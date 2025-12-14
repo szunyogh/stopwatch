@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "name": "debug",
+            "type": "dart",
+            "request": "launch",
+            "program": "lib/main.dart",
+        },
+        {
+            "name": "profile",
+            "type": "dart",
+            "request": "launch",
+            "program": "lib/main.dart",
+            "flutterMode": "profile",
+        },
+        {
+            "name": "release",
+            "type": "dart",
+            "request": "launch",
+            "program": "lib/main.dart",
+            "flutterMode": "release",
+        },
+    ]
+}
