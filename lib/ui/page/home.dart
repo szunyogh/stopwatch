@@ -84,7 +84,7 @@ class _BottomNavigationBar extends ConsumerWidget {
     final enabledReset = ref.watch(homeLogic.select((value) => value.time > Duration.zero && !value.isRunning));
     final isRunning = ref.watch(homeLogic.select((value) => value.isRunning));
 
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 10;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(15, 15, 15, bottomPadding).r,

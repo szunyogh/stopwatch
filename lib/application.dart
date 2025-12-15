@@ -16,6 +16,7 @@ class _ApplicationState extends ConsumerState<Application> {
   Widget build(BuildContext context) {
     return ScreenUtilInit(
       designSize: const Size(375, 812),
+      minTextAdapt: true,
       builder: (context, _) {
         return MaterialApp.router(
           title: 'Próba Stopper',

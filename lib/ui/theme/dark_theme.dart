@@ -7,15 +7,7 @@ final appDarkTheme = ThemeData(brightness: Brightness.dark).copyWith(
   primaryColor: primaryColor,
   primaryColorDark: primaryColorDark,
   primaryColorLight: primaryColorLight,
-  colorScheme: ColorScheme.dark(
-    primary: white.withValues(alpha: 0.5),
-    primaryContainer: grey2,
-    secondary: green,
-    secondaryContainer: green2,
-    surface: primaryColorDark,
-    onSurface: blue1,
-    error: red,
-  ),
+  colorScheme: ColorScheme.dark(primary: white.withValues(alpha: 0.5), primaryContainer: grey2, secondary: green, secondaryContainer: green2, surface: primaryColorDark, onSurface: blue1, error: red),
   textTheme: TextTheme(
     bodyLarge: TextStyle(color: white, fontSize: 16.sp, fontWeight: FontWeight.w500),
     bodyMedium: TextStyle(color: white, fontSize: 16.sp, fontWeight: FontWeight.w500),
@@ -33,16 +25,10 @@ final appDarkTheme = ThemeData(brightness: Brightness.dark).copyWith(
         }
         return primaryColor;
       }),
-      shape: WidgetStateProperty.all(
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(10).r),
-      ),
+      shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10).r)),
       iconColor: WidgetStatePropertyAll(white),
-      padding: WidgetStateProperty.all(
-        const EdgeInsets.symmetric(vertical: 12, horizontal: 24).r,
-      ),
-      textStyle: WidgetStateProperty.all(
-        TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
-      ),
+      padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 12, horizontal: 24).r),
+      textStyle: WidgetStateProperty.all(TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500)),
     ),
   ),
 );
