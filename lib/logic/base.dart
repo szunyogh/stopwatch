@@ -11,7 +11,5 @@ abstract class BaseLogic<T> extends Notifier<T> {
 
   Logger get logger => _logger;
 
-  Future<void> initialize();
-
   void changeState(T Function(T current) updater) => state = updater(state);
 }

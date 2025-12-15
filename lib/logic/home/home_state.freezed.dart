@@ -16,6 +16,8 @@ T _$identity<T>(T value) => value;
 mixin _$HomeState {
   Duration get time;
   bool get isRunning;
+  List<LapModel> get laps;
+  Duration? get currentTime;
 
   /// Create a copy of HomeState
   /// with the given fields replaced by the non-null parameter values.
@@ -31,15 +33,19 @@ mixin _$HomeState {
             other is HomeState &&
             (identical(other.time, time) || other.time == time) &&
             (identical(other.isRunning, isRunning) ||
-                other.isRunning == isRunning));
+                other.isRunning == isRunning) &&
+            const DeepCollectionEquality().equals(other.laps, laps) &&
+            (identical(other.currentTime, currentTime) ||
+                other.currentTime == currentTime));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, time, isRunning);
+  int get hashCode => Object.hash(runtimeType, time, isRunning,
+      const DeepCollectionEquality().hash(laps), currentTime);
 
   @override
   String toString() {
-    return 'HomeState(time: $time, isRunning: $isRunning)';
+    return 'HomeState(time: $time, isRunning: $isRunning, laps: $laps, currentTime: $currentTime)';
   }
 }
 
@@ -48,7 +54,11 @@ abstract mixin class $HomeStateCopyWith<$Res> {
   factory $HomeStateCopyWith(HomeState value, $Res Function(HomeState) _then) =
       _$HomeStateCopyWithImpl;
   @useResult
-  $Res call({Duration time, bool isRunning});
+  $Res call(
+      {Duration time,
+      bool isRunning,
+      List<LapModel> laps,
+      Duration? currentTime});
 }
 
 /// @nodoc
@@ -65,6 +75,8 @@ class _$HomeStateCopyWithImpl<$Res> implements $HomeStateCopyWith<$Res> {
   $Res call({
     Object? time = null,
     Object? isRunning = null,
+    Object? laps = null,
+    Object? currentTime = freezed,
   }) {
     return _then(_self.copyWith(
       time: null == time
@@ -75,6 +87,14 @@ class _$HomeStateCopyWithImpl<$Res> implements $HomeStateCopyWith<$Res> {
           ? _self.isRunning
           : isRunning // ignore: cast_nullable_to_non_nullable
               as bool,
+      laps: null == laps
+          ? _self.laps
+          : laps // ignore: cast_nullable_to_non_nullable
+              as List<LapModel>,
+      currentTime: freezed == currentTime
+          ? _self.currentTime
+          : currentTime // ignore: cast_nullable_to_non_nullable
+              as Duration?,
     ));
   }
 }
@@ -172,13 +192,16 @@ extension HomeStatePatterns on HomeState {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(Duration time, bool isRunning)? $default, {
+    TResult Function(Duration time, bool isRunning, List<LapModel> laps,
+            Duration? currentTime)?
+        $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
       case _HomeState() when $default != null:
-        return $default(_that.time, _that.isRunning);
+        return $default(
+            _that.time, _that.isRunning, _that.laps, _that.currentTime);
       case _:
         return orElse();
     }
@@ -199,12 +222,15 @@ extension HomeStatePatterns on HomeState {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(Duration time, bool isRunning) $default,
+    TResult Function(Duration time, bool isRunning, List<LapModel> laps,
+            Duration? currentTime)
+        $default,
   ) {
     final _that = this;
     switch (_that) {
       case _HomeState():
-        return $default(_that.time, _that.isRunning);
+        return $default(
+            _that.time, _that.isRunning, _that.laps, _that.currentTime);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -224,12 +250,15 @@ extension HomeStatePatterns on HomeState {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(Duration time, bool isRunning)? $default,
+    TResult? Function(Duration time, bool isRunning, List<LapModel> laps,
+            Duration? currentTime)?
+        $default,
   ) {
     final _that = this;
     switch (_that) {
       case _HomeState() when $default != null:
-        return $default(_that.time, _that.isRunning);
+        return $default(
+            _that.time, _that.isRunning, _that.laps, _that.currentTime);
       case _:
         return null;
     }
@@ -239,8 +268,13 @@ extension HomeStatePatterns on HomeState {
 /// @nodoc
 
 class _HomeState extends HomeState {
-  const _HomeState({this.time = Duration.zero, this.isRunning = false})
-      : super._();
+  const _HomeState(
+      {this.time = Duration.zero,
+      this.isRunning = false,
+      final List<LapModel> laps = const [],
+      this.currentTime = null})
+      : _laps = laps,
+        super._();
 
   @override
   @JsonKey()
@@ -248,6 +282,18 @@ class _HomeState extends HomeState {
   @override
   @JsonKey()
   final bool isRunning;
+  final List<LapModel> _laps;
+  @override
+  @JsonKey()
+  List<LapModel> get laps {
+    if (_laps is EqualUnmodifiableListView) return _laps;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_laps);
+  }
+
+  @override
+  @JsonKey()
+  final Duration? currentTime;
 
   /// Create a copy of HomeState
   /// with the given fields replaced by the non-null parameter values.
@@ -264,15 +310,19 @@ class _HomeState extends HomeState {
             other is _HomeState &&
             (identical(other.time, time) || other.time == time) &&
             (identical(other.isRunning, isRunning) ||
-                other.isRunning == isRunning));
+                other.isRunning == isRunning) &&
+            const DeepCollectionEquality().equals(other._laps, _laps) &&
+            (identical(other.currentTime, currentTime) ||
+                other.currentTime == currentTime));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, time, isRunning);
+  int get hashCode => Object.hash(runtimeType, time, isRunning,
+      const DeepCollectionEquality().hash(_laps), currentTime);
 
   @override
   String toString() {
-    return 'HomeState(time: $time, isRunning: $isRunning)';
+    return 'HomeState(time: $time, isRunning: $isRunning, laps: $laps, currentTime: $currentTime)';
   }
 }
 
@@ -284,7 +334,11 @@ abstract mixin class _$HomeStateCopyWith<$Res>
       __$HomeStateCopyWithImpl;
   @override
   @useResult
-  $Res call({Duration time, bool isRunning});
+  $Res call(
+      {Duration time,
+      bool isRunning,
+      List<LapModel> laps,
+      Duration? currentTime});
 }
 
 /// @nodoc
@@ -301,6 +355,8 @@ class __$HomeStateCopyWithImpl<$Res> implements _$HomeStateCopyWith<$Res> {
   $Res call({
     Object? time = null,
     Object? isRunning = null,
+    Object? laps = null,
+    Object? currentTime = freezed,
   }) {
     return _then(_HomeState(
       time: null == time
@@ -311,6 +367,14 @@ class __$HomeStateCopyWithImpl<$Res> implements _$HomeStateCopyWith<$Res> {
           ? _self.isRunning
           : isRunning // ignore: cast_nullable_to_non_nullable
               as bool,
+      laps: null == laps
+          ? _self._laps
+          : laps // ignore: cast_nullable_to_non_nullable
+              as List<LapModel>,
+      currentTime: freezed == currentTime
+          ? _self.currentTime
+          : currentTime // ignore: cast_nullable_to_non_nullable
+              as Duration?,
     ));
   }
 }
