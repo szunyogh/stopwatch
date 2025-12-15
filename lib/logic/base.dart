@@ -3,7 +3,13 @@ import 'package:logger/logger.dart';
 import 'package:stopwatch/logic/logger.dart';
 
 abstract class BaseLogic<T> extends Notifier<T> {
-  Logger get logger => ref.read(loggerProvider);
+  late final Logger _logger;
+
+  void initLogger() {
+    _logger = ref.read(loggerProvider);
+  }
+
+  Logger get logger => _logger;
 
   Future<void> initialize();
 

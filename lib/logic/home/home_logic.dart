@@ -9,6 +9,8 @@ final homeLogic = NotifierProvider.autoDispose<HomeLogic, HomeState>(HomeLogic.n
 class HomeLogic extends BaseLogic<HomeState> {
   @override
   HomeState build() {
+    initLogger();
+
     ref.onDispose(() {
       _timer?.cancel();
       _timer = null;
@@ -23,9 +25,9 @@ class HomeLogic extends BaseLogic<HomeState> {
   @override
   Future<void> initialize() async {}
 
-  Future<void> start() async {
+  void start() async {
     try {
-      logger.i('[HomeLogic] Start');
+      logger.i('[HomeLogic] start');
 
       if (_timer?.isActive ?? false) return;
 
@@ -38,23 +40,27 @@ class HomeLogic extends BaseLogic<HomeState> {
 
       state = state.copyWith(isRunning: _timer?.isActive ?? false);
     } catch (e, stack) {
-      logger.e('[HomeLogic] Start', error: e, stackTrace: stack);
+      logger.e('[HomeLogic] start', error: e, stackTrace: stack);
     }
   }
 
-  Future<void> stop() async {
+  void stop() async {
     try {
-      logger.i('[HomeLogic] Stop');
+      logger.i('[HomeLogic] stop');
       _timer?.cancel();
       state = state.copyWith(isRunning: _timer?.isActive ?? false);
       _timer = null;
     } catch (e, stack) {
-      logger.e('[HomeLogic] Stop', error: e, stackTrace: stack);
+      logger.e('[HomeLogic] stop', error: e, stackTrace: stack);
     }
   }
 
-  Future<void> reset() async {
+  void reset() async {
     try {
+      logger.i('[HomeLogic] reset');
+
+      if (state.isRunning) stop();
+
       state = state.copyWith(time: Duration.zero);
     } catch (e, stack) {
       logger.e('[HomeLogic] reset', error: e, stackTrace: stack);
