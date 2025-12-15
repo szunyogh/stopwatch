@@ -25,6 +25,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final time = ref.watch(homeLogic.select((value) => value.time));
     final isRunning = ref.watch(homeLogic.select((value) => value.isRunning));
+    final enabledReset = time > Duration.zero && !isRunning;
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(15.0).r,
@@ -39,15 +40,15 @@ class _HomePageState extends ConsumerState<HomePage> {
               children: [
                 Expanded(
                   child: TextButton(
-                    onPressed: isRunning ? () => logic.stop() : null,
-                    child: const Text('Leállítás'),
+                    onPressed: enabledReset ? () => logic.reset() : null,
+                    child: const Text('Visszaállítás'),
                   ),
                 ),
                 SizedBox(width: 10.w),
                 Expanded(
                   child: TextButton(
-                    onPressed: () => logic.start(),
-                    child: const Text('Indítás'),
+                    onPressed: () => isRunning ? logic.stop() : logic.start(),
+                    child: Text(isRunning ? 'Leállítás' : 'Indítás'),
                   ),
                 ),
               ],
