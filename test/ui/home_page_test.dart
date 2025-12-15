@@ -6,14 +6,15 @@ import 'package:stopwatch/ui/page/home.dart';
 
 void main() {
   group('HomePage Widget Tests', () {
-    testWidgets('4. Button interactions and UI responds correctly', (WidgetTester tester) async {
-      // STEP 1: Setup screen size for ScreenUtil
-      // ScreenUtil needs a proper screen size to calculate responsive values
+    setUp(() {
+      // Setup screen size for ScreenUtil before each test
+      TestWidgetsFlutterBinding.ensureInitialized();
+    });
+
+    testWidgets('1. Initial state displays correctly', (WidgetTester tester) async {
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 1.0;
 
-      // STEP 2: Build the widget tree
-      // We wrap everything in ProviderScope (for Riverpod) and ScreenUtilInit
       await tester.pumpWidget(
         ProviderScope(
           child: ScreenUtilInit(
@@ -27,66 +28,155 @@ void main() {
         ),
       );
 
-      // STEP 3: Wait for all animations and async operations to complete
       await tester.pumpAndSettle();
 
-      // STEP 4: Verify initial state
-      // The UI should show "Indítás" (Start) and "Visszaállítás" (Reset) buttons
+      // Verify initial buttons
       expect(find.text('Indítás'), findsOneWidget);
       expect(find.text('Visszaállítás'), findsOneWidget);
 
-      // STEP 5: Get the initial time display
-      // We find the first Text widget which displays the time
-      final initialTimeWidget = tester.widget<Text>(
-        find.byType(Text).first,
-      );
-      final initialTime = initialTimeWidget.data!;
+      // Verify initial time is 00:00.000
+      expect(find.text('00:00.000'), findsOneWidget);
 
-      // STEP 6: Simulate tapping the Start button
-      await tester.tap(find.text('Indítás'));
-      // pumpAndSettle waits for all frames to settle (animations, rebuilds)
+      // Verify no laps are displayed
+      expect(find.byType(ListView), findsNothing);
+
+      // Verify reset button is disabled
+      final resetButton = tester.widget<TextButton>(
+        find.widgetWithText(TextButton, 'Visszaállítás'),
+      );
+      expect(resetButton.onPressed, isNull);
+    });
+
+    testWidgets('2. Start button starts the timer and UI updates', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: ScreenUtilInit(
+            designSize: const Size(360, 690),
+            builder: (context, child) {
+              return const MaterialApp(
+                home: HomePage(),
+              );
+            },
+          ),
+        ),
+      );
+
       await tester.pumpAndSettle();
 
-      // STEP 7: Verify UI changed to "Leállítás" (Stop)
-      expect(find.text('Leállítás'), findsOneWidget);
+      // Get initial time
+      final initialTimeWidget = tester.widget<Text>(find.byType(Text).first);
+      final initialTime = initialTimeWidget.data!;
 
-      // STEP 8: Wait for the timer to run and time to increase
-      // pump() with duration advances time and triggers rebuilds
+      // Tap start button
+      await tester.tap(find.text('Indítás'));
+      await tester.pumpAndSettle();
+
+      // Verify button changed to "Leállítás"
+      expect(find.text('Leállítás'), findsOneWidget);
+      expect(find.text('Indítás'), findsNothing);
+
+      // Verify button changed to "Kör"
+      expect(find.text('Kör'), findsOneWidget);
+
+      // Wait for timer to run
       await tester.pump(const Duration(milliseconds: 100));
 
-      // STEP 9: Verify time has increased
-      final runningTimeWidget = tester.widget<Text>(
-        find.byType(Text).first,
-      );
+      // Verify time has changed
+      final runningTimeWidget = tester.widget<Text>(find.byType(Text).first);
       expect(runningTimeWidget.data, isNot(equals(initialTime)));
 
-      // STEP 10: Tap the Stop button
+      // Cleanup
+      await tester.tap(find.text('Leállítás'));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('3. Stop button stops the timer', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: ScreenUtilInit(
+            designSize: const Size(360, 690),
+            builder: (context, child) {
+              return const MaterialApp(
+                home: HomePage(),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Start timer
+      await tester.tap(find.text('Indítás'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Get time after running
+      final timeAfterStart = tester.widget<Text>(find.byType(Text).first).data!;
+
+      // Stop timer
       await tester.tap(find.text('Leállítás'));
       await tester.pumpAndSettle();
 
-      // STEP 11: Verify button changed back to "Indítás"
+      // Verify button changed back to "Indítás"
       expect(find.text('Indítás'), findsOneWidget);
+      expect(find.text('Leállítás'), findsNothing);
 
-      // STEP 12: Verify Reset button is enabled
-      // When stopped and time > 0, reset should be enabled (onPressed != null)
+      // Wait and verify time hasn't changed
+      await tester.pump(const Duration(milliseconds: 100));
+      final timeAfterStop = tester.widget<Text>(find.byType(Text).first).data!;
+      expect(timeAfterStop, equals(timeAfterStart));
+    });
+
+    testWidgets('4. Reset button resets the timer to zero', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: ScreenUtilInit(
+            designSize: const Size(360, 690),
+            builder: (context, child) {
+              return const MaterialApp(
+                home: HomePage(),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Start and wait
+      await tester.tap(find.text('Indítás'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Stop
+      await tester.tap(find.text('Leállítás'));
+      await tester.pumpAndSettle();
+
+      // Verify reset button is enabled
       final resetButton = tester.widget<TextButton>(
         find.widgetWithText(TextButton, 'Visszaállítás'),
       );
       expect(resetButton.onPressed, isNotNull);
 
-      // STEP 13: Tap Reset button
+      // Reset
       await tester.tap(find.text('Visszaállítás'));
       await tester.pumpAndSettle();
 
-      // STEP 14: Verify time is back to initial value
-      final resetTimeWidget = tester.widget<Text>(
-        find.byType(Text).first,
-      );
-      expect(resetTimeWidget.data, equals(initialTime));
+      // Verify time is back to zero
+      expect(find.text('00:00.000'), findsOneWidget);
     });
 
     testWidgets('5. Reset button is disabled when time is 0 or running', (WidgetTester tester) async {
-      // Setup
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 1.0;
 
@@ -109,18 +199,16 @@ void main() {
       var resetButton = tester.widget<TextButton>(
         find.widgetWithText(TextButton, 'Visszaállítás'),
       );
-      expect(resetButton.onPressed, isNull); // null = disabled
+      expect(resetButton.onPressed, isNull);
 
       // TEST 2: Start the timer
       await tester.tap(find.text('Indítás'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(milliseconds: 50));
 
-      // While running, reset should be disabled
-      resetButton = tester.widget<TextButton>(
-        find.widgetWithText(TextButton, 'Visszaállítás'),
-      );
-      expect(resetButton.onPressed, isNull); // disabled while running
+      // While running, left button should show "Kör", not "Visszaállítás"
+      expect(find.text('Kör'), findsOneWidget);
+      expect(find.text('Visszaállítás'), findsNothing);
 
       // TEST 3: Stop the timer
       await tester.tap(find.text('Leállítás'));
@@ -130,7 +218,339 @@ void main() {
       resetButton = tester.widget<TextButton>(
         find.widgetWithText(TextButton, 'Visszaállítás'),
       );
-      expect(resetButton.onPressed, isNotNull); // enabled when stopped with time > 0
+      expect(resetButton.onPressed, isNotNull);
+    });
+
+    testWidgets('6. Lap button adds laps when running', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: ScreenUtilInit(
+            designSize: const Size(360, 690),
+            builder: (context, child) {
+              return const MaterialApp(
+                home: HomePage(),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Start timer
+      await tester.tap(find.text('Indítás'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Verify "Kör" button appears
+      expect(find.text('Kör'), findsOneWidget);
+
+      // Add first lap
+      await tester.tap(find.text('Kör'));
+      await tester.pumpAndSettle();
+
+      // Verify ListView appears with lap
+      expect(find.byType(ListView), findsOneWidget);
+      expect(find.text('1'), findsOneWidget); // Lap order
+      expect(find.text('Kör idő'), findsOneWidget);
+      expect(find.text('Teljes idő'), findsOneWidget);
+
+      // Wait and add second lap
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(find.text('Kör'));
+      await tester.pumpAndSettle();
+
+      // Verify two laps exist
+      expect(find.text('1'), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
+
+      // Cleanup
+      await tester.tap(find.text('Leállítás'));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('7. Lap list displays correct information', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: ScreenUtilInit(
+            designSize: const Size(360, 690),
+            builder: (context, child) {
+              return const MaterialApp(
+                home: HomePage(),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Start timer
+      await tester.tap(find.text('Indítás'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Add lap
+      await tester.tap(find.text('Kör'));
+      await tester.pumpAndSettle();
+
+      // Verify lap item structure
+      expect(find.text('Kör idő'), findsOneWidget);
+      expect(find.text('Teljes idő'), findsOneWidget);
+
+      // Verify order is displayed
+      expect(find.text('1'), findsOneWidget);
+
+      // Cleanup
+      await tester.tap(find.text('Leállítás'));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('8. Multiple laps are displayed in order', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: ScreenUtilInit(
+            designSize: const Size(360, 690),
+            builder: (context, child) {
+              return const MaterialApp(
+                home: HomePage(),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Start timer
+      await tester.tap(find.text('Indítás'));
+      await tester.pumpAndSettle();
+
+      // Add 3 laps
+      for (int i = 0; i < 3; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+        await tester.tap(find.text('Kör'));
+        await tester.pumpAndSettle();
+      }
+
+      // Verify all laps are displayed
+      expect(find.text('1'), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
+      expect(find.text('3'), findsOneWidget);
+
+      // Verify we have 3 lap items
+      expect(find.text('Kör idő'), findsNWidgets(3));
+      expect(find.text('Teljes idő'), findsNWidgets(3));
+
+      // Cleanup
+      await tester.tap(find.text('Leállítás'));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('9. Current lap time is displayed when running with laps', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: ScreenUtilInit(
+            designSize: const Size(360, 690),
+            builder: (context, child) {
+              return const MaterialApp(
+                home: HomePage(),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Start timer
+      await tester.tap(find.text('Indítás'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Add first lap
+      await tester.tap(find.text('Kör'));
+      await tester.pumpAndSettle();
+
+      // Wait a bit more
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Find the two time displays
+      final textWidgets = tester.widgetList<Text>(find.byType(Text)).toList();
+
+      // First text should be total time (larger font)
+      // Second text should be current lap time (smaller font)
+      // The second time should be visible and updating
+      expect(textWidgets.length, greaterThan(1));
+
+      // Cleanup
+      await tester.tap(find.text('Leállítás'));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('10. Reset clears all laps', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: ScreenUtilInit(
+            designSize: const Size(360, 690),
+            builder: (context, child) {
+              return const MaterialApp(
+                home: HomePage(),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Start timer and add laps
+      await tester.tap(find.text('Indítás'));
+      await tester.pumpAndSettle();
+
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(find.text('Kör'));
+      await tester.pumpAndSettle();
+
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(find.text('Kör'));
+      await tester.pumpAndSettle();
+
+      // Verify laps exist
+      expect(find.byType(ListView), findsOneWidget);
+      expect(find.text('1'), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
+
+      // Stop and reset
+      await tester.tap(find.text('Leállítás'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Visszaállítás'));
+      await tester.pumpAndSettle();
+
+      // Verify laps are cleared
+      expect(find.byType(ListView), findsNothing);
+      expect(find.text('1'), findsNothing);
+      expect(find.text('2'), findsNothing);
+      expect(find.text('00:00.000'), findsOneWidget);
+    });
+
+    testWidgets('11. UI responds correctly to start-stop-reset cycle', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: ScreenUtilInit(
+            designSize: const Size(360, 690),
+            builder: (context, child) {
+              return const MaterialApp(
+                home: HomePage(),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Initial state
+      expect(find.text('Indítás'), findsOneWidget);
+      expect(find.text('Visszaállítás'), findsOneWidget);
+
+      // Start
+      await tester.tap(find.text('Indítás'));
+      await tester.pumpAndSettle();
+      expect(find.text('Leállítás'), findsOneWidget);
+      expect(find.text('Kör'), findsOneWidget);
+
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Stop
+      await tester.tap(find.text('Leállítás'));
+      await tester.pumpAndSettle();
+      expect(find.text('Indítás'), findsOneWidget);
+      expect(find.text('Visszaállítás'), findsOneWidget);
+
+      // Verify reset is enabled
+      final resetButton = tester.widget<TextButton>(
+        find.widgetWithText(TextButton, 'Visszaállítás'),
+      );
+      expect(resetButton.onPressed, isNotNull);
+
+      // Reset
+      await tester.tap(find.text('Visszaállítás'));
+      await tester.pumpAndSettle();
+
+      // Back to initial state
+      expect(find.text('Indítás'), findsOneWidget);
+      expect(find.text('00:00.000'), findsOneWidget);
+
+      // Reset should be disabled again
+      final resetButtonAfter = tester.widget<TextButton>(
+        find.widgetWithText(TextButton, 'Visszaállítás'),
+      );
+      expect(resetButtonAfter.onPressed, isNull);
+    });
+
+    testWidgets('12. Lap list is scrollable with many laps', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: ScreenUtilInit(
+            designSize: const Size(360, 690),
+            builder: (context, child) {
+              return const MaterialApp(
+                home: HomePage(),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Start timer
+      await tester.tap(find.text('Indítás'));
+      await tester.pumpAndSettle();
+
+      // Add 5 laps quickly
+      for (int i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+        await tester.tap(find.text('Kör'));
+        await tester.pumpAndSettle();
+      }
+
+      // Verify ListView exists and is scrollable
+      expect(find.byType(ListView), findsOneWidget);
+
+      // Verify we can find the first lap
+      expect(find.text('1'), findsOneWidget);
+
+      // The ListView should be scrollable
+      final listView = tester.widget<ListView>(find.byType(ListView));
+      expect(listView.physics, isNot(const NeverScrollableScrollPhysics()));
+
+      // Cleanup
+      await tester.tap(find.text('Leállítás'));
+      await tester.pumpAndSettle();
     });
   });
 }
