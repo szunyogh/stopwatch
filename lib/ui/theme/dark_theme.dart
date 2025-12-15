@@ -20,7 +20,7 @@ final appDarkTheme = ThemeData(brightness: Brightness.dark).copyWith(
     bodyLarge: TextStyle(color: white, fontSize: 16.sp, fontWeight: FontWeight.w500),
     bodyMedium: TextStyle(color: white, fontSize: 16.sp, fontWeight: FontWeight.w500),
     bodySmall: TextStyle(color: white, fontSize: 12.sp, fontWeight: FontWeight.w400),
-    headlineLarge: TextStyle(color: white, fontSize: 32.sp, fontWeight: FontWeight.w500),
+    headlineLarge: TextStyle(color: white, fontSize: 50.sp, fontWeight: FontWeight.w500),
     headlineSmall: TextStyle(color: white, fontSize: 18.sp, fontWeight: FontWeight.w700),
     headlineMedium: TextStyle(color: white, fontSize: 24.sp, fontWeight: FontWeight.w500),
   ),

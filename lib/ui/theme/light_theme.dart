@@ -20,7 +20,7 @@ final appLightTheme = ThemeData(brightness: Brightness.light).copyWith(
     bodyLarge: TextStyle(color: black3, fontSize: 16.sp, fontWeight: FontWeight.w500),
     bodyMedium: TextStyle(color: black3, fontSize: 16.sp, fontWeight: FontWeight.w500),
     bodySmall: TextStyle(color: black400, fontSize: 12.sp, fontWeight: FontWeight.w400),
-    headlineLarge: TextStyle(color: black, fontSize: 32.sp, fontWeight: FontWeight.w500),
+    headlineLarge: TextStyle(color: black, fontSize: 50.sp, fontWeight: FontWeight.w500),
     headlineMedium: TextStyle(color: black, fontSize: 24.sp, fontWeight: FontWeight.w500),
     headlineSmall: TextStyle(color: black, fontSize: 18.sp, fontWeight: FontWeight.w700),
   ),

@@ -6,6 +6,7 @@ part 'home_state.freezed.dart';
 abstract class HomeState with _$HomeState {
   const HomeState._();
   const factory HomeState({
-    @Default(0.0) double time,
+    @Default(Duration.zero) Duration time,
+    @Default(false) bool isRunning,
   }) = _HomeState;
 }
