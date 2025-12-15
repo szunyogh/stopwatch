@@ -8,13 +8,12 @@ final appDarkTheme = ThemeData(brightness: Brightness.dark).copyWith(
   primaryColorDark: primaryColorDark,
   primaryColorLight: primaryColorLight,
   colorScheme: ColorScheme.dark(
-    primary: white.withOpacity(.5),
+    primary: white.withValues(alpha: 0.5),
     primaryContainer: grey2,
     secondary: green,
     secondaryContainer: green2,
     surface: primaryColorDark,
     onSurface: blue1,
-    background: primaryColorDark,
     error: red,
   ),
   textTheme: TextTheme(

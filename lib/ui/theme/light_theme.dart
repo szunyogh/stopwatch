@@ -14,7 +14,6 @@ final appLightTheme = ThemeData(brightness: Brightness.light).copyWith(
     secondaryContainer: green2,
     surface: white,
     onSurface: blu2,
-    background: white,
     error: red,
   ),
   textTheme: TextTheme(

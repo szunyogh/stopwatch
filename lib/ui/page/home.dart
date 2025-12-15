@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:stopwatch/core/duration_extension.dart';
 import 'package:stopwatch/logic/home/home_logic.dart';
 import 'package:stopwatch/model/lap.dart';
+import 'package:stopwatch/ui/widget/analog_colck.dart';
 
 @RoutePage()
 class HomePage extends ConsumerStatefulWidget {
@@ -48,6 +49,8 @@ class _Body extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          AnalogClock(elapsed: time),
+          SizedBox(height: 20.h),
           Text(time.toElapsedTime(), style: Theme.of(context).textTheme.headlineLarge),
           Text(currentTime?.toElapsedTime() ?? '', style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
           SizedBox(height: 10.h),
