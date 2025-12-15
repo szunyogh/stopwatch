@@ -15,14 +15,6 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  late HomeLogic logic;
-
-  @override
-  void initState() {
-    super.initState();
-    logic = ref.read(homeLogic.notifier);
-  }
-
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top + 10;
