@@ -8,80 +8,101 @@ import 'package:stopwatch/model/lap.dart';
 final homeLogic = NotifierProvider.autoDispose<HomeLogic, HomeState>(HomeLogic.new);
 
 class HomeLogic extends BaseLogic<HomeState> {
+  Timer? _timer;
+  Stopwatch? _stopwatch;
+
+  Duration? _lapStartElapsed;
+
   @override
   HomeState build() {
     initLogger();
 
     ref.onDispose(() {
-      _timer?.cancel();
-      _timer = null;
+      clear();
+      _stopwatch = null;
       logger.i('[HomeLogic] disposed');
     });
 
     return const HomeState();
   }
 
-  Timer? _timer;
+  void clear() {
+    _timer?.cancel();
+    _timer = null;
 
-  void start() async {
+    _stopwatch?.stop();
+    _stopwatch?.reset();
+
+    _lapStartElapsed = null;
+  }
+
+  void start() {
     try {
       logger.i('[HomeLogic] start');
 
-      if (_timer?.isActive ?? false) return;
+      if (state.isRunning) return;
 
-      logger.i('[HomeLogic] timer started');
+      _stopwatch ??= Stopwatch();
 
-      _timer ??= Timer.periodic(const Duration(milliseconds: 1), (timer) {
-        final newTime = state.time + const Duration(milliseconds: 1);
-        state = state.copyWith(time: newTime);
-        if (state.currentTime != null) {
-          final newCurrentTime = (state.currentTime ?? Duration.zero) + const Duration(milliseconds: 1);
-          state = state.copyWith(currentTime: newCurrentTime);
-        }
+      _stopwatch!.start();
+
+      _timer ??= Timer.periodic(const Duration(milliseconds: 32), (_) {
+        final elapsed = _stopwatch!.elapsed;
+
+        final lapStart = _lapStartElapsed;
+        final lapElapsed = (lapStart == null) ? null : (elapsed - lapStart);
+
+        state = state.copyWith(time: elapsed, currentTime: lapElapsed, isRunning: true);
       });
 
-      state = state.copyWith(isRunning: _timer?.isActive ?? false);
+      state = state.copyWith(isRunning: true);
     } catch (e, stack) {
       logger.e('[HomeLogic] start', error: e, stackTrace: stack);
     }
   }
 
-  void stop() async {
+  void stop() {
     try {
       logger.i('[HomeLogic] stop');
+
+      _stopwatch?.stop();
       _timer?.cancel();
-      state = state.copyWith(isRunning: _timer?.isActive ?? false);
       _timer = null;
+
+      state = state.copyWith(isRunning: false);
     } catch (e, stack) {
       logger.e('[HomeLogic] stop', error: e, stackTrace: stack);
     }
   }
 
-  void reset() async {
+  void reset() {
     try {
       logger.i('[HomeLogic] reset');
 
-      if (state.isRunning) stop();
+      clear();
 
-      state = state.copyWith(time: Duration.zero, laps: [], currentTime: null);
+      state = state.copyWith(time: Duration.zero, currentTime: null, laps: const [], isRunning: false);
     } catch (e, stack) {
       logger.e('[HomeLogic] reset', error: e, stackTrace: stack);
     }
   }
 
-  void addLap() async {
+  void addLap() {
     try {
       logger.i('[HomeLogic] addLap');
 
       if (!state.isRunning) return;
 
-      logger.i('[HomeLogic] adding lap');
+      final sw = _stopwatch;
+      if (sw == null) return;
 
-      final item = LapModel(
-        time: state.currentTime ?? state.time,
-        totalTime: state.time,
-        order: state.laps.length + 1,
-      );
+      final elapsed = sw.elapsed;
+      final lapStart = _lapStartElapsed ?? Duration.zero;
+      final lapElapsed = elapsed - lapStart;
+
+      final item = LapModel(time: lapElapsed, totalTime: elapsed, order: state.laps.length + 1);
+
+      _lapStartElapsed = elapsed;
 
       state = state.copyWith(laps: [...state.laps, item], currentTime: Duration.zero);
     } catch (e, stack) {
