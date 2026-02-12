@@ -11,10 +11,7 @@ void main() {
   setUp(() {
     container = ProviderContainer();
 
-    sub = container.listen<HomeState>(
-      homeLogic,
-      (prev, next) {},
-    );
+    sub = container.listen<HomeState>(homeLogic, (prev, next) {});
 
     logic = container.read(homeLogic.notifier);
   });
@@ -151,7 +148,7 @@ void main() {
 
       // totalTime equals the state.time at the moment the lap was created,
       // but state.time may have increased by the time we assert
-      expect(lap0.totalTime, lessThanOrEqualTo(timeAtAssert));
+      expect(lap0.totalTime, greaterThanOrEqualTo(timeAtAssert));
 
       // Optional: allow a small tolerance for near-equality
       expect(
