@@ -1,5 +1,4 @@
-import 'dart:async';
-
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stopwatch/logic/base.dart';
 import 'package:stopwatch/logic/home/home_state.dart';
@@ -8,7 +7,7 @@ import 'package:stopwatch/model/lap.dart';
 final homeLogic = NotifierProvider.autoDispose<HomeLogic, HomeState>(HomeLogic.new);
 
 class HomeLogic extends BaseLogic<HomeState> {
-  Timer? _timer;
+  Ticker? _ticker;
   Stopwatch? _stopwatch;
 
   Duration? _lapStartElapsed;
@@ -27,8 +26,9 @@ class HomeLogic extends BaseLogic<HomeState> {
   }
 
   void clear() {
-    _timer?.cancel();
-    _timer = null;
+    _ticker?.stop();
+    _ticker?.dispose();
+    _ticker = null;
 
     _stopwatch?.stop();
     _stopwatch?.reset();
@@ -46,14 +46,16 @@ class HomeLogic extends BaseLogic<HomeState> {
 
       _stopwatch!.start();
 
-      _timer ??= Timer.periodic(const Duration(milliseconds: 32), (_) {
+      _ticker ??= Ticker((_) {
         final elapsed = _stopwatch!.elapsed;
 
         final lapStart = _lapStartElapsed;
         final lapElapsed = (lapStart == null) ? null : (elapsed - lapStart);
 
-        state = state.copyWith(time: elapsed, currentTime: lapElapsed, isRunning: true);
+        state = state.copyWith(time: elapsed, currentTime: lapElapsed);
       });
+
+      _ticker?.start();
 
       state = state.copyWith(isRunning: true);
     } catch (e, stack) {
@@ -66,8 +68,7 @@ class HomeLogic extends BaseLogic<HomeState> {
       logger.i('[HomeLogic] stop');
 
       _stopwatch?.stop();
-      _timer?.cancel();
-      _timer = null;
+      _ticker?.stop();
 
       state = state.copyWith(isRunning: false);
     } catch (e, stack) {
@@ -109,4 +110,12 @@ class HomeLogic extends BaseLogic<HomeState> {
       logger.e('[HomeLogic] addLap', error: e, stackTrace: stack);
     }
   }
+
+  void lapResetPressed() {
+    if (state.time > Duration.zero && !state.isRunning) return reset();
+
+    if (state.isRunning) return addLap();
+  }
+
+  void startStopPressed() => state.isRunning ? stop() : start();
 }

@@ -4,6 +4,8 @@ import 'package:stopwatch/logic/home/home_logic.dart';
 import 'package:stopwatch/logic/home/home_state.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late ProviderContainer container;
   late HomeLogic logic;
   late ProviderSubscription<HomeState> sub;

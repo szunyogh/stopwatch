@@ -2,7 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:stopwatch/core/duration_extension.dart';
+import 'package:stopwatch/core/duration_formatter.dart';
 import 'package:stopwatch/logic/home/home_logic.dart';
 import 'package:stopwatch/model/lap.dart';
 import 'package:stopwatch/ui/widget/analog_clock.dart';
@@ -19,11 +19,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top + 10;
     return Scaffold(
-      body: Padding(
-        padding: EdgeInsets.fromLTRB(15, topPadding, 15, 0).r,
-        child: _Body(),
-      ),
-      bottomNavigationBar: _BottomNavigationBar(),
+      body: Padding(padding: EdgeInsets.fromLTRB(15, topPadding, 15, 0).r, child: _Body()),
+      bottomNavigationBar: _BottomButtons(),
     );
   }
 }
@@ -43,18 +40,10 @@ class _Body extends ConsumerWidget {
         children: [
           AnalogClock(elapsed: time),
           SizedBox(height: 20.h),
+          Text(DurationElapsedFormatter.toElapsedTime(time), style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontFeatures: [FontFeature.tabularFigures()])),
           Text(
-            time.toElapsedTime(),
-            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-              fontFeatures: [FontFeature.tabularFigures()],
-            ),
-          ),
-          Text(
-            currentTime?.toElapsedTime() ?? '',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontFeatures: [FontFeature.tabularFigures()],
-            ),
+            DurationElapsedFormatter.toElapsedTime(currentTime),
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface, fontFeatures: [FontFeature.tabularFigures()]),
           ),
           SizedBox(height: 10.h),
           if (laps.isNotEmpty)
@@ -75,14 +64,14 @@ class _Body extends ConsumerWidget {
   }
 }
 
-class _BottomNavigationBar extends ConsumerWidget {
-  const _BottomNavigationBar();
+class _BottomButtons extends ConsumerWidget {
+  const _BottomButtons();
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final logic = ref.read(homeLogic.notifier);
 
-    final enabledReset = ref.watch(homeLogic.select((value) => value.time > Duration.zero && !value.isRunning));
     final isRunning = ref.watch(homeLogic.select((value) => value.isRunning));
+    final enabledReset = ref.watch(homeLogic.select((value) => value.time > Duration.zero));
 
     final bottomPadding = MediaQuery.of(context).padding.bottom + 10;
 
@@ -91,29 +80,15 @@ class _BottomNavigationBar extends ConsumerWidget {
       child: Row(
         children: [
           Expanded(
-            child: TextButton(
-              onPressed: _leftButtonPressed(logic, isRunning, enabledReset),
-              child: Text(isRunning ? 'Kör' : 'Visszaállítás'),
-            ),
+            child: TextButton(onPressed: enabledReset ? () => logic.lapResetPressed() : null, child: Text(isRunning ? 'Kör' : 'Visszaállítás')),
           ),
           SizedBox(width: 10.w),
           Expanded(
-            child: TextButton(
-              onPressed: () => isRunning ? logic.stop() : logic.start(),
-              child: Text(isRunning ? 'Leállítás' : 'Indítás'),
-            ),
+            child: TextButton(onPressed: () => logic.startStopPressed(), child: Text(isRunning ? 'Leállítás' : 'Indítás')),
           ),
         ],
       ),
     );
-  }
-
-  Function()? _leftButtonPressed(HomeLogic logic, bool isRunning, bool enabledReset) {
-    if (enabledReset) return () => logic.reset();
-
-    if (isRunning) return () => logic.addLap();
-
-    return null;
   }
 }
 
@@ -125,10 +100,7 @@ class _LapItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.fromLTRB(15, 10, 15, 10).r,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(10).r,
-      ),
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(10).r),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -137,14 +109,14 @@ class _LapItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Kör idő', style: Theme.of(context).textTheme.bodySmall),
-              Text(lap.time.toElapsedTime(), style: Theme.of(context).textTheme.bodyMedium),
+              Text(DurationElapsedFormatter.toElapsedTime(lap.time), style: Theme.of(context).textTheme.bodyMedium),
             ],
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Teljes idő', style: Theme.of(context).textTheme.bodySmall),
-              Text(lap.totalTime.toElapsedTime(), style: Theme.of(context).textTheme.bodyMedium),
+              Text(DurationElapsedFormatter.toElapsedTime(lap.totalTime), style: Theme.of(context).textTheme.bodyMedium),
             ],
           ),
         ],

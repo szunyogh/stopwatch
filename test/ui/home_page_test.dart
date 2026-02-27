@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:stopwatch/ui/page/home.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('HomePage Widget Tests', () {
     setUp(() {
       // Setup screen size for ScreenUtil before each test
@@ -20,9 +21,7 @@ void main() {
           child: ScreenUtilInit(
             designSize: const Size(360, 690),
             builder: (context, child) {
-              return const MaterialApp(
-                home: HomePage(),
-              );
+              return const MaterialApp(home: HomePage());
             },
           ),
         ),
@@ -41,9 +40,7 @@ void main() {
       expect(find.byType(ListView), findsNothing);
 
       // Verify reset button is disabled
-      final resetButton = tester.widget<TextButton>(
-        find.widgetWithText(TextButton, 'Visszaállítás'),
-      );
+      final resetButton = tester.widget<TextButton>(find.widgetWithText(TextButton, 'Visszaállítás'));
       expect(resetButton.onPressed, isNull);
     });
 
@@ -56,9 +53,7 @@ void main() {
           child: ScreenUtilInit(
             designSize: const Size(360, 690),
             builder: (context, child) {
-              return const MaterialApp(
-                home: HomePage(),
-              );
+              return const MaterialApp(home: HomePage());
             },
           ),
         ),
@@ -102,9 +97,7 @@ void main() {
           child: ScreenUtilInit(
             designSize: const Size(360, 690),
             builder: (context, child) {
-              return const MaterialApp(
-                home: HomePage(),
-              );
+              return const MaterialApp(home: HomePage());
             },
           ),
         ),
@@ -143,9 +136,7 @@ void main() {
           child: ScreenUtilInit(
             designSize: const Size(360, 690),
             builder: (context, child) {
-              return const MaterialApp(
-                home: HomePage(),
-              );
+              return const MaterialApp(home: HomePage());
             },
           ),
         ),
@@ -163,9 +154,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify reset button is enabled
-      final resetButton = tester.widget<TextButton>(
-        find.widgetWithText(TextButton, 'Visszaállítás'),
-      );
+      final resetButton = tester.widget<TextButton>(find.widgetWithText(TextButton, 'Visszaállítás'));
       expect(resetButton.onPressed, isNotNull);
 
       // Reset
@@ -185,9 +174,7 @@ void main() {
           child: ScreenUtilInit(
             designSize: const Size(360, 690),
             builder: (context, child) {
-              return const MaterialApp(
-                home: HomePage(),
-              );
+              return const MaterialApp(home: HomePage());
             },
           ),
         ),
@@ -196,9 +183,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // TEST 1: Initially (time = 0), reset should be disabled
-      var resetButton = tester.widget<TextButton>(
-        find.widgetWithText(TextButton, 'Visszaállítás'),
-      );
+      var resetButton = tester.widget<TextButton>(find.widgetWithText(TextButton, 'Visszaállítás'));
       expect(resetButton.onPressed, isNull);
 
       // TEST 2: Start the timer
@@ -215,9 +200,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // After stopping (time > 0 and not running), reset should be enabled
-      resetButton = tester.widget<TextButton>(
-        find.widgetWithText(TextButton, 'Visszaállítás'),
-      );
+      resetButton = tester.widget<TextButton>(find.widgetWithText(TextButton, 'Visszaállítás'));
       expect(resetButton.onPressed, isNotNull);
     });
 
@@ -230,9 +213,7 @@ void main() {
           child: ScreenUtilInit(
             designSize: const Size(360, 690),
             builder: (context, child) {
-              return const MaterialApp(
-                home: HomePage(),
-              );
+              return const MaterialApp(home: HomePage());
             },
           ),
         ),
@@ -281,9 +262,7 @@ void main() {
           child: ScreenUtilInit(
             designSize: const Size(360, 690),
             builder: (context, child) {
-              return const MaterialApp(
-                home: HomePage(),
-              );
+              return const MaterialApp(home: HomePage());
             },
           ),
         ),
@@ -321,9 +300,7 @@ void main() {
           child: ScreenUtilInit(
             designSize: const Size(360, 690),
             builder: (context, child) {
-              return const MaterialApp(
-                home: HomePage(),
-              );
+              return const MaterialApp(home: HomePage());
             },
           ),
         ),
@@ -365,9 +342,7 @@ void main() {
           child: ScreenUtilInit(
             designSize: const Size(360, 690),
             builder: (context, child) {
-              return const MaterialApp(
-                home: HomePage(),
-              );
+              return const MaterialApp(home: HomePage());
             },
           ),
         ),
@@ -409,9 +384,7 @@ void main() {
           child: ScreenUtilInit(
             designSize: const Size(360, 690),
             builder: (context, child) {
-              return const MaterialApp(
-                home: HomePage(),
-              );
+              return const MaterialApp(home: HomePage());
             },
           ),
         ),
@@ -459,9 +432,7 @@ void main() {
           child: ScreenUtilInit(
             designSize: const Size(360, 690),
             builder: (context, child) {
-              return const MaterialApp(
-                home: HomePage(),
-              );
+              return const MaterialApp(home: HomePage());
             },
           ),
         ),
@@ -488,9 +459,7 @@ void main() {
       expect(find.text('Visszaállítás'), findsOneWidget);
 
       // Verify reset is enabled
-      final resetButton = tester.widget<TextButton>(
-        find.widgetWithText(TextButton, 'Visszaállítás'),
-      );
+      final resetButton = tester.widget<TextButton>(find.widgetWithText(TextButton, 'Visszaállítás'));
       expect(resetButton.onPressed, isNotNull);
 
       // Reset
@@ -502,9 +471,7 @@ void main() {
       expect(find.text('00:00.000'), findsOneWidget);
 
       // Reset should be disabled again
-      final resetButtonAfter = tester.widget<TextButton>(
-        find.widgetWithText(TextButton, 'Visszaállítás'),
-      );
+      final resetButtonAfter = tester.widget<TextButton>(find.widgetWithText(TextButton, 'Visszaállítás'));
       expect(resetButtonAfter.onPressed, isNull);
     });
 
@@ -517,9 +484,7 @@ void main() {
           child: ScreenUtilInit(
             designSize: const Size(360, 690),
             builder: (context, child) {
-              return const MaterialApp(
-                home: HomePage(),
-              );
+              return const MaterialApp(home: HomePage());
             },
           ),
         ),
