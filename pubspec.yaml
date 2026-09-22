@@ -1,31 +1,34 @@
 name: stopwatch
 description: "A new Flutter project."
-version: 1.0.0+1
+publish_to: "none"
+version: 1.1.0+1
+
+#dart run build_runner build --delete-conflicting-outputs
 
 environment:
-  sdk: ^3.10.4
+  sdk: ^3.13.4
 
 dependencies:
   flutter:
     sdk: flutter
-  auto_route: ^11.0.0
+  auto_route: ^11.2.0
   collection: ^1.19.1
   freezed_annotation: ^3.1.0
-  json_annotation: ^4.9.0
-  intl: ^0.20.2
-  flutter_riverpod: ^3.0.3
-  logger: ^2.6.2
+  json_annotation: ^4.12.0
+  intl: ^0.20.3
+  flutter_riverpod: ^3.4.3
+  logger: ^2.8.0
   flutter_screenutil: ^5.9.3
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^1.0.9
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  auto_route_generator: ^10.4.0
-  freezed: ^3.2.3
-  build_runner: ^2.10.4
-  json_serializable: ^6.11.2
-  flutter_lints: ^5.0.0
+  auto_route_generator: ^10.6.0
+  freezed: ^4.0.1
+  build_runner: ^2.16.1
+  json_serializable: ^6.14.1
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true

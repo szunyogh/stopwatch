@@ -44,7 +44,7 @@ class HomeLogic extends BaseLogic<HomeState> {
 
       _stopwatch ??= Stopwatch();
 
-      _stopwatch!.start();
+      _stopwatch?.start();
 
       _ticker ??= Ticker((_) {
         final elapsed = _stopwatch!.elapsed;

@@ -9,6 +9,7 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+
 import 'package:auto_route/auto_route.dart' as _i2;
 import 'package:stopwatch/ui/page/home.dart' as _i1;
 
@@ -16,7 +17,7 @@ import 'package:stopwatch/ui/page/home.dart' as _i1;
 /// [_i1.HomePage]
 class HomeRoute extends _i2.PageRouteInfo<void> {
   const HomeRoute({List<_i2.PageRouteInfo>? children})
-      : super(HomeRoute.name, initialChildren: children);
+    : super(HomeRoute.name, initialChildren: children);
 
   static const String name = 'HomeRoute';
 
