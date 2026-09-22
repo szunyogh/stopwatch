@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stopwatch/core/router.gr.dart';
 import 'package:stopwatch/logic/base.dart';
 import 'package:stopwatch/logic/home/home_state.dart';
 import 'package:stopwatch/model/lap.dart';
@@ -36,6 +38,21 @@ class HomeLogic extends BaseLogic<HomeState> {
     _lapStartElapsed = null;
   }
 
+  void onTap(LapModel lap, BuildContext context) {
+    try {
+      logger.i('[HomeLogic] onTap');
+
+      final navigator = Navigator.of(context);
+
+      final itemBox = context.findRenderObject()! as RenderBox;
+      final itemRect = itemBox.localToGlobal(Offset.zero, ancestor: navigator.context.findRenderObject()) & itemBox.size;
+
+      appRouter.push(LapDetailsRoute(lap: lap, itemRect: itemRect));
+    } catch (error, stack) {
+      logger.e('[HomeLogic] onTap error', error: error, stackTrace: stack);
+    }
+  }
+
   void start() {
     try {
       logger.i('[HomeLogic] start');
@@ -58,8 +75,8 @@ class HomeLogic extends BaseLogic<HomeState> {
       _ticker?.start();
 
       state = state.copyWith(isRunning: true);
-    } catch (e, stack) {
-      logger.e('[HomeLogic] start', error: e, stackTrace: stack);
+    } catch (error, stack) {
+      logger.e('[HomeLogic] start', error: error, stackTrace: stack);
     }
   }
 
@@ -71,8 +88,8 @@ class HomeLogic extends BaseLogic<HomeState> {
       _ticker?.stop();
 
       state = state.copyWith(isRunning: false);
-    } catch (e, stack) {
-      logger.e('[HomeLogic] stop', error: e, stackTrace: stack);
+    } catch (error, stack) {
+      logger.e('[HomeLogic] stop', error: error, stackTrace: stack);
     }
   }
 
@@ -83,8 +100,8 @@ class HomeLogic extends BaseLogic<HomeState> {
       clear();
 
       state = state.copyWith(time: Duration.zero, currentTime: null, laps: const [], isRunning: false);
-    } catch (e, stack) {
-      logger.e('[HomeLogic] reset', error: e, stackTrace: stack);
+    } catch (error, stack) {
+      logger.e('[HomeLogic] reset', error: error, stackTrace: stack);
     }
   }
 
@@ -106,8 +123,8 @@ class HomeLogic extends BaseLogic<HomeState> {
       _lapStartElapsed = elapsed;
 
       state = state.copyWith(laps: [...state.laps, item], currentTime: Duration.zero);
-    } catch (e, stack) {
-      logger.e('[HomeLogic] addLap', error: e, stackTrace: stack);
+    } catch (error, stack) {
+      logger.e('[HomeLogic] addLap', error: error, stackTrace: stack);
     }
   }
 

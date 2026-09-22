@@ -29,6 +29,8 @@ class _Body extends ConsumerWidget {
   const _Body();
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final logic = ref.read(homeLogic.notifier);
+
     final time = ref.watch(homeLogic.select((value) => value.time));
     final currentTime = ref.watch(homeLogic.select((value) => value.currentTime));
     final laps = ref.watch(homeLogic.select((value) => value.laps));
@@ -52,7 +54,7 @@ class _Body extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(10).r,
                 child: ListView.separated(
                   padding: EdgeInsets.symmetric(vertical: 10.h),
-                  itemBuilder: (context, index) => _LapItem(laps[index]),
+                  itemBuilder: (context, index) => _LapItem(laps[index], onTap: (ctx) => logic.onTap(laps[index], ctx)),
                   separatorBuilder: (context, index) => SizedBox(height: 10.h),
                   itemCount: laps.length,
                 ),
@@ -94,32 +96,37 @@ class _BottomButtons extends ConsumerWidget {
 
 class _LapItem extends StatelessWidget {
   final LapModel lap;
-  const _LapItem(this.lap);
+  final Function(BuildContext) onTap;
+  const _LapItem(this.lap, {required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(15, 10, 15, 10).r,
-      decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(10).r),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text('${lap.order}', style: Theme.of(context).textTheme.bodyMedium),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Kör idő', style: Theme.of(context).textTheme.bodySmall),
-              Text(DurationElapsedFormatter.toElapsedTime(lap.time), style: Theme.of(context).textTheme.bodyMedium),
-            ],
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Teljes idő', style: Theme.of(context).textTheme.bodySmall),
-              Text(DurationElapsedFormatter.toElapsedTime(lap.totalTime), style: Theme.of(context).textTheme.bodyMedium),
-            ],
-          ),
-        ],
+    return InkWell(
+      borderRadius: BorderRadius.circular(10).r,
+      onTap: () => onTap(context),
+      child: Container(
+        padding: EdgeInsets.fromLTRB(15, 10, 15, 10).r,
+        decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(10).r),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('${lap.order}', style: Theme.of(context).textTheme.bodyMedium),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Kör idő', style: Theme.of(context).textTheme.bodySmall),
+                Text(DurationElapsedFormatter.toElapsedTime(lap.time), style: Theme.of(context).textTheme.bodyMedium),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Teljes idő', style: Theme.of(context).textTheme.bodySmall),
+                Text(DurationElapsedFormatter.toElapsedTime(lap.totalTime), style: Theme.of(context).textTheme.bodyMedium),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
