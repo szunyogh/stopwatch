@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LapDetailsState {
 
- LapModel? get lap; bool get isInitialized;
+ LapModel? get lap;
 /// Create a copy of LapDetailsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $LapDetailsStateCopyWith<LapDetailsState> get copyWith => _$LapDetailsStateCopyW
 @override
 bool operator ==(Object other) {
   final _this = this as LapDetailsState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LapDetailsState&&(identical(other.lap, _this.lap) || other.lap == _this.lap)&&(identical(other.isInitialized, _this.isInitialized) || other.isInitialized == _this.isInitialized));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LapDetailsState&&(identical(other.lap, _this.lap) || other.lap == _this.lap));
 }
 
 
 @override
 int get hashCode {
   final _this = this as LapDetailsState;
-  return Object.hash(runtimeType,_this.lap,_this.isInitialized);
+  return Object.hash(runtimeType,_this.lap);
 }
 
 @override
 String toString() {
   final _this = this as LapDetailsState;
-  return 'LapDetailsState(lap: ${_this.lap}, isInitialized: ${_this.isInitialized})';
+  return 'LapDetailsState(lap: ${_this.lap})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $LapDetailsStateCopyWith<$Res>  {
   factory $LapDetailsStateCopyWith(LapDetailsState value, $Res Function(LapDetailsState) _then) = _$LapDetailsStateCopyWithImpl;
 @useResult
 $Res call({
- LapModel? lap, bool isInitialized
+ LapModel? lap
 });
 
 
@@ -68,11 +68,10 @@ class _$LapDetailsStateCopyWithImpl<$Res>
 
 /// Create a copy of LapDetailsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? lap = freezed,Object? isInitialized = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? lap = freezed,}) {
   return _then(LapDetailsState(
 lap: freezed == lap ? _self.lap : lap // ignore: cast_nullable_to_non_nullable
-as LapModel?,isInitialized: null == isInitialized ? _self.isInitialized : isInitialized // ignore: cast_nullable_to_non_nullable
-as bool,
+as LapModel?,
   ));
 }
 /// Create a copy of LapDetailsState
@@ -169,10 +168,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LapModel? lap,  bool isInitialized)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LapModel? lap)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LapDetailsState() when $default != null:
-return $default(_that.lap,_that.isInitialized);case _:
+return $default(_that.lap);case _:
   return orElse();
 
 }
@@ -190,10 +189,10 @@ return $default(_that.lap,_that.isInitialized);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LapModel? lap,  bool isInitialized)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LapModel? lap)  $default,) {final _that = this;
 switch (_that) {
 case _LapDetailsState():
-return $default(_that.lap,_that.isInitialized);case _:
+return $default(_that.lap);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -210,10 +209,10 @@ return $default(_that.lap,_that.isInitialized);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LapModel? lap,  bool isInitialized)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LapModel? lap)?  $default,) {final _that = this;
 switch (_that) {
 case _LapDetailsState() when $default != null:
-return $default(_that.lap,_that.isInitialized);case _:
+return $default(_that.lap);case _:
   return null;
 
 }
@@ -225,11 +224,10 @@ return $default(_that.lap,_that.isInitialized);case _:
 
 
 class _LapDetailsState extends LapDetailsState {
-  const _LapDetailsState({this.lap = null, this.isInitialized = false}): super._();
+  const _LapDetailsState({this.lap = null}): super._();
   
 
 @override@JsonKey() final  LapModel? lap;
-@override@JsonKey() final  bool isInitialized;
 
 /// Create a copy of LapDetailsState
 /// with the given fields replaced by the non-null parameter values.
@@ -241,18 +239,18 @@ _$LapDetailsStateCopyWith<_LapDetailsState> get copyWith => __$LapDetailsStateCo
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LapDetailsState&&(identical(other.lap, lap) || other.lap == lap)&&(identical(other.isInitialized, isInitialized) || other.isInitialized == isInitialized));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LapDetailsState&&(identical(other.lap, lap) || other.lap == lap));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,lap,isInitialized);
+    return Object.hash(runtimeType,lap);
 }
 
 @override
 String toString() {
-    return 'LapDetailsState(lap: $lap, isInitialized: $isInitialized)';
+    return 'LapDetailsState(lap: $lap)';
 }
 
 
@@ -263,7 +261,7 @@ abstract mixin class _$LapDetailsStateCopyWith<$Res> implements $LapDetailsState
   factory _$LapDetailsStateCopyWith(_LapDetailsState value, $Res Function(_LapDetailsState) _then) = __$LapDetailsStateCopyWithImpl;
 @override @useResult
 $Res call({
- LapModel? lap, bool isInitialized
+ LapModel? lap
 });
 
 
@@ -280,11 +278,10 @@ class __$LapDetailsStateCopyWithImpl<$Res>
 
 /// Create a copy of LapDetailsState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? lap = freezed,Object? isInitialized = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? lap = freezed,}) {
   return _then(_LapDetailsState(
 lap: freezed == lap ? _self.lap : lap // ignore: cast_nullable_to_non_nullable
-as LapModel?,isInitialized: null == isInitialized ? _self.isInitialized : isInitialized // ignore: cast_nullable_to_non_nullable
-as bool,
+as LapModel?,
   ));
 }
 

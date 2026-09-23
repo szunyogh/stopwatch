@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stopwatch/core/router.gr.dart';
@@ -38,16 +37,11 @@ class HomeLogic extends BaseLogic<HomeState> {
     _lapStartElapsed = null;
   }
 
-  void onTap(LapModel lap, BuildContext context) {
+  void onTap(LapModel lap, Object tag) {
     try {
       logger.i('[HomeLogic] onTap');
 
-      final navigator = Navigator.of(context);
-
-      final itemBox = context.findRenderObject()! as RenderBox;
-      final itemRect = itemBox.localToGlobal(Offset.zero, ancestor: navigator.context.findRenderObject()) & itemBox.size;
-
-      appRouter.push(LapDetailsRoute(lap: lap, itemRect: itemRect));
+      appRouter.push(LapDetailsRoute(lap: lap, tag: tag));
     } catch (error, stack) {
       logger.e('[HomeLogic] onTap error', error: error, stackTrace: stack);
     }

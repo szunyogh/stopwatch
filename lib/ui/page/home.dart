@@ -54,7 +54,7 @@ class _Body extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(10).r,
                 child: ListView.separated(
                   padding: EdgeInsets.symmetric(vertical: 10.h),
-                  itemBuilder: (context, index) => _LapItem(laps[index], onTap: (ctx) => logic.onTap(laps[index], ctx)),
+                  itemBuilder: (context, index) => _LapItem(laps[index], laps[index].order, onTap: (ctx) => logic.onTap(laps[index], laps[index].order)),
                   separatorBuilder: (context, index) => SizedBox(height: 10.h),
                   itemCount: laps.length,
                 ),
@@ -97,11 +97,13 @@ class _BottomButtons extends ConsumerWidget {
 class _LapItem extends StatelessWidget {
   final LapModel lap;
   final Function(BuildContext) onTap;
-  const _LapItem(this.lap, {required this.onTap});
+  final Object tag;
+  const _LapItem(this.lap, this.tag, {required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
+      key: GlobalObjectKey(tag),
       borderRadius: BorderRadius.circular(10).r,
       onTap: () => onTap(context),
       child: Container(
