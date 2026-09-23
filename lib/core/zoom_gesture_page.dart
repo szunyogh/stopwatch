@@ -1,12 +1,27 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart' show PredictiveBackEvent;
 
 class ZoomGesturePageRoute<T> extends PageRoute<T> {
   final WidgetBuilder builder;
   final Object? tag;
 
   ZoomGesturePageRoute({required this.builder, this.tag, super.settings});
+
+  late final _predictiveBackForwarder = _PredictiveBackForwarder(this);
+
+  @override
+  void install() {
+    super.install();
+    WidgetsBinding.instance.addObserver(_predictiveBackForwarder);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(_predictiveBackForwarder);
+    super.dispose();
+  }
 
   late final Rect sourceRect = _getRectFromTag(tag);
   late final BorderRadius sourceBorderRadius = _getBorderRadiusFromTag(tag);
@@ -21,17 +36,21 @@ class ZoomGesturePageRoute<T> extends PageRoute<T> {
 
   static Rect _getRectFromTag(Object? tag) {
     final context = _findContextByTag(tag);
+
     if (context == null) return Rect.zero;
 
     final renderBox = context.findRenderObject() as RenderBox?;
+
     if (renderBox != null && renderBox.hasSize) {
       return renderBox.localToGlobal(Offset.zero) & renderBox.size;
     }
+
     return Rect.zero;
   }
 
   static BorderRadius _getBorderRadiusFromTag(Object? tag) {
     final context = _findContextByTag(tag);
+
     if (context == null) return BorderRadius.zero;
 
     BorderRadius? foundRadius;
@@ -41,11 +60,13 @@ class ZoomGesturePageRoute<T> extends PageRoute<T> {
         foundRadius = widget.borderRadius as BorderRadius;
       } else if (widget is Container && widget.decoration is BoxDecoration) {
         final dec = widget.decoration as BoxDecoration;
+
         if (dec.borderRadius is BorderRadius) {
           foundRadius = dec.borderRadius as BorderRadius;
         }
       } else if (widget is Card && widget.shape is RoundedRectangleBorder) {
         final shape = widget.shape as RoundedRectangleBorder;
+
         if (shape.borderRadius is BorderRadius) {
           foundRadius = shape.borderRadius as BorderRadius;
         }
@@ -56,6 +77,7 @@ class ZoomGesturePageRoute<T> extends PageRoute<T> {
 
     void visitChildren(Element element) {
       if (foundRadius != null) return;
+
       checkWidget(element.widget);
       element.visitChildren(visitChildren);
     }
@@ -67,6 +89,7 @@ class ZoomGesturePageRoute<T> extends PageRoute<T> {
 
     if (context is Element) {
       visitChildren(context);
+
       if (foundRadius == null) {
         context.visitAncestorElements(visitAncestor);
       }
@@ -77,15 +100,18 @@ class ZoomGesturePageRoute<T> extends PageRoute<T> {
 
   static Widget? _getWidgetFromTag(Object? tag) {
     final context = _findContextByTag(tag);
+
     if (context == null) return null;
 
     Widget widget = context.widget;
 
     if (widget.key is GlobalKey) {
       Element? childElement;
+
       (context as Element).visitChildren((element) {
         childElement = element;
       });
+
       if (childElement != null) {
         widget = childElement!.widget;
       }
@@ -110,8 +136,47 @@ class ZoomGesturePageRoute<T> extends PageRoute<T> {
   bool get maintainState => true;
 
   @override
+  bool get popGestureEnabled => true;
+
+  @override
   Widget buildPage(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
     return builder(context);
+  }
+
+  double _remapProgress(double raw) => (raw / 4).clamp(0.0, 1.0);
+
+  @override
+  void handleStartBackGesture({double progress = 0.0}) {
+    assert(isCurrent);
+
+    controller?.stop();
+
+    controller?.value = (1.0 - _remapProgress(progress)).clamp(0.0, 1.0);
+
+    navigator?.didStartUserGesture();
+  }
+
+  @override
+  void handleUpdateBackGestureProgress({required double progress}) {
+    if (!isCurrent) return;
+
+    controller?.value = (1.0 - _remapProgress(progress)).clamp(0.0, 1.0);
+  }
+
+  @override
+  void handleCancelBackGesture() {
+    if (isCurrent) {
+      controller?.animateTo(1.0, duration: transitionDuration, curve: Curves.easeOutCubic);
+    }
+
+    navigator?.didStopUserGesture();
+  }
+
+  @override
+  void handleCommitBackGesture() {
+    navigator?.didStopUserGesture();
+
+    navigator?.pop();
   }
 
   @override
@@ -124,21 +189,32 @@ class ZoomGesturePageRoute<T> extends PageRoute<T> {
       sourceBorderRadius: sourceBorderRadius,
       sourceWidget: sourceWidget,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
       canStartDismiss: () => controller?.status == AnimationStatus.completed,
+
       onDismissStart: () {
         navigator?.didStartUserGesture();
+
         controller?.stop();
+
         startAnimationValue = controller?.value ?? 1.0;
       },
+
       onDismissUpdate: (deltaY) {
         final maxHeight = MediaQuery.sizeOf(context).height;
+
         final progress = (startAnimationValue - (deltaY / maxHeight)).clamp(0.0, 1.0);
+
         controller?.value = progress;
       },
+
       onDismissEnd: (velocity) {
         navigator?.didStopUserGesture();
+
         final currentVal = controller?.value ?? 0.0;
+
         final isQuickFlick = velocity.pixelsPerSecond.dy > 500;
+
         final isDraggedFarEnough = currentVal < (startAnimationValue * 0.7);
 
         if (isQuickFlick || isDraggedFarEnough || currentVal < 0.5) {
@@ -147,9 +223,31 @@ class ZoomGesturePageRoute<T> extends PageRoute<T> {
           controller?.animateTo(1.0, curve: Curves.easeOutCubic);
         }
       },
+
       child: child,
     );
   }
+}
+
+class _PredictiveBackForwarder with WidgetsBindingObserver {
+  final ZoomGesturePageRoute route;
+  _PredictiveBackForwarder(this.route);
+
+  @override
+  bool handleStartBackGesture(PredictiveBackEvent backEvent) {
+    if (!route.isCurrent || !route.popGestureEnabled) return false;
+    route.handleStartBackGesture(progress: backEvent.progress);
+    return true;
+  }
+
+  @override
+  void handleUpdateBackGestureProgress(PredictiveBackEvent backEvent) => route.handleUpdateBackGestureProgress(progress: backEvent.progress);
+
+  @override
+  void handleCommitBackGesture() => route.handleCommitBackGesture();
+
+  @override
+  void handleCancelBackGesture() => route.handleCancelBackGesture();
 }
 
 class ZoomPageTransition extends AnimatedWidget {
@@ -183,6 +281,7 @@ class ZoomPageTransition extends AnimatedWidget {
   @override
   Widget build(BuildContext context) {
     final progress = animation.value.clamp(0.0, 1.0);
+
     if (progress <= 0.0) return const SizedBox.shrink();
 
     return RawGestureDetector(
@@ -238,6 +337,7 @@ class ZoomPageTransitionLayout extends SlottedMultiChildRenderObjectWidget<ZoomS
     switch (slot) {
       case ZoomSlot.target:
         return child;
+
       case ZoomSlot.source:
         return sourceWidget;
     }
@@ -268,29 +368,34 @@ class RenderZoomTransitionLayout extends RenderBox with SlottedContainerRenderOb
 
   set progress(double value) {
     if (_progress == value) return;
+
     _progress = value;
     markNeedsPaint();
   }
 
   set sourceRect(Rect value) {
     if (_sourceRect == value) return;
+
     _sourceRect = value;
     markNeedsLayout();
   }
 
   set sourceBorderRadius(BorderRadius value) {
     if (_sourceBorderRadius == value) return;
+
     _sourceBorderRadius = value;
     markNeedsPaint();
   }
 
   set backgroundColor(Color value) {
     if (_backgroundColor == value) return;
+
     _backgroundColor = value;
     markNeedsPaint();
   }
 
   RenderBox? get targetChild => childForSlot(ZoomSlot.target);
+
   RenderBox? get sourceChild => childForSlot(ZoomSlot.source);
 
   @override
@@ -301,6 +406,7 @@ class RenderZoomTransitionLayout extends RenderBox with SlottedContainerRenderOb
     if (targetChild != null) {
       return targetChild!.hitTest(result, position: position);
     }
+
     return false;
   }
 
@@ -320,17 +426,23 @@ class RenderZoomTransitionLayout extends RenderBox with SlottedContainerRenderOb
   @override
   void paint(PaintingContext context, Offset offset) {
     final progress = _progress.clamp(0.0, 1.0);
+
     if (progress <= 0.0) return;
 
     final fullRect = offset & size;
+
     final currentRect = Rect.lerp(_sourceRect, fullRect, progress)!;
+
     final currentRadius = BorderRadius.lerp(_sourceBorderRadius, BorderRadius.zero, progress)!;
+
     final clipRRect = currentRadius.toRRect(currentRect);
 
     final sourceOpacity = (1.0 - (progress / 0.35)).clamp(0.0, 1.0);
+
     final targetOpacity = (progress / 0.35).clamp(0.0, 1.0);
 
     final bgPaint = Paint()..color = _backgroundColor;
+
     context.canvas.drawRRect(clipRRect, bgPaint);
 
     context.pushClipRRect(needsCompositing, offset, currentRect, clipRRect, (PaintingContext context, Offset offset) {
@@ -339,9 +451,13 @@ class RenderZoomTransitionLayout extends RenderBox with SlottedContainerRenderOb
 
         context.pushOpacity(offset, (targetOpacity * 255).round().clamp(0, 255), (PaintingContext context, Offset offset) {
           context.canvas.save();
+
           context.canvas.translate(currentRect.left, currentRect.top);
+
           context.canvas.scale(scale, scale);
+
           context.paintChild(targetChild!, Offset.zero);
+
           context.canvas.restore();
         });
       }
@@ -351,9 +467,13 @@ class RenderZoomTransitionLayout extends RenderBox with SlottedContainerRenderOb
 
         context.pushOpacity(offset, (sourceOpacity * 255).round().clamp(0, 255), (PaintingContext context, Offset offset) {
           context.canvas.save();
+
           context.canvas.translate(currentRect.left, currentRect.top);
+
           context.canvas.scale(scale, scale);
+
           context.paintChild(sourceChild!, Offset.zero);
+
           context.canvas.restore();
         });
       }
@@ -368,8 +488,11 @@ class VerticalDismissGestureRecognizer extends OneSequenceGestureRecognizer {
   final bool Function() canStart;
 
   int? _primaryPointer;
+
   double _initialY = 0.0;
+
   bool _isAccepted = false;
+
   VelocityTracker? _velocityTracker;
 
   VerticalDismissGestureRecognizer({required this.onDismissStart, required this.onDismissUpdate, required this.onDismissEnd, required this.canStart});
@@ -379,10 +502,14 @@ class VerticalDismissGestureRecognizer extends OneSequenceGestureRecognizer {
     if (!canStart()) return;
 
     startTrackingPointer(event.pointer, event.transform);
+
     if (_primaryPointer == null) {
       _primaryPointer = event.pointer;
+
       _initialY = event.position.dy;
+
       _isAccepted = false;
+
       _velocityTracker = VelocityTracker.withKind(event.kind);
     }
   }
@@ -398,7 +525,9 @@ class VerticalDismissGestureRecognizer extends OneSequenceGestureRecognizer {
 
       if (!_isAccepted && deltaY > 15) {
         _isAccepted = true;
+
         resolve(GestureDisposition.accepted);
+
         onDismissStart();
       }
 
@@ -408,8 +537,10 @@ class VerticalDismissGestureRecognizer extends OneSequenceGestureRecognizer {
     } else if (event is PointerUpEvent || event is PointerCancelEvent) {
       if (_isAccepted) {
         final velocity = _velocityTracker?.getVelocity() ?? Velocity.zero;
+
         onDismissEnd(velocity);
       }
+
       stopTrackingPointer(event.pointer);
     }
   }

@@ -13,7 +13,7 @@ class AppRouter extends RootStackRouter {
   AppRouter(this.ref);
 
   @override
-  RouteType get defaultRouteType => const RouteType.cupertino();
+  RouteType get defaultRouteType => const RouteType.adaptive(enablePredictiveBackGesture: true);
 
   @override
   List<AutoRoute> get routes => [
