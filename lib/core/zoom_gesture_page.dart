@@ -104,7 +104,7 @@ class ZoomGesturePageRoute<T> extends PageRoute<T> {
   String? get barrierLabel => 'zoom_page_route';
 
   @override
-  Duration get transitionDuration => const Duration(milliseconds: 5000);
+  Duration get transitionDuration => const Duration(milliseconds: 300);
 
   @override
   bool get maintainState => true;
@@ -174,7 +174,7 @@ class ZoomPageTransition extends AnimatedWidget {
     required this.onDismissStart,
     required this.onDismissUpdate,
     required this.onDismissEnd,
-    required this.canStartDismiss, // FIX
+    required this.canStartDismiss,
     required this.child,
   }) : super(listenable: animation);
 
