@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stopwatch/core/router.gr.dart';
-import 'package:stopwatch/core/zoom_gesture_page.dart';
+import 'package:zoom_page/zoom_page.dart';
 
 final appRouterProvider = Provider((ref) => AppRouter(ref));
 

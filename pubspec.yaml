@@ -21,6 +21,9 @@ dependencies:
   flutter_screenutil: ^5.9.3
   cupertino_icons: ^1.0.9
 
+  zoom_page:
+    path: zoom_page
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

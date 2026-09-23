@@ -693,6 +693,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.4"
+  zoom_page:
+    dependency: "direct main"
+    description:
+      path: zoom_page
+      relative: true
+    source: path
+    version: "0.0.1"
 sdks:
   dart: ">=3.13.4 <4.0.0"
   flutter: ">=3.47.0"
