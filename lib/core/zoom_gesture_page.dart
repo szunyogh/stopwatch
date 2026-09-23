@@ -124,6 +124,7 @@ class ZoomGesturePageRoute<T> extends PageRoute<T> {
       sourceBorderRadius: sourceBorderRadius,
       sourceWidget: sourceWidget,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      canStartDismiss: () => controller?.status == AnimationStatus.completed,
       onDismissStart: () {
         navigator?.didStartUserGesture();
         controller?.stop();
@@ -161,6 +162,7 @@ class ZoomPageTransition extends AnimatedWidget {
   final VoidCallback onDismissStart;
   final ValueChanged<double> onDismissUpdate;
   final ValueChanged<Velocity> onDismissEnd;
+  final bool Function() canStartDismiss;
 
   const ZoomPageTransition({
     super.key,
@@ -172,6 +174,7 @@ class ZoomPageTransition extends AnimatedWidget {
     required this.onDismissStart,
     required this.onDismissUpdate,
     required this.onDismissEnd,
+    required this.canStartDismiss, // FIX
     required this.child,
   }) : super(listenable: animation);
 
@@ -186,7 +189,7 @@ class ZoomPageTransition extends AnimatedWidget {
       behavior: HitTestBehavior.translucent,
       gestures: {
         VerticalDismissGestureRecognizer: GestureRecognizerFactoryWithHandlers<VerticalDismissGestureRecognizer>(
-          () => VerticalDismissGestureRecognizer(onDismissStart: onDismissStart, onDismissUpdate: onDismissUpdate, onDismissEnd: onDismissEnd),
+          () => VerticalDismissGestureRecognizer(onDismissStart: onDismissStart, onDismissUpdate: onDismissUpdate, onDismissEnd: onDismissEnd, canStart: canStartDismiss),
           (instance) {},
         ),
       },
@@ -362,16 +365,19 @@ class VerticalDismissGestureRecognizer extends OneSequenceGestureRecognizer {
   final VoidCallback onDismissStart;
   final ValueChanged<double> onDismissUpdate;
   final ValueChanged<Velocity> onDismissEnd;
+  final bool Function() canStart;
 
   int? _primaryPointer;
   double _initialY = 0.0;
   bool _isAccepted = false;
   VelocityTracker? _velocityTracker;
 
-  VerticalDismissGestureRecognizer({required this.onDismissStart, required this.onDismissUpdate, required this.onDismissEnd});
+  VerticalDismissGestureRecognizer({required this.onDismissStart, required this.onDismissUpdate, required this.onDismissEnd, required this.canStart});
 
   @override
   void addAllowedPointer(PointerDownEvent event) {
+    if (!canStart()) return;
+
     startTrackingPointer(event.pointer, event.transform);
     if (_primaryPointer == null) {
       _primaryPointer = event.pointer;
