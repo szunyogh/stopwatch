@@ -3,12 +3,27 @@ import 'package:flutter/services.dart' show PredictiveBackEvent;
 
 import 'zoom_page_transition.dart';
 
+/// Factor by which raw predictive-back progress is dampened before being
+/// applied to the transition controller.
+const double _kBackGestureDampening = 4.0;
+
+/// Minimum downward fling velocity (logical px/s) that counts as a "quick
+/// flick" dismiss, regardless of how far the page was dragged.
+const double _kDismissFlickVelocity = 500.0;
+
+/// Fraction of the starting animation value the user must drag past before
+/// a slower (non-flick) drag still counts as a dismiss.
+const double _kDismissDistanceFactor = 0.7;
+
 /// A [PageRoute] that transitions into the new page with a "zoom"
 /// (container-transform style) animation originating from a source widget,
 /// identified via [tag].
 ///
 /// Supports:
-/// - Predictive back gesture (Android) via [PredictiveBackEvent].
+/// - Predictive back gesture (Android) via [PredictiveBackEvent], forwarded
+///   from [WidgetsBindingObserver] by [_PredictiveBackForwarder] into this
+///   route's own handleStartBackGesture/handleUpdateBackGestureProgress/
+///   handleCommitBackGesture/handleCancelBackGesture.
 /// - Vertical swipe-to-dismiss once the page transition has completed.
 class ZoomGesturePageRoute<T> extends PageRoute<T> {
   final WidgetBuilder builder;
@@ -113,14 +128,14 @@ class ZoomGesturePageRoute<T> extends PageRoute<T> {
     Widget widget = context.widget;
 
     if (widget.key is GlobalKey) {
-      Element? childElement;
+      Element? firstChildElement;
 
       (context as Element).visitChildren((element) {
-        childElement = element;
+        firstChildElement ??= element;
       });
 
-      if (childElement != null) {
-        widget = childElement!.widget;
+      if (firstChildElement != null) {
+        widget = firstChildElement!.widget;
       }
     }
 
@@ -137,7 +152,7 @@ class ZoomGesturePageRoute<T> extends PageRoute<T> {
   String? get barrierLabel => 'zoom_page_route';
 
   @override
-  Duration get transitionDuration => const Duration(milliseconds: 300);
+  Duration get transitionDuration => const Duration(milliseconds: 240);
 
   @override
   bool get maintainState => true;
@@ -150,7 +165,7 @@ class ZoomGesturePageRoute<T> extends PageRoute<T> {
     return builder(context);
   }
 
-  double _remapProgress(double raw) => (raw / 4).clamp(0.0, 1.0);
+  double _remapProgress(double raw) => (raw / _kBackGestureDampening).clamp(0.0, 1.0);
 
   @override
   void handleStartBackGesture({double progress = 0.0}) {
@@ -220,9 +235,9 @@ class ZoomGesturePageRoute<T> extends PageRoute<T> {
 
         final currentVal = controller?.value ?? 0.0;
 
-        final isQuickFlick = velocity.pixelsPerSecond.dy > 500;
+        final isQuickFlick = velocity.pixelsPerSecond.dy > _kDismissFlickVelocity;
 
-        final isDraggedFarEnough = currentVal < (startAnimationValue * 0.7);
+        final isDraggedFarEnough = currentVal < (startAnimationValue * _kDismissDistanceFactor);
 
         if (isQuickFlick || isDraggedFarEnough || currentVal < 0.5) {
           navigator?.pop();
@@ -236,8 +251,12 @@ class ZoomGesturePageRoute<T> extends PageRoute<T> {
   }
 }
 
-/// Forwards platform predictive-back gesture callbacks to the
-/// [ZoomGesturePageRoute] that owns this observer.
+/// Forwards platform predictive-back gesture callbacks (delivered to
+/// [WidgetsBindingObserver]s) to the [ZoomGesturePageRoute] that owns this
+/// observer. The route's own handleStartBackGesture/etc. overrides only
+/// drive its animation controller — they are never invoked directly by the
+/// framework, so this forwarder is what actually wires the route into the
+/// system predictive-back gesture.
 class _PredictiveBackForwarder with WidgetsBindingObserver {
   final ZoomGesturePageRoute route;
   _PredictiveBackForwarder(this.route);

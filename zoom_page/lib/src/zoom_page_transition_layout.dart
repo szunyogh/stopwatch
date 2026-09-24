@@ -4,6 +4,10 @@ import 'package:flutter/rendering.dart';
 /// Identifies the two children laid out by [ZoomPageTransitionLayout].
 enum ZoomSlot { target, source }
 
+/// Progress fraction (of the whole transition) over which the source and
+/// target children cross-fade into/out of view.
+const double _kCrossfadeThreshold = 0.35;
+
 /// Lays out the incoming page ([ZoomSlot.target]) at full size and the
 /// (optional) source widget ([ZoomSlot.source]) at its original on-screen
 /// size, so [RenderZoomTransitionLayout] can morph between the two rects.
@@ -135,9 +139,9 @@ class RenderZoomTransitionLayout extends RenderBox with SlottedContainerRenderOb
 
     final clipRRect = currentRadius.toRRect(currentRect);
 
-    final sourceOpacity = (1.0 - (progress / 0.35)).clamp(0.0, 1.0);
+    final sourceOpacity = (1.0 - (progress / _kCrossfadeThreshold)).clamp(0.0, 1.0);
 
-    final targetOpacity = (progress / 0.35).clamp(0.0, 1.0);
+    final targetOpacity = (progress / _kCrossfadeThreshold).clamp(0.0, 1.0);
 
     final bgPaint = Paint()..color = _backgroundColor;
 
@@ -160,7 +164,7 @@ class RenderZoomTransitionLayout extends RenderBox with SlottedContainerRenderOb
         });
       }
 
-      if (sourceChild != null && sourceOpacity > 0.0 && _sourceRect.width > 0) {
+      if (sourceChild != null && sourceOpacity > 0.0 && _sourceRect.width > 0 && _sourceRect.height > 0) {
         final scale = currentRect.width / _sourceRect.width;
 
         context.pushOpacity(offset, (sourceOpacity * 255).round().clamp(0, 255), (PaintingContext context, Offset offset) {

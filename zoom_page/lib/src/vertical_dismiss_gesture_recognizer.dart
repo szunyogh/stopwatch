@@ -1,6 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 
+/// Distance (in logical pixels) the primary pointer must travel downward
+/// before the gesture is accepted as a dismiss drag.
+const double _kDismissDragThreshold = 15.0;
+
 /// Recognizes a vertical drag-to-dismiss gesture, only when [canStart]
 /// returns true (e.g. once a page transition has fully completed).
 class VerticalDismissGestureRecognizer extends OneSequenceGestureRecognizer {
@@ -38,14 +42,20 @@ class VerticalDismissGestureRecognizer extends OneSequenceGestureRecognizer {
 
   @override
   void handleEvent(PointerEvent event) {
-    if (event.pointer != _primaryPointer) return;
+    if (event.pointer != _primaryPointer) {
+      if (event is PointerUpEvent || event is PointerCancelEvent) {
+        stopTrackingPointer(event.pointer);
+      }
+
+      return;
+    }
 
     _velocityTracker?.addPosition(event.timeStamp, event.position);
 
     if (event is PointerMoveEvent) {
       final deltaY = event.position.dy - _initialY;
 
-      if (!_isAccepted && deltaY > 15) {
+      if (!_isAccepted && deltaY > _kDismissDragThreshold) {
         _isAccepted = true;
 
         resolve(GestureDisposition.accepted);
