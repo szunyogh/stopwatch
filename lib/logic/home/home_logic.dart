@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stopwatch/core/router.gr.dart';
+import 'package:stopwatch/core/stopwatch_native_state.dart';
 import 'package:stopwatch/logic/base.dart';
 import 'package:stopwatch/logic/home/home_state.dart';
 import 'package:stopwatch/model/lap.dart';
@@ -12,18 +15,71 @@ class HomeLogic extends BaseLogic<HomeState> {
   Stopwatch? _stopwatch;
 
   Duration? _lapStartElapsed;
+  StreamSubscription<StopwatchNativeState>? _nativeSub;
+
+  final _bridge = StopwatchNativeBridge.instance;
 
   @override
   HomeState build() {
     initLogger();
 
+    _syncFromNative();
+
+    _nativeSub = _bridge.onNativeStateChanged.listen(_applyNativeState);
+
     ref.onDispose(() {
       clear();
+      _nativeSub?.cancel();
       _stopwatch = null;
       logger.i('[HomeLogic] disposed');
     });
 
     return const HomeState();
+  }
+
+  Future<void> syncFromNative() => _syncFromNative();
+
+  Future<void> _syncFromNative() async {
+    try {
+      final native = await _bridge.getState();
+      _applyNativeState(native);
+    } catch (error, stack) {
+      logger.e('[HomeLogic] syncFromNative error', error: error, stackTrace: stack);
+    }
+  }
+
+  void _applyNativeState(StopwatchNativeState native) {
+    if (native.isRunning) {
+      _adoptRunningState(startedAtEpochMs: native.startedAtEpochMs!, accumulatedMs: native.accumulatedMs);
+    } else {
+      _adoptStoppedState(accumulatedMs: native.accumulatedMs);
+    }
+  }
+
+  void _adoptRunningState({required int startedAtEpochMs, required int accumulatedMs}) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final elapsedNow = Duration(milliseconds: accumulatedMs + (now - startedAtEpochMs));
+
+    clear();
+
+    _stopwatch = Stopwatch()..start();
+    final localStartOffset = elapsedNow;
+
+    _ticker = Ticker((_) {
+      final elapsed = localStartOffset + _stopwatch!.elapsed;
+      state = state.copyWith(time: elapsed, currentTime: null);
+    })..start();
+
+    state = state.copyWith(time: elapsedNow, isRunning: true);
+  }
+
+  void _adoptStoppedState({required int accumulatedMs}) {
+    _ticker?.stop();
+    _ticker?.dispose();
+    _ticker = null;
+    _stopwatch?.stop();
+
+    state = state.copyWith(time: Duration(milliseconds: accumulatedMs), isRunning: false);
   }
 
   void clear() {
@@ -53,12 +109,14 @@ class HomeLogic extends BaseLogic<HomeState> {
 
       if (state.isRunning) return;
 
-      _stopwatch ??= Stopwatch();
+      final accumulatedMs = state.time.inMilliseconds;
+      final startedAtEpochMs = DateTime.now().millisecondsSinceEpoch;
 
+      _stopwatch ??= Stopwatch();
       _stopwatch?.start();
 
       _ticker ??= Ticker((_) {
-        final elapsed = _stopwatch!.elapsed;
+        final elapsed = Duration(milliseconds: accumulatedMs) + _stopwatch!.elapsed;
 
         final lapStart = _lapStartElapsed;
         final lapElapsed = (lapStart == null) ? null : (elapsed - lapStart);
@@ -69,6 +127,8 @@ class HomeLogic extends BaseLogic<HomeState> {
       _ticker?.start();
 
       state = state.copyWith(isRunning: true);
+
+      _bridge.notifyStart(startedAtEpochMs: startedAtEpochMs, accumulatedMs: accumulatedMs);
     } catch (error, stack) {
       logger.e('[HomeLogic] start', error: error, stackTrace: stack);
     }
@@ -82,6 +142,8 @@ class HomeLogic extends BaseLogic<HomeState> {
       _ticker?.stop();
 
       state = state.copyWith(isRunning: false);
+
+      _bridge.notifyStop(accumulatedMs: state.time.inMilliseconds);
     } catch (error, stack) {
       logger.e('[HomeLogic] stop', error: error, stackTrace: stack);
     }
@@ -94,6 +156,8 @@ class HomeLogic extends BaseLogic<HomeState> {
       clear();
 
       state = state.copyWith(time: Duration.zero, currentTime: null, laps: const [], isRunning: false);
+
+      _bridge.notifyReset();
     } catch (error, stack) {
       logger.e('[HomeLogic] reset', error: error, stackTrace: stack);
     }
@@ -105,10 +169,7 @@ class HomeLogic extends BaseLogic<HomeState> {
 
       if (!state.isRunning) return;
 
-      final sw = _stopwatch;
-      if (sw == null) return;
-
-      final elapsed = sw.elapsed;
+      final elapsed = state.time;
       final lapStart = _lapStartElapsed ?? Duration.zero;
       final lapElapsed = elapsed - lapStart;
 
