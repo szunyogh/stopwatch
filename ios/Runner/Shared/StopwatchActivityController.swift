@@ -1,57 +1,80 @@
-//
-//  StopwatchActivityController.swift
-//
-
+import Foundation
 import ActivityKit
-import OSLog
 
-enum StopwatchActivityController {
-    private static let logger = Logger(subsystem: "com.szunyogh.stopwatch", category: "LiveActivity")
-
-    static func start() async {
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
-            logger.warning("Live Activities disabled by user/system.")
+public class StopwatchActivityController {
+    private static let activeActivityIdKey = "com.szunyogh.stopwatch.activeActivityId"
+    private static let appGroupSuiteName = "group.com.szunyogh.stopwatch"
+    
+    public static func start() {
+        let sharedDefaults = UserDefaults(suiteName: appGroupSuiteName)
+        
+        if let savedId = sharedDefaults?.string(forKey: activeActivityIdKey),
+            let _ = Activity<StopwatchAttributes>.activities.first(where: { $0.id == savedId }) {
+            
+            Task {
+                await update(activityId: savedId)
+                NSLog("[Widget] [ActivityController] Resumed existing activity via update(activityId:).")
+            }
             return
         }
 
-        let existing = Activity<StopwatchAttributes>.activities
-        logger.debug("start() – existing activities: \(existing.count)")
-
-        if existing.isEmpty {
-            do {
-                let activity = try Activity.request(
-                    attributes: StopwatchAttributes(),
-                    content: .init(state: StopwatchSharedState.contentState(), staleDate: nil)
-                )
-                logger.debug("Requested new activity: \(activity.id)")
-            } catch {
-                logger.error("Live Activity start failed: \(error.localizedDescription)")
-            }
+        let initialState = StopwatchSharedState.contentState()
+        let attributes = StopwatchAttributes()
+        
+        do {
+            let content = ActivityContent(state: initialState, staleDate: nil)
+            let activity = try Activity.request(
+                attributes: attributes,
+                content: content,
+                pushType: nil
+            )
+            
+            sharedDefaults?.set(activity.id, forKey: activeActivityIdKey)
+            
+            NSLog("[Widget] [ActivityController] Started and saved Activity ID: \(activity.id)")
+        } catch {
+            NSLog("[Widget] [ActivityController] Failed to start: \(error.localizedDescription)")
+        }
+    }
+    
+    public static func update(activityId: String? = nil) async {
+        let targetId: String?
+        
+        if let providedId = activityId {
+            targetId = providedId
         } else {
-            // Frissítsünk MINDEN futó activity-t (ha duplikáció van, akkor is helyes állapotba kerül mindegyik)
-            for activity in existing {
-                await activity.update(.init(state: StopwatchSharedState.contentState(), staleDate: nil))
-                logger.debug("Updated activity \(activity.id) on start()")
-            }
+            targetId = UserDefaults(suiteName: appGroupSuiteName)?.string(forKey: activeActivityIdKey)
         }
-    }
-
-    static func update() async {
-        let activities = Activity<StopwatchAttributes>.activities
-        guard !activities.isEmpty else {
-            logger.warning("update() called but Activity<StopwatchAttributes>.activities is EMPTY — nothing to update.")
+        
+        guard let savedId = targetId else {
+            NSLog("[Widget] [ActivityController] No saved activity ID found.")
             return
         }
-        for activity in activities {
-            await activity.update(.init(state: StopwatchSharedState.contentState(), staleDate: nil))
-            logger.debug("Updated activity \(activity.id) on update()")
+        
+        let targetActivity = Activity<StopwatchAttributes>.activities.first { $0.id == savedId }
+        let state = StopwatchSharedState.contentState()
+        let content = ActivityContent(state: state, staleDate: nil)
+        
+        if let activity = targetActivity {
+            NSLog("[Widget] [ActivityController] Updating exact activity ID: \(activity.id)")
+            await activity.update(content)
+        } else {
+            NSLog("[Widget] [ActivityController] Activity with ID \(savedId) not found in system.")
         }
     }
-
-    static func end() async {
-        let activities = Activity<StopwatchAttributes>.activities
-        for activity in activities {
-            await activity.end(nil, dismissalPolicy: .immediate)
+    
+    public static func end() async {
+        guard let savedId = UserDefaults(suiteName: appGroupSuiteName)?.string(forKey: activeActivityIdKey) else { return }
+            
+        let targetActivity = Activity<StopwatchAttributes>.activities.first { $0.id == savedId }
+        
+        let state = StopwatchSharedState.contentState()
+        let content = ActivityContent(state: state, staleDate: nil)
+        
+        if let activity = targetActivity {
+            await activity.end(content, dismissalPolicy: .immediate)
         }
+        
+        UserDefaults(suiteName: appGroupSuiteName)?.removeObject(forKey: activeActivityIdKey)
     }
 }

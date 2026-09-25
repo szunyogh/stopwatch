@@ -15,7 +15,6 @@ class HomeLogic extends BaseLogic<HomeState> {
   Stopwatch? _stopwatch;
 
   Duration? _lapStartElapsed;
-  StreamSubscription<StopwatchNativeState>? _nativeSub;
 
   final _bridge = StopwatchNativeBridge.instance;
 
@@ -25,11 +24,8 @@ class HomeLogic extends BaseLogic<HomeState> {
 
     _syncFromNative();
 
-    _nativeSub = _bridge.onNativeStateChanged.listen(_applyNativeState);
-
     ref.onDispose(() {
       clear();
-      _nativeSub?.cancel();
       _stopwatch = null;
       logger.i('[HomeLogic] disposed');
     });

@@ -63,6 +63,16 @@
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C1E355A13066D0930021711B /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -104,7 +114,6 @@
 		C1005AA53065865500343677 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				DarwinNotificationObserver.swift,
 				StopwatchActivityController.swift,
 				StopwatchAttributes.swift,
 				StopwatchSharedState.swift,
@@ -269,6 +278,7 @@
 				C1005A7030657CA200343677 /* Sources */,
 				C1005A7130657CA200343677 /* Frameworks */,
 				C1005A7230657CA200343677 /* Resources */,
+				C1E355A13066D0930021711B /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -516,7 +526,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = 2ML5Y2X45Z;
+				DEVELOPMENT_TEAM = 2Q84B64JX2;
 				ENABLE_APP_INTENTS_METADATA_EXTRACTION = NO;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -542,7 +552,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.stopwatch.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.szunyogh.stopwatch.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -559,7 +569,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.stopwatch.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.szunyogh.stopwatch.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -574,7 +584,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.stopwatch.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.szunyogh.stopwatch.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -702,7 +712,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = 2ML5Y2X45Z;
+				DEVELOPMENT_TEAM = 2Q84B64JX2;
 				ENABLE_APP_INTENTS_METADATA_EXTRACTION = NO;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -729,7 +739,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = 2ML5Y2X45Z;
+				DEVELOPMENT_TEAM = 2Q84B64JX2;
 				ENABLE_APP_INTENTS_METADATA_EXTRACTION = NO;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -761,7 +771,7 @@
 				CODE_SIGN_ENTITLEMENTS = StopwatchWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 2ML5Y2X45Z;
+				DEVELOPMENT_TEAM = 2Q84B64JX2;
 				ENABLE_APP_INTENTS_METADATA_EXTRACTION = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -808,7 +818,7 @@
 				CODE_SIGN_ENTITLEMENTS = StopwatchWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 2ML5Y2X45Z;
+				DEVELOPMENT_TEAM = 2Q84B64JX2;
 				ENABLE_APP_INTENTS_METADATA_EXTRACTION = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -852,7 +862,7 @@
 				CODE_SIGN_ENTITLEMENTS = StopwatchWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 2ML5Y2X45Z;
+				DEVELOPMENT_TEAM = 2Q84B64JX2;
 				ENABLE_APP_INTENTS_METADATA_EXTRACTION = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;

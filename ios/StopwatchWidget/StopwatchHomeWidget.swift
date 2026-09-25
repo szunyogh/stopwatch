@@ -1,10 +1,3 @@
-//
-//  StopwatchHomeWidget.swift
-//  Runner
-//
-//  Created by Szunyogh Tamás on 2026. 09. 24..
-//
-
 import WidgetKit
 import SwiftUI
 import AppIntents
@@ -16,15 +9,20 @@ struct StopwatchEntry: TimelineEntry {
 
 struct StopwatchTimelineProvider: TimelineProvider {
     func placeholder(in context: Context) -> StopwatchEntry {
-        StopwatchEntry(date: Date(), state: .init(startedAtEpochMs: nil, accumulatedMs: 0, isRunning: false))
+        NSLog("[Widget] [TimelineProvider] placeholder requested")
+        return StopwatchEntry(date: Date(), state: .init(startedAtEpochMs: nil, accumulatedMs: 0, isRunning: false))
     }
 
     func getSnapshot(in context: Context, completion: @escaping (StopwatchEntry) -> Void) {
-        completion(StopwatchEntry(date: Date(), state: StopwatchSharedState.contentState()))
+        let state = StopwatchSharedState.contentState()
+        NSLog("[Widget] [TimelineProvider] getSnapshot requested. State: \(state)")
+        completion(StopwatchEntry(date: Date(), state: state))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<StopwatchEntry>) -> Void) {
-        let entry = StopwatchEntry(date: Date(), state: StopwatchSharedState.contentState())
+        let state = StopwatchSharedState.contentState()
+        NSLog("[Widget] [TimelineProvider] getTimeline requested. Rendering UI with State: \(state)")
+        let entry = StopwatchEntry(date: Date(), state: state)
         completion(Timeline(entries: [entry], policy: .never))
     }
 }
@@ -39,20 +37,6 @@ struct StopwatchWidgetView: View {
                 .minimumScaleFactor(0.5)
 
             Spacer()
-
-            if entry.state.isRunning {
-                Button(intent: StopStopwatchIntent()) {
-                    Image(systemName: "stop.fill")
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
-            } else {
-                Button(intent: StartStopwatchIntent()) {
-                    Image(systemName: "play.fill")
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.green)
-            }
         }
         .padding()
     }
@@ -65,16 +49,19 @@ private struct StopwatchTimeText: View {
         if state.isRunning, let startedAtEpochMs = state.startedAtEpochMs {
             let virtualStart = Date(timeIntervalSince1970: Double(startedAtEpochMs) / 1000)
                 .addingTimeInterval(-Double(state.accumulatedMs) / 1000)
+            
             Text(virtualStart, style: .timer)
                 .monospacedDigit()
+                .id("widget-timer-\(startedAtEpochMs)")
         } else {
             Text(formatted(ms: state.accumulatedMs))
                 .monospacedDigit()
+                .id("widget-stopped-\(state.accumulatedMs)")
         }
     }
 
     private func formatted(ms: Int) -> String {
-        let s = ms / 1000
+        let s = Int(round(Double(ms) / 1000.0))
         return String(format: "%02d:%02d", s / 60, s % 60)
     }
 }

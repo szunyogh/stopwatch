@@ -1,10 +1,3 @@
-//
-//  StopwatchLiveActivity.swift
-//  Runner
-//
-//  Created by Szunyogh Tamás on 2026. 09. 24..
-//
-
 import ActivityKit
 import WidgetKit
 import SwiftUI
@@ -18,22 +11,6 @@ struct StopwatchLiveActivity: Widget {
                     .font(.system(size: 34, weight: .semibold, design: .monospaced))
 
                 Spacer()
-
-                if context.state.isRunning {
-                    Button(intent: StopStopwatchIntent()) {
-                        Image(systemName: "stop.fill")
-                            .font(.title2)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.red)
-                } else {
-                    Button(intent: StartStopwatchIntent()) {
-                        Image(systemName: "play.fill")
-                            .font(.title2)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.green)
-                }
             }
             .padding()
 
@@ -42,17 +19,6 @@ struct StopwatchLiveActivity: Widget {
                 DynamicIslandExpandedRegion(.center) {
                     LiveActivityTimeText(state: context.state)
                         .font(.system(size: 28, weight: .semibold, design: .monospaced))
-                }
-                DynamicIslandExpandedRegion(.trailing) {
-                    if context.state.isRunning {
-                        Button(intent: StopStopwatchIntent()) {
-                            Image(systemName: "stop.fill")
-                        }
-                    } else {
-                        Button(intent: StartStopwatchIntent()) {
-                            Image(systemName: "play.fill")
-                        }
-                    }
                 }
             } compactLeading: {
                 Image(systemName: "stopwatch")
@@ -74,16 +40,20 @@ private struct LiveActivityTimeText: View {
         if state.isRunning, let startedAtEpochMs = state.startedAtEpochMs {
             let virtualStart = Date(timeIntervalSince1970: Double(startedAtEpochMs) / 1000)
                 .addingTimeInterval(-Double(state.accumulatedMs) / 1000)
+            
             Text(virtualStart, style: .timer)
                 .monospacedDigit()
+                .id("timer-\(startedAtEpochMs)")
         } else {
             Text(formatted(ms: state.accumulatedMs))
                 .monospacedDigit()
+                .id("stopped-\(state.accumulatedMs)")
         }
     }
 
     private func formatted(ms: Int) -> String {
-        let s = ms / 1000
+        let s = Int(round(Double(ms) / 1000.0))
         return String(format: "%02d:%02d", s / 60, s % 60)
     }
 }
+

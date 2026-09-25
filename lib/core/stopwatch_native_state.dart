@@ -29,14 +29,6 @@ class StopwatchNativeBridge {
   static final StopwatchNativeBridge instance = StopwatchNativeBridge._();
 
   static const _methodChannel = MethodChannel('stopwatch/native');
-  static const _eventChannel = EventChannel('stopwatch/native_events');
-
-  Stream<StopwatchNativeState>? _events;
-
-  Stream<StopwatchNativeState> get onNativeStateChanged {
-    _events ??= _eventChannel.receiveBroadcastStream().map((event) => StopwatchNativeState.fromMap(Map<dynamic, dynamic>.from(event as Map)));
-    return _events!;
-  }
 
   Future<StopwatchNativeState> getState() async {
     final result = await _methodChannel.invokeMethod<Map<dynamic, dynamic>>('getState');
