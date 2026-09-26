@@ -5,7 +5,7 @@ import os
 private let sharedStateLogger = Logger(subsystem: "com.szunyoghtamas.stopwatch", category: "SharedState")
 
 enum StopwatchSharedState {
-    private static let appGroupId = "group.com.szunyogh.stopwatch"
+    private static let appGroupId = "group.com.szunyoghtamas.stopwatch"
 
     private static let keyIsRunning = "isRunning"
     private static let keyStartedAt = "startedAtEpochMs"
