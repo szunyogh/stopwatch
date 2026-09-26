@@ -1,4 +1,4 @@
-package com.szunyogh.stopwatch
+package com.szunyoghtamas.stopwatch
 
 import io.flutter.embedding.android.FlutterActivity
 
