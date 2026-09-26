@@ -33,49 +33,35 @@ class HomeLogic extends BaseLogic<HomeState> {
     return const HomeState();
   }
 
-  Future<void> syncFromNative() => _syncFromNative();
-
   Future<void> _syncFromNative() async {
     try {
       final native = await _bridge.getState();
-      _applyNativeState(native);
+
+      logger.i('[HomeLogic] _syncFromNative native: accumulatedMs: ${native.accumulatedMs}, isRunning: ${native.isRunning}, startedAtEpochMs: ${native.startedAtEpochMs}');
+
+      final elapsedNow = native.elapsed;
+
+      _stopwatch ??= Stopwatch();
+
+      _ticker ??= Ticker((_) {
+        final elapsed = elapsedNow + (_stopwatch?.elapsed ?? Duration.zero);
+
+        final lapStart = _lapStartElapsed;
+        final lapElapsed = (lapStart == null) ? null : (elapsed - lapStart);
+
+        state = state.copyWith(time: elapsed, currentTime: lapElapsed);
+      });
+
+      state = state.copyWith(time: elapsedNow, isRunning: native.isRunning);
+
+      if (!native.isRunning) return;
+
+      _stopwatch?.start();
+
+      _ticker?.start();
     } catch (error, stack) {
       logger.e('[HomeLogic] syncFromNative error', error: error, stackTrace: stack);
     }
-  }
-
-  void _applyNativeState(StopwatchNativeState native) {
-    if (native.isRunning) {
-      _adoptRunningState(startedAtEpochMs: native.startedAtEpochMs!, accumulatedMs: native.accumulatedMs);
-    } else {
-      _adoptStoppedState(accumulatedMs: native.accumulatedMs);
-    }
-  }
-
-  void _adoptRunningState({required int startedAtEpochMs, required int accumulatedMs}) {
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final elapsedNow = Duration(milliseconds: accumulatedMs + (now - startedAtEpochMs));
-
-    clear();
-
-    _stopwatch = Stopwatch()..start();
-    final localStartOffset = elapsedNow;
-
-    _ticker = Ticker((_) {
-      final elapsed = localStartOffset + _stopwatch!.elapsed;
-      state = state.copyWith(time: elapsed, currentTime: null);
-    })..start();
-
-    state = state.copyWith(time: elapsedNow, isRunning: true);
-  }
-
-  void _adoptStoppedState({required int accumulatedMs}) {
-    _ticker?.stop();
-    _ticker?.dispose();
-    _ticker = null;
-    _stopwatch?.stop();
-
-    state = state.copyWith(time: Duration(milliseconds: accumulatedMs), isRunning: false);
   }
 
   void clear() {
@@ -99,30 +85,22 @@ class HomeLogic extends BaseLogic<HomeState> {
     }
   }
 
-  void start() {
+  void start() async {
     try {
       logger.i('[HomeLogic] start');
 
       if (state.isRunning) return;
 
-      final accumulatedMs = state.time.inMilliseconds;
-      final startedAtEpochMs = DateTime.now().millisecondsSinceEpoch;
+      if (_ticker == null) await _syncFromNative();
 
-      _stopwatch ??= Stopwatch();
       _stopwatch?.start();
-
-      _ticker ??= Ticker((_) {
-        final elapsed = Duration(milliseconds: accumulatedMs) + _stopwatch!.elapsed;
-
-        final lapStart = _lapStartElapsed;
-        final lapElapsed = (lapStart == null) ? null : (elapsed - lapStart);
-
-        state = state.copyWith(time: elapsed, currentTime: lapElapsed);
-      });
 
       _ticker?.start();
 
       state = state.copyWith(isRunning: true);
+
+      final accumulatedMs = state.time.inMilliseconds;
+      final startedAtEpochMs = DateTime.now().millisecondsSinceEpoch;
 
       _bridge.notifyStart(startedAtEpochMs: startedAtEpochMs, accumulatedMs: accumulatedMs);
     } catch (error, stack) {
