@@ -34,17 +34,16 @@ struct StopwatchWidgetView: View {
     var entry: StopwatchTimelineProvider.Entry
 
     var body: some View {
-        HStack {
-            StopwatchTimeText(state: entry.state)
-                .font(.system(size: 22, weight: .semibold, design: .monospaced))
-                .minimumScaleFactor(0.5)
-
-            Spacer()
-        }
-        .padding()
-        .containerBackground(for: .widget) {
-            Color.clear
-        }
+        StopwatchTimeText(state: entry.state)
+            .font(.custom("Roboto-Light", size: 25))
+            .monospacedDigit()
+            .multilineTextAlignment(.center)
+            .minimumScaleFactor(0.5)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .padding()
+            .containerBackground(for: .widget) {
+                Color.clear
+            }
     }
 }
 
@@ -52,23 +51,37 @@ private struct StopwatchTimeText: View {
     let state: StopwatchAttributes.ContentState
 
     var body: some View {
-        if state.isRunning, let startedAtEpochMs = state.startedAtEpochMs {
-            let virtualStart = Date(timeIntervalSince1970: Double(startedAtEpochMs) / 1000)
-                .addingTimeInterval(-Double(state.accumulatedMs) / 1000)
-            
-            Text(virtualStart, style: .timer)
-                .monospacedDigit()
-                .id("widget-timer-\(startedAtEpochMs)")
-        } else {
-            Text(formatted(ms: state.accumulatedMs))
-                .monospacedDigit()
-                .id("widget-stopped-\(state.accumulatedMs)")
+        Group {
+            if state.isRunning, let startedAtEpochMs = state.startedAtEpochMs {
+                let startDate = Date(timeIntervalSince1970: Double(startedAtEpochMs) / 1000)
+                    .addingTimeInterval(-Double(state.accumulatedMs) / 1000)
+
+                if #available(iOS 18.0, *) {
+                    Text(.currentDate, format: .stopwatch(
+                        startingAt: startDate,
+                        showsHours: false,
+                        maxFieldCount: 3,
+                        maxPrecision: .milliseconds(10)
+                    ))
+                    .id("widget-timer-\(startedAtEpochMs)")
+                } else {
+                    Text(startDate, style: .timer)
+                        .id("widget-timer-\(startedAtEpochMs)")
+                }
+            } else {
+                Text(formatted(ms: state.accumulatedMs))
+                    .id("widget-stopped-\(state.accumulatedMs)")
+            }
         }
+        .environment(\.locale, Locale(identifier: "en_US_POSIX"))
     }
 
     private func formatted(ms: Int) -> String {
-        let s = Int(round(Double(ms) / 1000.0))
-        return String(format: "%02d:%02d", s / 60, s % 60)
+        let totalMs = max(0, ms)
+        let minutes = (totalMs / 1000) / 60
+        let seconds = (totalMs / 1000) % 60
+        let hundredths = (totalMs % 1000) / 10
+        return String(format: "%02d:%02d.%02d", minutes, seconds, hundredths)
     }
 }
 
@@ -83,4 +96,33 @@ struct StopwatchHomeScreenWidget: Widget {
         .description("Stopper gyors indítás/leállítás a főképernyőről.")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
+}
+
+// MARK: - Xcode Canvas previews
+
+#Preview("Small - Running", as: .systemSmall) {
+    StopwatchHomeScreenWidget()
+} timeline: {
+    StopwatchEntry(
+        date: .now,
+        state: .init(startedAtEpochMs: Int(Date().timeIntervalSince1970 * 1000) - 48_054, accumulatedMs: 0, isRunning: true)
+    )
+}
+
+#Preview("Small - Paused", as: .systemSmall) {
+    StopwatchHomeScreenWidget()
+} timeline: {
+    StopwatchEntry(
+        date: .now,
+        state: .init(startedAtEpochMs: nil, accumulatedMs: 48_054, isRunning: false)
+    )
+}
+
+#Preview("Medium - Running", as: .systemMedium) {
+    StopwatchHomeScreenWidget()
+} timeline: {
+    StopwatchEntry(
+        date: .now,
+        state: .init(startedAtEpochMs: Int(Date().timeIntervalSince1970 * 1000) - 48_054, accumulatedMs: 0, isRunning: true)
+    )
 }
