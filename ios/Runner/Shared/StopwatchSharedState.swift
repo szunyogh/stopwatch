@@ -1,5 +1,8 @@
 import Foundation
 import WidgetKit
+import os
+
+private let sharedStateLogger = Logger(subsystem: "com.szunyoghtamas.stopwatch", category: "SharedState")
 
 enum StopwatchSharedState {
     private static let appGroupId = "group.com.szunyogh.stopwatch"
@@ -29,7 +32,7 @@ enum StopwatchSharedState {
     }
 
     static func start(startedAtEpochMs: Int, accumulatedMs: Int) {
-        NSLog("[Widget] [SharedState] START -> startedAt: \(startedAtEpochMs), accumulated: \(accumulatedMs)")
+        sharedStateLogger("[Widget] [SharedState] START -> startedAt: \(startedAtEpochMs), accumulated: \(accumulatedMs)")
         defaults.set(true, forKey: keyIsRunning)
         defaults.set(startedAtEpochMs, forKey: keyStartedAt)
         defaults.set(accumulatedMs, forKey: keyAccumulated)
@@ -37,7 +40,7 @@ enum StopwatchSharedState {
     }
 
     static func stop(accumulatedMs: Int) {
-        NSLog("[Widget] [SharedState] STOP -> accumulated: \(accumulatedMs)")
+        sharedStateLogger("[Widget] [SharedState] STOP -> accumulated: \(accumulatedMs)")
         defaults.set(false, forKey: keyIsRunning)
         defaults.set(0, forKey: keyStartedAt)
         defaults.set(accumulatedMs, forKey: keyAccumulated)
@@ -45,7 +48,7 @@ enum StopwatchSharedState {
     }
 
     static func reset() {
-        NSLog("[Widget] [SharedState] RESET -> clearing data")
+        sharedStateLogger("[Widget] [SharedState] RESET -> clearing data")
         defaults.set(false, forKey: keyIsRunning)
         defaults.set(0, forKey: keyStartedAt)
         defaults.set(0, forKey: keyAccumulated)
@@ -54,7 +57,7 @@ enum StopwatchSharedState {
 
     static func contentState() -> StopwatchAttributes.ContentState {
         let state = StopwatchAttributes.ContentState(startedAtEpochMs: startedAtEpochMs, accumulatedMs: accumulatedMs, isRunning: isRunning)
-        NSLog("[Widget] [SharedState] contentState() requested -> \(state)")
+        sharedStateLogger("[Widget] [SharedState] contentState() requested -> \(state)")
         return state
     }
 

@@ -1,26 +1,27 @@
 import Foundation
 import ActivityKit
+import os
+
+private let activityLogger = Logger(subsystem: "com.szunyoghtamas.stopwatch", category: "ActivityController")
 
 public class StopwatchActivityController {
-    private static let activeActivityIdKey = "com.szunyogh.stopwatch.activeActivityId"
-    private static let appGroupSuiteName = "group.com.szunyogh.stopwatch"
+    private static let activeActivityIdKey = "com.szunyoghtamas.stopwatch.activeActivityId"
+    private static let appGroupSuiteName = "group.com.szunyoghtamas.stopwatch"
     
-    public static func start() {
+    public static func start() async {
         let sharedDefaults = UserDefaults(suiteName: appGroupSuiteName)
-        
+
         if let savedId = sharedDefaults?.string(forKey: activeActivityIdKey),
-            let _ = Activity<StopwatchAttributes>.activities.first(where: { $0.id == savedId }) {
-            
-            Task {
-                await update(activityId: savedId)
-                NSLog("[Widget] [ActivityController] Resumed existing activity via update(activityId:).")
-            }
+            Activity<StopwatchAttributes>.activities.contains(where: { $0.id == savedId }) {
+
+            await update(activityId: savedId)
+            activityLogger.notice("[Widget] Resumed existing activity via update(activityId:).")
             return
         }
 
         let initialState = StopwatchSharedState.contentState()
         let attributes = StopwatchAttributes()
-        
+
         do {
             let content = ActivityContent(state: initialState, staleDate: nil)
             let activity = try Activity.request(
@@ -28,12 +29,12 @@ public class StopwatchActivityController {
                 content: content,
                 pushType: nil
             )
-            
+
             sharedDefaults?.set(activity.id, forKey: activeActivityIdKey)
-            
-            NSLog("[Widget] [ActivityController] Started and saved Activity ID: \(activity.id)")
+
+            activityLogger.notice("[Widget] Started and saved Activity ID: \(activity.id)")
         } catch {
-            NSLog("[Widget] [ActivityController] Failed to start: \(error.localizedDescription)")
+            activityLogger.error("[Widget] Failed to start: \(error.localizedDescription)")
         }
     }
     
@@ -47,7 +48,7 @@ public class StopwatchActivityController {
         }
         
         guard let savedId = targetId else {
-            NSLog("[Widget] [ActivityController] No saved activity ID found.")
+            activityLogger.notice("[Widget] [ActivityController] No saved activity ID found.")
             return
         }
         
@@ -56,10 +57,10 @@ public class StopwatchActivityController {
         let content = ActivityContent(state: state, staleDate: nil)
         
         if let activity = targetActivity {
-            NSLog("[Widget] [ActivityController] Updating exact activity ID: \(activity.id)")
+            activityLogger.notice("[Widget] [ActivityController] Updating exact activity ID: \(activity.id)")
             await activity.update(content)
         } else {
-            NSLog("[Widget] [ActivityController] Activity with ID \(savedId) not found in system.")
+            activityLogger.notice("[Widget] [ActivityController] Activity with ID \(savedId) not found in system.")
         }
     }
     

@@ -1,6 +1,9 @@
 import WidgetKit
 import SwiftUI
 import AppIntents
+import os
+
+private let widgetLogger = Logger(subsystem: "com.szunyoghtamas.stopwatch", category: "WidgetTimeline")
 
 struct StopwatchEntry: TimelineEntry {
     let date: Date
@@ -9,19 +12,19 @@ struct StopwatchEntry: TimelineEntry {
 
 struct StopwatchTimelineProvider: TimelineProvider {
     func placeholder(in context: Context) -> StopwatchEntry {
-        NSLog("[Widget] [TimelineProvider] placeholder requested")
+        widgetLogger.notice("[Widget] placeholder requested")
         return StopwatchEntry(date: Date(), state: .init(startedAtEpochMs: nil, accumulatedMs: 0, isRunning: false))
     }
 
     func getSnapshot(in context: Context, completion: @escaping (StopwatchEntry) -> Void) {
         let state = StopwatchSharedState.contentState()
-        NSLog("[Widget] [TimelineProvider] getSnapshot requested. State: \(state)")
+        widgetLogger.notice("[Widget] getSnapshot requested. State: \(String(describing: state))")
         completion(StopwatchEntry(date: Date(), state: state))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<StopwatchEntry>) -> Void) {
         let state = StopwatchSharedState.contentState()
-        NSLog("[Widget] [TimelineProvider] getTimeline requested. Rendering UI with State: \(state)")
+        widgetLogger.notice("[Widget] getTimeline requested. Rendering UI with State: \(String(describing: state))")
         let entry = StopwatchEntry(date: Date(), state: state)
         completion(Timeline(entries: [entry], policy: .never))
     }
@@ -39,6 +42,9 @@ struct StopwatchWidgetView: View {
             Spacer()
         }
         .padding()
+        .containerBackground(for: .widget) {
+            Color.clear
+        }
     }
 }
 
