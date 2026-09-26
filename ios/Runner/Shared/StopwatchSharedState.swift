@@ -32,7 +32,7 @@ enum StopwatchSharedState {
     }
 
     static func start(startedAtEpochMs: Int, accumulatedMs: Int) {
-        sharedStateLogger("[Widget] [SharedState] START -> startedAt: \(startedAtEpochMs), accumulated: \(accumulatedMs)")
+        sharedStateLogger.notice("[Widget] [SharedState] START -> startedAt: \(startedAtEpochMs), accumulated: \(accumulatedMs)")
         defaults.set(true, forKey: keyIsRunning)
         defaults.set(startedAtEpochMs, forKey: keyStartedAt)
         defaults.set(accumulatedMs, forKey: keyAccumulated)
@@ -40,7 +40,7 @@ enum StopwatchSharedState {
     }
 
     static func stop(accumulatedMs: Int) {
-        sharedStateLogger("[Widget] [SharedState] STOP -> accumulated: \(accumulatedMs)")
+        sharedStateLogger.notice("[Widget] [SharedState] STOP -> accumulated: \(accumulatedMs)")
         defaults.set(false, forKey: keyIsRunning)
         defaults.set(0, forKey: keyStartedAt)
         defaults.set(accumulatedMs, forKey: keyAccumulated)
@@ -48,7 +48,7 @@ enum StopwatchSharedState {
     }
 
     static func reset() {
-        sharedStateLogger("[Widget] [SharedState] RESET -> clearing data")
+        sharedStateLogger.notice("[Widget] [SharedState] RESET -> clearing data")
         defaults.set(false, forKey: keyIsRunning)
         defaults.set(0, forKey: keyStartedAt)
         defaults.set(0, forKey: keyAccumulated)
@@ -57,7 +57,7 @@ enum StopwatchSharedState {
 
     static func contentState() -> StopwatchAttributes.ContentState {
         let state = StopwatchAttributes.ContentState(startedAtEpochMs: startedAtEpochMs, accumulatedMs: accumulatedMs, isRunning: isRunning)
-        sharedStateLogger("[Widget] [SharedState] contentState() requested -> \(state)")
+        sharedStateLogger.notice("[Widget] [SharedState] contentState() requested -> \(String(describing: state), privacy: .public)")
         return state
     }
 

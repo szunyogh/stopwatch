@@ -1,6 +1,5 @@
 import Flutter
 import Foundation
-import StopwatchCore
 import os
 
 private let methodChannelLogger = Logger(subsystem: "com.szunyoghtamas.stopwatch", category: "MethodChannel")
