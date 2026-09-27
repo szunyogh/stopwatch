@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,20 +18,63 @@ class HomeLogic extends BaseLogic<HomeState> {
   Duration? _lapStartElapsed;
 
   final _bridge = StopwatchNativeBridge.instance;
+  StreamSubscription<StopwatchNativeState>? _nativeEventsSub;
 
   @override
   HomeState build() {
     initLogger();
 
-    _syncFromNative();
+    _init();
 
     ref.onDispose(() {
+      _nativeEventsSub?.cancel();
       clear();
       _stopwatch = null;
       logger.i('[HomeLogic] disposed');
     });
 
     return const HomeState();
+  }
+
+  Future<void> _init() async {
+    try {
+      logger.i('[HomeLogic] _init');
+
+      _stopwatch ??= Stopwatch();
+
+      _syncFromNative();
+      _initEventChannel();
+
+      if (!Platform.isAndroid) return;
+
+      final hasPermission = await _bridge.hasNotificationPermission();
+
+      logger.i('[HomeLogic] _init hasPermission: $hasPermission');
+
+      if (!hasPermission) await _bridge.requestNotificationPermission();
+    } catch (error, stack) {
+      logger.e('[HomeLogic] _init error', error: error, stackTrace: stack);
+    }
+  }
+
+  void _initEventChannel() {
+    try {
+      logger.i('[HomeLogic] _initEventChannel');
+
+      _nativeEventsSub ??= _bridge.stateUpdates.listen((native) {
+        logger.i('[HomeLogic] _initEventChannel native: accumulatedMs: ${native.accumulatedMs}, isRunning: ${native.isRunning}, startedAtEpochMs: ${native.startedAtEpochMs}');
+        if (native.isRunning && _ticker?.isActive != true) {
+          _stopwatch?.start();
+          _ticker?.start();
+        } else if (!native.isRunning) {
+          _stopwatch?.stop();
+          _ticker?.stop();
+        }
+        state = state.copyWith(time: native.elapsed, isRunning: native.isRunning);
+      });
+    } catch (error, stack) {
+      logger.e('[HomeLogic] _initEventChannel error', error: error, stackTrace: stack);
+    }
   }
 
   Future<void> _syncFromNative() async {
@@ -40,8 +84,6 @@ class HomeLogic extends BaseLogic<HomeState> {
       logger.i('[HomeLogic] _syncFromNative native: accumulatedMs: ${native.accumulatedMs}, isRunning: ${native.isRunning}, startedAtEpochMs: ${native.startedAtEpochMs}');
 
       final elapsedNow = native.elapsed;
-
-      _stopwatch ??= Stopwatch();
 
       _ticker ??= Ticker((_) {
         final elapsed = elapsedNow + (_stopwatch?.elapsed ?? Duration.zero);

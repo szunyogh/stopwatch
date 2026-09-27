@@ -29,6 +29,19 @@ class StopwatchNativeBridge {
   static final StopwatchNativeBridge instance = StopwatchNativeBridge._();
 
   static const _methodChannel = MethodChannel('stopwatch/native');
+  static const _eventChannel = EventChannel('stopwatch/native_events');
+
+  Stream<StopwatchNativeState> get stateUpdates => _eventChannel.receiveBroadcastStream().map((event) => StopwatchNativeState.fromMap(event as Map));
+
+  Future<bool> hasNotificationPermission() async {
+    final result = await _methodChannel.invokeMethod<bool>('hasNotificationPermission');
+    return result ?? false;
+  }
+
+  Future<bool> requestNotificationPermission() async {
+    final result = await _methodChannel.invokeMethod<bool>('requestNotificationPermission');
+    return result ?? false;
+  }
 
   Future<StopwatchNativeState> getState() async {
     final result = await _methodChannel.invokeMethod<Map<dynamic, dynamic>>('getState');
