@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 
 class StopwatchNativeState {
@@ -31,7 +33,11 @@ class StopwatchNativeBridge {
   static const _methodChannel = MethodChannel('stopwatch/native');
   static const _eventChannel = EventChannel('stopwatch/native_events');
 
-  Stream<StopwatchNativeState> get stateUpdates => _eventChannel.receiveBroadcastStream().map((event) => StopwatchNativeState.fromMap(event as Map));
+  Stream<StopwatchNativeState> get stateUpdates {
+    if (Platform.isAndroid) return _eventChannel.receiveBroadcastStream().map((event) => StopwatchNativeState.fromMap(event as Map));
+
+    return const Stream.empty();
+  }
 
   Future<bool> hasNotificationPermission() async {
     final result = await _methodChannel.invokeMethod<bool>('hasNotificationPermission');
