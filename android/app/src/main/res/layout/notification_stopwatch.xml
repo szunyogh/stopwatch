@@ -2,12 +2,11 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/widget_background"
-    android:contentDescription="@string/widget_description"
-    android:gravity="center"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:padding="10dp">
+    android:paddingHorizontal="8dp"
+    android:paddingVertical="4dp">
 
     <Chronometer
         android:id="@+id/widget_time_text"
@@ -15,18 +14,18 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:fontFamily="monospace"
-        android:gravity="center"
+        android:gravity="start|center_vertical"
         android:maxLines="1"
         android:textColor="@color/widget_content"
-        android:textSize="28sp"
+        android:textSize="24sp"
         android:textStyle="bold" />
 
     <ImageButton
         android:id="@+id/widget_action_button"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_marginStart="12dp"
-        android:background="@android:color/transparent"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/widget_play_description"
         android:src="@drawable/ic_play"
         android:tint="@color/widget_content" />

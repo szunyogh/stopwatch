@@ -1,33 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/widget_root"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
-    android:contentDescription="@string/widget_description"
     android:gravity="center"
     android:orientation="horizontal"
     android:padding="10dp">
 
-    <Chronometer
-        android:id="@+id/widget_time_text"
+    <TextView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:fontFamily="monospace"
         android:gravity="center"
         android:maxLines="1"
+        android:text="00:00"
         android:textColor="@color/widget_content"
         android:textSize="28sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        tools:ignore="HardcodedText" />
 
-    <ImageButton
-        android:id="@+id/widget_action_button"
+    <ImageView
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginStart="12dp"
-        android:background="@android:color/transparent"
-        android:contentDescription="@string/widget_play_description"
         android:src="@drawable/ic_play"
-        android:tint="@color/widget_content" />
+        android:tint="@color/widget_content"
+        tools:ignore="ContentDescription" />
 </LinearLayout>
