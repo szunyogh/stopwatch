@@ -88,7 +88,7 @@ object StopwatchNotificationHelper {
         customView.setOnClickPendingIntent(R.id.widget_action_button, actionPendingIntent(context, action))
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.mipmap.stopwatch_icon)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setCustomContentView(customView)
             .setCustomBigContentView(customView)

@@ -2,4 +2,5 @@
 <resources>
     <color name="widget_background">#FFFFFFFF</color>
     <color name="widget_content">#FF1A1A1A</color>
+	<color name="ic_launcher_background">#1A1F22</color>
 </resources>
