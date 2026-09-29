@@ -41,6 +41,6 @@ flutter_launcher_icons:
   android: "stopwatch_icon"
   ios: true
   image_path: "assets/icon/stopwatch_icon.png"
-  adaptive_icon_background: "#1A1F22"
+  adaptive_icon_background: "assets/icon/stopwatch_background.png"
   adaptive_icon_foreground: "assets/icon/stopwatch_adaptive_icon.png"
   adaptive_icon_monochrome: "assets/icon/stopwatch_monochrome_icon.png"
