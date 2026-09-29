@@ -27,7 +27,7 @@ object StopwatchNotificationHelper {
     fun createChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Log.d(TAG, "createChannel: Értesítési csatorna létrehozása (ha még nincs)")
-            val channel = NotificationChannel(CHANNEL_ID, "Stopper", NotificationManager.IMPORTANCE_LOW)
+            val channel = NotificationChannel(CHANNEL_ID, "Stopper", NotificationManager.IMPORTANCE_DEFAULT)
                 .apply { setShowBadge(false) }
             context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
@@ -92,9 +92,9 @@ object StopwatchNotificationHelper {
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setCustomContentView(customView)
             .setCustomBigContentView(customView)
-            .setOngoing(isRunning)
+            .setOngoing(true)
             .setOnlyAlertOnce(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setDeleteIntent(actionPendingIntent(context, StopwatchActionReceiver.ACTION_DISMISS))
 
         launchPendingIntent?.let { builder.setContentIntent(it) }
