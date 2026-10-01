@@ -75,17 +75,20 @@ object StopwatchNotificationHelper {
             val elapsedSinceEpochWhen = System.currentTimeMillis() - epochWhen
             val base = SystemClock.elapsedRealtime() - elapsedSinceEpochWhen
             Log.d(TAG, "update: Értesítés futó állapotban (Chronometer mód), base=$base")
-            customView.setChronometer(R.id.widget_time_text, base, null, true)
+            customView.setChronometer(R.id.notification_time_text, base, null, true)
         } else {
             val timeString = formatStatic(accumulated)
             Log.d(TAG, "update: Értesítés álló állapotban, mutatott idő=$timeString")
-            customView.setChronometer(R.id.widget_time_text, 0L, null, false)
-            customView.setTextViewText(R.id.widget_time_text, timeString)
+            customView.setChronometer(R.id.notification_time_text, 0L, null, false)
+            customView.setTextViewText(R.id.notification_time_text, timeString)
         }
 
         val action = if (isRunning) StopwatchActionReceiver.ACTION_STOP else StopwatchActionReceiver.ACTION_START
-        customView.setImageViewResource(R.id.widget_action_button, if (isRunning) R.drawable.ic_stop else R.drawable.ic_play)
-        customView.setOnClickPendingIntent(R.id.widget_action_button, actionPendingIntent(context, action))
+        val iconColor = if(isRunning) R.color.button_bgr_color_stop else R.color.button_bgr_color_start
+
+        customView.setImageViewResource(R.id.notification_action_button, if (isRunning) R.drawable.ic_stop else R.drawable.ic_play)
+        customView.setInt(R.id.notification_action_button, "setColorFilter", ContextCompat.getColor(context, iconColor))
+        customView.setOnClickPendingIntent(R.id.notification_action_button, actionPendingIntent(context, action))
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.stopwatch_icon)

@@ -65,9 +65,14 @@ class StopwatchWidgetProvider : AppWidgetProvider() {
                 views.setTextViewText(R.id.widget_time_text, timeString)
             }
 
+            val buttonText = if (isRunning) R.string.widget_button_text_stop else R.string.widget_button_text_start
+            val buttonBackground = if (isRunning) R.drawable.rounded_button_stop_bg else R.drawable.rounded_button_start_bg
+
+            views.setTextViewText(R.id.widget_action_button, context.getString(buttonText))
+            views.setInt(R.id.widget_action_button, "setBackgroundResource", buttonBackground)
+
             val action = if (isRunning) StopwatchActionReceiver.ACTION_STOP else StopwatchActionReceiver.ACTION_START
             Log.d(TAG, "updateWidget (ID: $appWidgetId): Gomb action beállítása -> $action")
-            views.setImageViewResource(R.id.widget_action_button, if (isRunning) R.drawable.ic_stop else R.drawable.ic_play)
 
             val intent = Intent(context, StopwatchActionReceiver::class.java).apply { this.action = action }
             val pendingIntent = PendingIntent.getBroadcast(

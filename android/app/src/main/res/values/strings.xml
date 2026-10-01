@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="widget_description" >Stopperóra</string>
+    <string name="widget_button_text_start">Indítás</string>
+    <string name="widget_button_text_stop">Leállítás</string>
     <string name="widget_play_description" >Stopperóra Start</string>
 </resources>

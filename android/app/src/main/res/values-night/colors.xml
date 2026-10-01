@@ -1,4 +1,7 @@
 <resources>
-    <color name="widget_background">#FF000000</color>
-    <color name="widget_content">#FFFFFFFF</color>
+    <color name="widget_background">#70000000</color>
+    <color name="button_text">#FFFFFFFF</color>
+    <color name="text_color">#FFFFFFFF</color>
+    <color name="button_bgr_color_stop">#D0FF0000</color>
+    <color name="button_bgr_color_start">#E740B17D</color>
 </resources>

@@ -1,33 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
     android:contentDescription="@string/widget_description"
     android:gravity="center"
-    android:orientation="horizontal"
-    android:padding="10dp">
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:layout_weight="1"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="start|center_vertical"
+            android:text="@string/widget_description"
+            android:textColor="@color/text_color"
+            android:textSize="25sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/widget_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/rounded_image_bg"
+            android:clipToOutline="true"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop"
+            android:src="@mipmap/stopwatch_icon"
+            tools:targetApi="31" />
+
+
+    </LinearLayout>
 
     <Chronometer
         android:id="@+id/widget_time_text"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:fontFamily="monospace"
-        android:gravity="center"
+        android:layout_marginBottom="10dp"
         android:maxLines="1"
-        android:textColor="@color/widget_content"
-        android:textSize="28sp"
+        android:textColor="@color/text_color"
+        android:textSize="50sp"
         android:textStyle="bold" />
 
-    <ImageButton
+    <Button
         android:id="@+id/widget_action_button"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginStart="12dp"
-        android:background="@android:color/transparent"
-        android:contentDescription="@string/widget_play_description"
-        android:src="@drawable/ic_play"
-        android:tint="@color/widget_content" />
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/rounded_button_start_bg"
+        android:paddingStart="15dp"
+        android:paddingEnd="15dp"
+        android:elevation="0dp"
+        android:stateListAnimator="@null"
+        android:text="@string/widget_button_text_start"
+        android:textStyle="bold"
+        android:textSize="20sp"
+        android:textColor="@color/button_text" />
+
 </LinearLayout>

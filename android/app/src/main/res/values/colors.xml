@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="widget_background">#FFFFFFFF</color>
-    <color name="widget_content">#FF1A1A1A</color>
-	<color name="ic_launcher_background">#1A1F22</color>
+    <color name="widget_background">#70FFFFFF</color>
+    <color name="button_text">#FFFFFFFF</color>
+    <color name="text_color">#1B1F21</color>
+    <color name="button_bgr_color_stop">#E53935</color>
+    <color name="button_bgr_color_start">#40B17D</color>
 </resources>
