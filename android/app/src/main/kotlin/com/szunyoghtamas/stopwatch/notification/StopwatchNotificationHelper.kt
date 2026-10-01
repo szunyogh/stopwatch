@@ -91,7 +91,7 @@ object StopwatchNotificationHelper {
         customView.setOnClickPendingIntent(R.id.notification_action_button, actionPendingIntent(context, action))
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.stopwatch_icon)
+            .setSmallIcon(R.drawable.ic_stat_stopwatch)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setCustomContentView(customView)
             .setCustomBigContentView(customView)
@@ -101,11 +101,6 @@ object StopwatchNotificationHelper {
             .setDeleteIntent(actionPendingIntent(context, StopwatchActionReceiver.ACTION_DISMISS))
 
         launchPendingIntent?.let { builder.setContentIntent(it) }
-
-        if (Build.VERSION.SDK_INT >= 36) {
-            builder.setRequestPromotedOngoing(true)
-            builder.setShortCriticalText(if (isRunning) "Fut" else "Áll")
-        }
 
         NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, builder.build())
         Log.d(TAG, "update: Értesítés sikeresen elküldve")
