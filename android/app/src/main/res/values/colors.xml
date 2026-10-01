@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="widget_background">#70FFFFFF</color>
+    <color name="widget_background">#B2FFFFFF</color>
     <color name="button_text">#FFFFFFFF</color>
     <color name="text_color">#1B1F21</color>
     <color name="button_bgr_color_stop">#E53935</color>
