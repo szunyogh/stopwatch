@@ -70,6 +70,9 @@ struct StopwatchWidgetView: View {
             .buttonStyle(.plain)
         }
         .padding(12)
+        .containerBackground(for: .widget) {
+            Color.clear
+        }
     }
     
     private var buttonLabel: some View {
