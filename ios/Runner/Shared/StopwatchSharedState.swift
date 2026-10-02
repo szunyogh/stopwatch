@@ -31,20 +31,24 @@ enum StopwatchSharedState {
         defaults.integer(forKey: keyAccumulated)
     }
 
-    static func start(startedAtEpochMs: Int, accumulatedMs: Int) {
+    static func start(startedAtEpochMs: Int, accumulatedMs: Int, fromIntent: Bool = false) {
         sharedStateLogger.notice("[Widget] [SharedState] START -> startedAt: \(startedAtEpochMs), accumulated: \(accumulatedMs)")
         defaults.set(true, forKey: keyIsRunning)
         defaults.set(startedAtEpochMs, forKey: keyStartedAt)
         defaults.set(accumulatedMs, forKey: keyAccumulated)
-        WidgetCenter.shared.reloadAllTimelines()
+        if !fromIntent {
+            WidgetCenter.shared.reloadTimelines(ofKind: "StopwatchHomeScreenWidget")
+        }
     }
 
-    static func stop(accumulatedMs: Int) {
+    static func stop(accumulatedMs: Int, fromIntent: Bool = false) {
         sharedStateLogger.notice("[Widget] [SharedState] STOP -> accumulated: \(accumulatedMs)")
         defaults.set(false, forKey: keyIsRunning)
         defaults.set(0, forKey: keyStartedAt)
         defaults.set(accumulatedMs, forKey: keyAccumulated)
-        WidgetCenter.shared.reloadAllTimelines()
+        if !fromIntent {
+            WidgetCenter.shared.reloadTimelines(ofKind: "StopwatchHomeScreenWidget")
+        }
     }
 
     static func reset() {
@@ -52,7 +56,7 @@ enum StopwatchSharedState {
         defaults.set(false, forKey: keyIsRunning)
         defaults.set(0, forKey: keyStartedAt)
         defaults.set(0, forKey: keyAccumulated)
-        WidgetCenter.shared.reloadAllTimelines()
+        WidgetCenter.shared.reloadTimelines(ofKind: "StopwatchHomeScreenWidget")
     }
 
     static func contentState() -> StopwatchAttributes.ContentState {

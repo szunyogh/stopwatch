@@ -33,11 +33,7 @@ class StopwatchNativeBridge {
   static const _methodChannel = MethodChannel('stopwatch/native');
   static const _eventChannel = EventChannel('stopwatch/native_events');
 
-  Stream<StopwatchNativeState> get stateUpdates {
-    if (Platform.isAndroid) return _eventChannel.receiveBroadcastStream().map((event) => StopwatchNativeState.fromMap(event as Map));
-
-    return const Stream.empty();
-  }
+  Stream<StopwatchNativeState> get stateUpdates => _eventChannel.receiveBroadcastStream().map((event) => StopwatchNativeState.fromMap(event as Map));
 
   Future<bool> hasNotificationPermission() async {
     final result = await _methodChannel.invokeMethod<bool>('hasNotificationPermission');

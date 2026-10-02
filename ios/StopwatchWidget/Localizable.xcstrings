@@ -1,0 +1,50 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "widget_button_text_start" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indítás"
+          }
+        }
+      }
+    },
+    "widget_button_text_stop" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leállítás"
+          }
+        }
+      }
+    },
+    "widget_description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stopper gyors indítás/leállítás a főképernyőről."
+          }
+        }
+      }
+    },
+    "widget_name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stopperóra"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.3"
+}

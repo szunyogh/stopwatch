@@ -34,16 +34,54 @@ struct StopwatchWidgetView: View {
     var entry: StopwatchTimelineProvider.Entry
 
     var body: some View {
-        StopwatchTimeText(state: entry.state)
-            .font(.custom("Roboto-Light", size: 25))
-            .monospacedDigit()
-            .multilineTextAlignment(.center)
-            .minimumScaleFactor(0.5)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-            .padding()
-            .containerBackground(for: .widget) {
-                Color.clear
+        VStack(spacing: 10) {
+            HStack {
+                Text("widget_name")
+                    .font(.system(size: 23, weight: .bold))
+                    .foregroundStyle(Color(.widgetText))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+
+                Spacer(minLength: 8)
+
+                Image("StopwatchIcon")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 40, height: 40)
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .accessibilityHidden(true)
             }
+
+            StopwatchTimeText(state: entry.state)
+                .font(.system(size: 50, weight: .bold))
+                .monospacedDigit()
+                .foregroundStyle(Color(.widgetText))
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Group {
+                if entry.state.isRunning {
+                    Button(intent: StopwatchStopIntent()) { buttonLabel }
+                } else {
+                    Button(intent: StopwatchStartIntent()) { buttonLabel }
+                }
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(12)
+    }
+    
+    private var buttonLabel: some View {
+        Text(entry.state.isRunning ? "widget_button_text_stop" : "widget_button_text_start")
+            .font(.system(size: 20, weight: .bold))
+            .foregroundStyle(Color(.buttonText))
+            .frame(maxWidth: .infinity)
+            .frame(height: 40)
+            .background(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .fill(Color(entry.state.isRunning ? .buttonStop : .buttonStart))
+            )
     }
 }
 
@@ -92,37 +130,9 @@ struct StopwatchHomeScreenWidget: Widget {
         StaticConfiguration(kind: kind, provider: StopwatchTimelineProvider()) { entry in
             StopwatchWidgetView(entry: entry)
         }
-        .configurationDisplayName("Stopper")
-        .description("Stopper gyors indítás/leállítás a főképernyőről.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .configurationDisplayName("widget_name")
+        .description("widget_description")
+        .supportedFamilies([.systemMedium])
+        .contentMarginsDisabled()
     }
-}
-
-// MARK: - Xcode Canvas previews
-
-#Preview("Small - Running", as: .systemSmall) {
-    StopwatchHomeScreenWidget()
-} timeline: {
-    StopwatchEntry(
-        date: .now,
-        state: .init(startedAtEpochMs: Int(Date().timeIntervalSince1970 * 1000) - 48_054, accumulatedMs: 0, isRunning: true)
-    )
-}
-
-#Preview("Small - Paused", as: .systemSmall) {
-    StopwatchHomeScreenWidget()
-} timeline: {
-    StopwatchEntry(
-        date: .now,
-        state: .init(startedAtEpochMs: nil, accumulatedMs: 48_054, isRunning: false)
-    )
-}
-
-#Preview("Medium - Running", as: .systemMedium) {
-    StopwatchHomeScreenWidget()
-} timeline: {
-    StopwatchEntry(
-        date: .now,
-        state: .init(startedAtEpochMs: Int(Date().timeIntervalSince1970 * 1000) - 48_054, accumulatedMs: 0, isRunning: true)
-    )
 }

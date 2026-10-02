@@ -8,19 +8,32 @@ final class StopwatchMethodChannel: NSObject {
     static let shared = StopwatchMethodChannel()
 
     private static let methodChannelName = "stopwatch/native"
+    private static let eventChannelName = "stopwatch/native_events"
+
+    private var eventSink: FlutterEventSink?
+    private var darwinObserver: DarwinNotificationObserver?
 
     func register(with registrar: FlutterPluginRegistrar) {
         methodChannelLogger.notice("[Widget] [ActivityController] Registering method and event channels...")
-        
+
         let methodChannel = FlutterMethodChannel(name: Self.methodChannelName, binaryMessenger: registrar.messenger())
         methodChannel.setMethodCallHandler { [weak self] call, result in
             self?.handle(call, result: result)
+        }
+
+        let eventChannel = FlutterEventChannel(name: Self.eventChannelName, binaryMessenger: registrar.messenger())
+        eventChannel.setStreamHandler(self)
+
+        darwinObserver = DarwinNotificationObserver { [weak self] in
+            DispatchQueue.main.async {
+                self?.eventSink?(StopwatchSharedState.asDictionary())
+            }
         }
     }
 
     private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         methodChannelLogger.notice("[Widget] [ActivityController] Received call from Flutter: \(call.method)")
-        
+
         switch call.method {
         case "getState":
             let state = StopwatchSharedState.asDictionary()
@@ -29,8 +42,8 @@ final class StopwatchMethodChannel: NSObject {
 
         case "notifyStart":
             guard let args = call.arguments as? [String: Any],
-                let startedAt = args["startedAtEpochMs"] as? Int,
-                let accumulated = args["accumulatedMs"] as? Int else {
+                  let startedAt = args["startedAtEpochMs"] as? Int,
+                  let accumulated = args["accumulatedMs"] as? Int else {
                 methodChannelLogger.error("[Widget] [ActivityController] notifyStart failed: bad_args")
                 result(FlutterError(code: "bad_args", message: "startedAtEpochMs/accumulatedMs missing", details: nil))
                 return
@@ -42,7 +55,7 @@ final class StopwatchMethodChannel: NSObject {
 
         case "notifyStop":
             guard let args = call.arguments as? [String: Any],
-                let accumulated = args["accumulatedMs"] as? Int else {
+                  let accumulated = args["accumulatedMs"] as? Int else {
                 methodChannelLogger.error("[Widget] [ActivityController] notifyStop failed: bad_args")
                 result(FlutterError(code: "bad_args", message: "accumulatedMs missing", details: nil))
                 return
@@ -62,5 +75,17 @@ final class StopwatchMethodChannel: NSObject {
             methodChannelLogger.error("[Widget] [ActivityController] Method not implemented: \(call.method)")
             result(FlutterMethodNotImplemented)
         }
+    }
+}
+
+extension StopwatchMethodChannel: FlutterStreamHandler {
+    func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+        eventSink = events
+        return nil
+    }
+
+    func onCancel(withArguments arguments: Any?) -> FlutterError? {
+        eventSink = nil
+        return nil
     }
 }
