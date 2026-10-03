@@ -58,7 +58,7 @@ enum StopwatchActions {
 struct StopwatchStartIntent: AppIntent {
     static let title: LocalizedStringResource = "Stopperóra indítása"
     static var isDiscoverable: Bool { false }
-    static var openAppWhenRun: Bool { true }
+    static var openAppWhenRun: Bool = true
 
     @Parameter(title: "Live Activityből", default: false)
     var fromLiveActivity: Bool
