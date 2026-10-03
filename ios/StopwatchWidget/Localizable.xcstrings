@@ -7,6 +7,12 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Start"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
             "value" : "Indítás"
           }
         }
@@ -16,6 +22,12 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop"
+          }
+        },
+        "hu" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Leállítás"
@@ -29,6 +41,12 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Quick start/stop stopwatch from home screen."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
             "value" : "Stopper gyors indítás/leállítás a főképernyőről."
           }
         }
@@ -38,6 +56,12 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stopwatch"
+          }
+        },
+        "hu" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stopperóra"
