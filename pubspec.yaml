@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   auto_route: ^11.2.0
   collection: ^1.19.1
   freezed_annotation: ^3.1.0
@@ -36,6 +38,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
 
 flutter_launcher_icons:
   android: "stopwatch_icon"

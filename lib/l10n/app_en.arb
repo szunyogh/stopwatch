@@ -1,0 +1,10 @@
+{
+    "@@locale": "en",
+    "lap": "Lap",
+    "reset": "Reset",
+    "start": "Start",
+    "stop": "Stop",
+    "lapTime": "Lap time",
+    "lapTotalTime": "Total time",
+    "lapDetails": "Lap time"
+}

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:stopwatch/core/duration_formatter.dart';
+import 'package:stopwatch/l10n/app_localizations.dart';
 import 'package:stopwatch/logic/home/home_logic.dart';
 import 'package:stopwatch/model/lap.dart';
 import 'package:stopwatch/ui/widget/analog_clock.dart';
@@ -82,11 +83,14 @@ class _BottomButtons extends ConsumerWidget {
       child: Row(
         children: [
           Expanded(
-            child: TextButton(onPressed: enabledReset ? () => logic.lapResetPressed() : null, child: Text(isRunning ? 'Kör' : 'Visszaállítás')),
+            child: TextButton(
+              onPressed: enabledReset ? () => logic.lapResetPressed() : null,
+              child: Text(isRunning ? AppLocalizations.of(context)?.lap ?? '' : AppLocalizations.of(context)?.reset ?? ''),
+            ),
           ),
           SizedBox(width: 10.w),
           Expanded(
-            child: TextButton(onPressed: () => logic.startStopPressed(), child: Text(isRunning ? 'Leállítás' : 'Indítás')),
+            child: TextButton(onPressed: () => logic.startStopPressed(), child: Text(isRunning ? AppLocalizations.of(context)?.stop ?? '' : AppLocalizations.of(context)?.start ?? '')),
           ),
         ],
       ),
@@ -116,14 +120,14 @@ class _LapItem extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Kör idő', style: Theme.of(context).textTheme.bodySmall),
+                Text(AppLocalizations.of(context)?.lapTime ?? '', style: Theme.of(context).textTheme.bodySmall),
                 Text(DurationElapsedFormatter.toElapsedTime(lap.time), style: Theme.of(context).textTheme.bodyMedium),
               ],
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Teljes idő', style: Theme.of(context).textTheme.bodySmall),
+                Text(AppLocalizations.of(context)?.lapTotalTime ?? '', style: Theme.of(context).textTheme.bodySmall),
                 Text(DurationElapsedFormatter.toElapsedTime(lap.totalTime), style: Theme.of(context).textTheme.bodyMedium),
               ],
             ),

@@ -1,0 +1,10 @@
+{
+    "@@locale": "hu",
+    "lap": "Kör",
+    "reset": "Visszaállítás",
+    "start": "Indítás",
+    "stop": "Leállítás",
+    "lapTime": "Kör idő",
+    "lapTotalTime": "Teljes idő",
+    "lapDetails": "Kör idő"
+}

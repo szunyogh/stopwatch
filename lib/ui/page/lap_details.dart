@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:stopwatch/core/duration_formatter.dart';
+import 'package:stopwatch/l10n/app_localizations.dart';
 import 'package:stopwatch/logic/lap_details/lap_details_logic.dart';
 import 'package:stopwatch/model/lap.dart';
 import 'package:stopwatch/ui/widget/analog_clock.dart';
@@ -33,7 +34,7 @@ class _LapDetailsPageState extends ConsumerState<LapDetailsPage> {
     final totalTime = ref.watch(lapDetailsLogic.select((value) => value.lap?.totalTime ?? Duration.zero));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Kör idő')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)?.lapDetails ?? '')),
       body: SizedBox(
         width: double.infinity,
         child: Column(
