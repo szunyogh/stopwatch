@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Stopperóra</string>
+    <string name="widget_description">Stopper gyors indítás/leállítás a főképernyőről.</string>
+    <string name="widget_button_text_start">Indítás</string>
+    <string name="widget_button_text_stop">Leállítás</string>
+    <string name="widget_play_description">Stopperóra Indítás</string>
+</resources>
+

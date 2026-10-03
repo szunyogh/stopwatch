@@ -22,7 +22,7 @@
             android:layout_weight="1"
             android:fontFamily="sans-serif-medium"
             android:gravity="start|center_vertical"
-            android:text="@string/widget_description"
+            android:text="@string/app_name"
             android:textColor="@color/text_color"
             android:textSize="25sp"
             android:textStyle="bold" />
@@ -36,7 +36,7 @@
             android:contentDescription="@null"
             android:importantForAccessibility="no"
             android:scaleType="centerCrop"
-            android:src="@mipmap/stopwatch_icon"
+            android:src="@drawable/stopwatch_icon"
             tools:targetApi="31" />
 
 
