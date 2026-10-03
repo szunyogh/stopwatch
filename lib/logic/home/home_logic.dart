@@ -4,34 +4,45 @@ import 'dart:io';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stopwatch/core/router.gr.dart';
-import 'package:stopwatch/core/stopwatch_native_state.dart';
+import 'package:stopwatch/core/stopwatch_native_bridge.dart';
+import 'package:stopwatch/core/stopwatch_native_state_log.dart';
 import 'package:stopwatch/logic/base.dart';
 import 'package:stopwatch/logic/home/home_state.dart';
 import 'package:stopwatch/model/lap.dart';
+import 'package:stopwatch/model/stopwatch_native_state.dart';
 
 final homeLogic = NotifierProvider.autoDispose<HomeLogic, HomeState>(HomeLogic.new);
 
 class HomeLogic extends BaseLogic<HomeState> {
-  Ticker? _ticker;
-  Stopwatch? _stopwatch;
+  static const _zeroNative = StopwatchNativeState(isRunning: false, startedAtEpochMs: null, accumulatedMs: 0);
 
-  Duration? _lapStartElapsed;
+  late final Ticker _ticker;
+  StreamSubscription<StopwatchNativeState>? _nativeEventsSub;
 
   final _bridge = StopwatchNativeBridge.instance;
-  StreamSubscription<StopwatchNativeState>? _nativeEventsSub;
+
+  StopwatchNativeState _anchor = _zeroNative;
+
+  int _anchorVersion = 0;
+  Duration? _lapStartElapsed;
+
+  bool _disposed = false;
 
   @override
   HomeState build() {
     initLogger();
 
-    _init();
+    _ticker = Ticker(_onTick);
 
     ref.onDispose(() {
+      _disposed = true;
       _nativeEventsSub?.cancel();
-      clear();
-      _stopwatch = null;
+      _ticker.stop();
+      _ticker.dispose();
       logger.i('[HomeLogic] disposed');
     });
+
+    _init();
 
     return const HomeState();
   }
@@ -40,12 +51,10 @@ class HomeLogic extends BaseLogic<HomeState> {
     try {
       logger.i('[HomeLogic] _init');
 
-      _stopwatch ??= Stopwatch();
-
-      _syncFromNative();
       _initEventChannel();
+      await _syncFromNative();
 
-      if (!Platform.isAndroid) return;
+      if (_disposed || !Platform.isAndroid) return;
 
       final hasPermission = await _bridge.hasNotificationPermission();
 
@@ -61,17 +70,18 @@ class HomeLogic extends BaseLogic<HomeState> {
     try {
       logger.i('[HomeLogic] _initEventChannel');
 
-      _nativeEventsSub ??= _bridge.stateUpdates.listen((native) {
-        logger.i('[HomeLogic] _initEventChannel native: accumulatedMs: ${native.accumulatedMs}, isRunning: ${native.isRunning}, startedAtEpochMs: ${native.startedAtEpochMs}');
-        if (native.isRunning && _ticker?.isActive != true) {
-          _stopwatch?.start();
-          _ticker?.start();
-        } else if (!native.isRunning) {
-          _stopwatch?.stop();
-          _ticker?.stop();
-        }
-        state = state.copyWith(time: native.elapsed, isRunning: native.isRunning);
-      });
+      _nativeEventsSub ??= _bridge.stateUpdates.listen(
+        (native) {
+          if (_disposed) return;
+
+          logger.i('[HomeLogic] native event: ${native.logText}');
+
+          _setAnchor(native);
+        },
+        onError: (Object error, StackTrace stack) {
+          logger.e('[HomeLogic] event stream error', error: error, stackTrace: stack);
+        },
+      );
     } catch (error, stack) {
       logger.e('[HomeLogic] _initEventChannel error', error: error, stackTrace: stack);
     }
@@ -79,42 +89,44 @@ class HomeLogic extends BaseLogic<HomeState> {
 
   Future<void> _syncFromNative() async {
     try {
+      final versionBefore = _anchorVersion;
       final native = await _bridge.getState();
 
-      logger.i('[HomeLogic] _syncFromNative native: accumulatedMs: ${native.accumulatedMs}, isRunning: ${native.isRunning}, startedAtEpochMs: ${native.startedAtEpochMs}');
+      if (_disposed) return;
 
-      final elapsedNow = native.elapsed;
+      if (versionBefore != _anchorVersion) return;
 
-      _ticker ??= Ticker((_) {
-        final elapsed = elapsedNow + (_stopwatch?.elapsed ?? Duration.zero);
+      logger.i('[HomeLogic] _syncFromNative native: ${native.logText}');
 
-        final lapStart = _lapStartElapsed;
-        final lapElapsed = (lapStart == null) ? null : (elapsed - lapStart);
-
-        state = state.copyWith(time: elapsed, currentTime: lapElapsed);
-      });
-
-      state = state.copyWith(time: elapsedNow, isRunning: native.isRunning);
-
-      if (!native.isRunning) return;
-
-      _stopwatch?.start();
-
-      _ticker?.start();
+      _setAnchor(native);
     } catch (error, stack) {
       logger.e('[HomeLogic] syncFromNative error', error: error, stackTrace: stack);
     }
   }
 
-  void clear() {
-    _ticker?.stop();
-    _ticker?.dispose();
-    _ticker = null;
+  void _setAnchor(StopwatchNativeState anchor) {
+    _anchor = anchor;
+    _anchorVersion++;
 
-    _stopwatch?.stop();
-    _stopwatch?.reset();
+    final elapsed = anchor.elapsed;
+    final lapStart = _lapStartElapsed;
 
-    _lapStartElapsed = null;
+    state = state.copyWith(time: elapsed, isRunning: anchor.isRunning, currentTime: lapStart == null ? null : elapsed - lapStart);
+
+    if (anchor.isRunning) {
+      if (!_ticker.isActive) _ticker.start();
+    } else {
+      if (_ticker.isActive) _ticker.stop();
+    }
+  }
+
+  void _onTick(Duration _) {
+    if (_disposed) return;
+
+    final elapsed = _anchor.elapsed;
+    final lapStart = _lapStartElapsed;
+
+    state = state.copyWith(time: elapsed, currentTime: lapStart == null ? null : elapsed - lapStart);
   }
 
   void onTap(LapModel lap, Object tag) {
@@ -127,22 +139,16 @@ class HomeLogic extends BaseLogic<HomeState> {
     }
   }
 
-  void start() async {
+  void start() {
     try {
       logger.i('[HomeLogic] start');
 
-      if (state.isRunning) return;
+      if (_anchor.isRunning) return;
 
-      if (_ticker == null) await _syncFromNative();
-
-      _stopwatch?.start();
-
-      _ticker?.start();
-
-      state = state.copyWith(isRunning: true);
-
-      final accumulatedMs = state.time.inMilliseconds;
+      final accumulatedMs = _anchor.elapsed.inMilliseconds;
       final startedAtEpochMs = DateTime.now().millisecondsSinceEpoch;
+
+      _setAnchor(StopwatchNativeState(isRunning: true, startedAtEpochMs: startedAtEpochMs, accumulatedMs: accumulatedMs));
 
       _bridge.notifyStart(startedAtEpochMs: startedAtEpochMs, accumulatedMs: accumulatedMs);
     } catch (error, stack) {
@@ -154,12 +160,13 @@ class HomeLogic extends BaseLogic<HomeState> {
     try {
       logger.i('[HomeLogic] stop');
 
-      _stopwatch?.stop();
-      _ticker?.stop();
+      if (!_anchor.isRunning) return;
 
-      state = state.copyWith(isRunning: false);
+      final accumulatedMs = _anchor.elapsed.inMilliseconds;
 
-      _bridge.notifyStop(accumulatedMs: state.time.inMilliseconds);
+      _setAnchor(StopwatchNativeState(isRunning: false, startedAtEpochMs: null, accumulatedMs: accumulatedMs));
+
+      _bridge.notifyStop(accumulatedMs: accumulatedMs);
     } catch (error, stack) {
       logger.e('[HomeLogic] stop', error: error, stackTrace: stack);
     }
@@ -169,9 +176,11 @@ class HomeLogic extends BaseLogic<HomeState> {
     try {
       logger.i('[HomeLogic] reset');
 
-      clear();
+      _lapStartElapsed = null;
 
-      state = state.copyWith(time: Duration.zero, currentTime: null, laps: const [], isRunning: false);
+      state = state.copyWith(laps: const [], currentTime: null);
+
+      _setAnchor(_zeroNative);
 
       _bridge.notifyReset();
     } catch (error, stack) {
@@ -183,9 +192,9 @@ class HomeLogic extends BaseLogic<HomeState> {
     try {
       logger.i('[HomeLogic] addLap');
 
-      if (!state.isRunning) return;
+      if (!_anchor.isRunning) return;
 
-      final elapsed = state.time;
+      final elapsed = _anchor.elapsed;
       final lapStart = _lapStartElapsed ?? Duration.zero;
       final lapElapsed = elapsed - lapStart;
 
@@ -193,14 +202,14 @@ class HomeLogic extends BaseLogic<HomeState> {
 
       _lapStartElapsed = elapsed;
 
-      state = state.copyWith(laps: [...state.laps, item], currentTime: Duration.zero);
+      state = state.copyWith(laps: [...state.laps, item], time: elapsed, currentTime: Duration.zero);
     } catch (error, stack) {
       logger.e('[HomeLogic] addLap', error: error, stackTrace: stack);
     }
   }
 
   void lapResetPressed() {
-    if (state.time > Duration.zero && !state.isRunning) return reset();
+    if (!state.isRunning && state.time > Duration.zero) return reset();
 
     if (state.isRunning) return addLap();
   }
