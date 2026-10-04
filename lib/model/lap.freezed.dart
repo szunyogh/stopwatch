@@ -12,16 +12,19 @@ part of 'lap.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$LapModel {
 
- Duration get time; Duration get totalTime; int get order;
+@DurationConverter() Duration get time;@DurationConverter() Duration get totalTime; int get order;
 /// Create a copy of LapModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $LapModelCopyWith<LapModel> get copyWith => _$LapModelCopyWithImpl<LapModel>(this as LapModel, _$identity);
 
+  /// Serializes this LapModel to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -30,7 +33,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is LapModel&&(identical(other.time, _this.time) || other.time == _this.time)&&(identical(other.totalTime, _this.totalTime) || other.totalTime == _this.totalTime)&&(identical(other.order, _this.order) || other.order == _this.order));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as LapModel;
@@ -51,7 +54,7 @@ abstract mixin class $LapModelCopyWith<$Res>  {
   factory $LapModelCopyWith(LapModel value, $Res Function(LapModel) _then) = _$LapModelCopyWithImpl;
 @useResult
 $Res call({
- Duration time, Duration totalTime, int order
+@DurationConverter() Duration time,@DurationConverter() Duration totalTime, int order
 });
 
 
@@ -158,7 +161,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Duration time,  Duration totalTime,  int order)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@DurationConverter()  Duration time, @DurationConverter()  Duration totalTime,  int order)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LapModel() when $default != null:
 return $default(_that.time,_that.totalTime,_that.order);case _:
@@ -179,7 +182,7 @@ return $default(_that.time,_that.totalTime,_that.order);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Duration time,  Duration totalTime,  int order)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@DurationConverter()  Duration time, @DurationConverter()  Duration totalTime,  int order)  $default,) {final _that = this;
 switch (_that) {
 case _LapModel():
 return $default(_that.time,_that.totalTime,_that.order);case _:
@@ -199,7 +202,7 @@ return $default(_that.time,_that.totalTime,_that.order);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Duration time,  Duration totalTime,  int order)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@DurationConverter()  Duration time, @DurationConverter()  Duration totalTime,  int order)?  $default,) {final _that = this;
 switch (_that) {
 case _LapModel() when $default != null:
 return $default(_that.time,_that.totalTime,_that.order);case _:
@@ -211,14 +214,14 @@ return $default(_that.time,_that.totalTime,_that.order);case _:
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _LapModel extends LapModel {
-  const _LapModel({this.time = Duration.zero, this.totalTime = Duration.zero, this.order = 0}): super._();
-  
+  const _LapModel({@DurationConverter() this.time = Duration.zero, @DurationConverter() this.totalTime = Duration.zero, this.order = 0}): super._();
+  factory _LapModel.fromJson(Map<String, dynamic> json) => _$LapModelFromJson(json);
 
-@override@JsonKey() final  Duration time;
-@override@JsonKey() final  Duration totalTime;
+@override@JsonKey()@DurationConverter() final  Duration time;
+@override@JsonKey()@DurationConverter() final  Duration totalTime;
 @override@JsonKey() final  int order;
 
 /// Create a copy of LapModel
@@ -227,14 +230,17 @@ class _LapModel extends LapModel {
 @pragma('vm:prefer-inline')
 _$LapModelCopyWith<_LapModel> get copyWith => __$LapModelCopyWithImpl<_LapModel>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$LapModelToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
     return identical(this, other) || (other.runtimeType == runtimeType&&other is _LapModel&&(identical(other.time, time) || other.time == time)&&(identical(other.totalTime, totalTime) || other.totalTime == totalTime)&&(identical(other.order, order) || other.order == order));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
     return Object.hash(runtimeType,time,totalTime,order);
@@ -253,7 +259,7 @@ abstract mixin class _$LapModelCopyWith<$Res> implements $LapModelCopyWith<$Res>
   factory _$LapModelCopyWith(_LapModel value, $Res Function(_LapModel) _then) = __$LapModelCopyWithImpl;
 @override @useResult
 $Res call({
- Duration time, Duration totalTime, int order
+@DurationConverter() Duration time,@DurationConverter() Duration totalTime, int order
 });
 
 

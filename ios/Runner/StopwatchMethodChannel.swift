@@ -14,7 +14,7 @@ final class StopwatchMethodChannel: NSObject {
     private var darwinObserver: DarwinNotificationObserver?
 
     func register(with registrar: FlutterPluginRegistrar) {
-        methodChannelLogger.notice("[Widget] [ActivityController] Registering method and event channels...")
+        methodChannelLogger.notice("[Widget] [MethodChannel] Registering method and event channels...")
 
         let methodChannel = FlutterMethodChannel(name: Self.methodChannelName, binaryMessenger: registrar.messenger())
         methodChannel.setMethodCallHandler { [weak self] call, result in
@@ -32,23 +32,23 @@ final class StopwatchMethodChannel: NSObject {
     }
 
     private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        methodChannelLogger.notice("[Widget] [ActivityController] Received call from Flutter: \(call.method)")
+        methodChannelLogger.notice("[Widget] [MethodChannel] Received call from Flutter: \(call.method)")
 
         switch call.method {
         case "getState":
             let state = StopwatchSharedState.asDictionary()
-            methodChannelLogger.notice("[Widget] [ActivityController] getState -> returning: \(String(describing: state))")
+            methodChannelLogger.notice("[Widget] [MethodChannel] getState -> returning: \(String(describing: state))")
             result(state)
 
         case "notifyStart":
             guard let args = call.arguments as? [String: Any],
                   let startedAt = args["startedAtEpochMs"] as? Int,
                   let accumulated = args["accumulatedMs"] as? Int else {
-                methodChannelLogger.error("[Widget] [ActivityController] notifyStart failed: bad_args")
+                methodChannelLogger.error("[Widget] [MethodChannel] notifyStart failed: bad_args")
                 result(FlutterError(code: "bad_args", message: "startedAtEpochMs/accumulatedMs missing", details: nil))
                 return
             }
-            methodChannelLogger.notice("[Widget] [ActivityController] notifyStart -> startedAt: \(startedAt), accumulated: \(accumulated)")
+            methodChannelLogger.notice("[Widget] [MethodChannel] notifyStart -> startedAt: \(startedAt), accumulated: \(accumulated)")
             StopwatchSharedState.start(startedAtEpochMs: startedAt, accumulatedMs: accumulated)
             Task { await StopwatchActivityController.start() }
             result(nil)
@@ -56,23 +56,40 @@ final class StopwatchMethodChannel: NSObject {
         case "notifyStop":
             guard let args = call.arguments as? [String: Any],
                   let accumulated = args["accumulatedMs"] as? Int else {
-                methodChannelLogger.error("[Widget] [ActivityController] notifyStop failed: bad_args")
+                methodChannelLogger.error("[Widget] [MethodChannel] notifyStop failed: bad_args")
                 result(FlutterError(code: "bad_args", message: "accumulatedMs missing", details: nil))
                 return
             }
-            methodChannelLogger.notice("[Widget] [ActivityController] notifyStop -> accumulated: \(accumulated)")
+            methodChannelLogger.notice("[Widget] [MethodChannel] notifyStop -> accumulated: \(accumulated)")
             StopwatchSharedState.stop(accumulatedMs: accumulated)
             Task { await StopwatchActivityController.update() }
             result(nil)
 
         case "notifyReset":
-            methodChannelLogger.notice("[Widget] [ActivityController] notifyReset called")
+            methodChannelLogger.notice("[Widget] [MethodChannel] notifyReset called")
             StopwatchSharedState.reset()
+            StopwatchSharedState.clearLaps()
             Task { await StopwatchActivityController.end() }
             result(nil)
 
+        case "getLaps":
+            let json = StopwatchSharedState.lapsJson
+            methodChannelLogger.notice("[Widget] [MethodChannel] getLaps -> \(json?.count ?? 0) characters")
+            result(json)
+
+        case "saveLaps":
+            guard let args = call.arguments as? [String: Any],
+                  let json = args["laps"] as? String else {
+                methodChannelLogger.error("[Widget] [MethodChannel] saveLaps failed: bad_args")
+                result(FlutterError(code: "bad_args", message: "laps missing", details: nil))
+                return
+            }
+            methodChannelLogger.notice("[Widget] [MethodChannel] saveLaps -> \(json.count) characters")
+            StopwatchSharedState.saveLaps(json)
+            result(nil)
+
         default:
-            methodChannelLogger.error("[Widget] [ActivityController] Method not implemented: \(call.method)")
+            methodChannelLogger.error("[Widget] [MethodChannel] Method not implemented: \(call.method)")
             result(FlutterMethodNotImplemented)
         }
     }

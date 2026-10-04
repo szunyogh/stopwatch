@@ -16,7 +16,7 @@ object StopwatchState {
 
     fun init(context: Context) {
         if (::prefs.isInitialized) return
-        Log.d(TAG, "init: SharedPreferences inicializálása")
+        Log.d(TAG, "init: initializing SharedPreferences")
         prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
 
@@ -25,7 +25,7 @@ object StopwatchState {
     val accumulatedMs: Long get() = prefs.getLong(KEY_ACCUMULATED, 0L)
 
     fun start(startedAtEpochMs: Long, accumulatedMs: Long) {
-        Log.d(TAG, "start: MENTÉS -> startedAt=$startedAtEpochMs, acc=$accumulatedMs")
+        Log.d(TAG, "start: SAVE -> startedAt=$startedAtEpochMs, acc=$accumulatedMs")
         prefs.edit {
             putBoolean(KEY_IS_RUNNING, true)
                 .putLong(KEY_STARTED_AT, startedAtEpochMs)
@@ -34,7 +34,7 @@ object StopwatchState {
     }
 
     fun stop(accumulatedMs: Long) {
-        Log.d(TAG, "stop: MENTÉS -> isRunning=false, acc=$accumulatedMs")
+        Log.d(TAG, "stop: SAVE -> isRunning=false, acc=$accumulatedMs")
         prefs.edit {
             putBoolean(KEY_IS_RUNNING, false)
                 .putLong(KEY_STARTED_AT, 0L)
@@ -43,7 +43,7 @@ object StopwatchState {
     }
 
     fun reset() {
-        Log.d(TAG, "reset: MENTÉS -> alaphelyzetbe állítás")
+        Log.d(TAG, "reset: SAVE -> restoring defaults")
         prefs.edit {
             putBoolean(KEY_IS_RUNNING, false)
                 .putLong(KEY_STARTED_AT, 0L)

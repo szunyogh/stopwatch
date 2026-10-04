@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
+import 'package:stopwatch/model/lap.dart';
 import 'package:stopwatch/model/stopwatch_native_state.dart';
 
 class StopwatchNativeBridge {
@@ -33,7 +36,23 @@ class StopwatchNativeBridge {
     return _methodChannel.invokeMethod('notifyStop', {'accumulatedMs': accumulatedMs});
   }
 
-  Future<void> notifyReset() {
-    return _methodChannel.invokeMethod('notifyReset');
+  Future<void> notifyReset() => _methodChannel.invokeMethod('notifyReset');
+
+  Future<List<LapModel>> getLaps() async {
+    final raw = await _methodChannel.invokeMethod<String>('getLaps');
+
+    if (raw == null || raw.isEmpty) return const [];
+
+    final list = jsonDecode(raw) as List<dynamic>;
+
+    final laps = list.map((item) => LapModel.fromJson(item as Map<String, dynamic>)).toList();
+
+    return laps;
+  }
+
+  Future<void> saveLaps(List<LapModel> laps) {
+    final json = jsonEncode(laps.map((lap) => lap.toJson()).toList());
+
+    return _methodChannel.invokeMethod('saveLaps', {'laps': json});
   }
 }

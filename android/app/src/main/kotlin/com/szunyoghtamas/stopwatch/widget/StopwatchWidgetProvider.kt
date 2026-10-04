@@ -17,7 +17,7 @@ import java.util.Locale
 class StopwatchWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, appWidgetIds: IntArray) {
-        Log.d(TAG, "onUpdate: Rendszer által hívva, widget ID-k száma: ${appWidgetIds.size}")
+        Log.d(TAG, "onUpdate: called by the system, widget ID count: ${appWidgetIds.size}")
         appWidgetIds.forEach { updateWidget(context, manager, it) }
     }
 
@@ -25,15 +25,15 @@ class StopwatchWidgetProvider : AppWidgetProvider() {
         private const val TAG = "[Widget] Provider"
 
         fun updateAll(context: Context) {
-            Log.d(TAG, "updateAll hívva: Az összes aktív widget manuális frissítése")
+            Log.d(TAG, "updateAll called: manually updating all active widgets")
             val manager = AppWidgetManager.getInstance(context)
             val ids = manager.getAppWidgetIds(ComponentName(context, StopwatchWidgetProvider::class.java))
-            Log.d(TAG, "updateAll: ${ids.size} darab widgetet találtunk")
+            Log.d(TAG, "updateAll: found ${ids.size} widgets")
             ids.forEach { updateWidget(context, manager, it) }
         }
 
         private fun updateWidget(context: Context, manager: AppWidgetManager, appWidgetId: Int) {
-            Log.d(TAG, "updateWidget: Kezdés (ID: $appWidgetId)")
+            Log.d(TAG, "updateWidget: starting (ID: $appWidgetId)")
             StopwatchState.init(context)
             val isRunning = StopwatchState.isRunning
             val startedAt = StopwatchState.startedAtEpochMs
@@ -56,11 +56,11 @@ class StopwatchWidgetProvider : AppWidgetProvider() {
                 val epochWhen = startedAt - accumulated
                 val elapsedSinceEpochWhen = System.currentTimeMillis() - epochWhen
                 val base = SystemClock.elapsedRealtime() - elapsedSinceEpochWhen
-                Log.d(TAG, "updateWidget (ID: $appWidgetId): Futó mód - Chronometer beállítása, base=$base")
+                Log.d(TAG, "updateWidget (ID: $appWidgetId): running mode - setting Chronometer, base=$base")
                 views.setChronometer(R.id.widget_time_text, base, null, true)
             } else {
                 val timeString = formatStatic(accumulated)
-                Log.d(TAG, "updateWidget (ID: $appWidgetId): Álló mód - Statikus szöveg beállítása: $timeString")
+                Log.d(TAG, "updateWidget (ID: $appWidgetId): stopped mode - setting static text: $timeString")
                 views.setChronometer(R.id.widget_time_text, 0L, null, false)
                 views.setTextViewText(R.id.widget_time_text, timeString)
             }
@@ -72,7 +72,7 @@ class StopwatchWidgetProvider : AppWidgetProvider() {
             views.setInt(R.id.widget_action_button, "setBackgroundResource", buttonBackground)
 
             val action = if (isRunning) StopwatchActionReceiver.ACTION_STOP else StopwatchActionReceiver.ACTION_START
-            Log.d(TAG, "updateWidget (ID: $appWidgetId): Gomb action beállítása -> $action")
+            Log.d(TAG, "updateWidget (ID: $appWidgetId): setting button action -> $action")
 
             val intent = Intent(context, StopwatchActionReceiver::class.java).apply { this.action = action }
             val pendingIntent = PendingIntent.getBroadcast(
@@ -82,7 +82,7 @@ class StopwatchWidgetProvider : AppWidgetProvider() {
             views.setOnClickPendingIntent(R.id.widget_action_button, pendingIntent)
 
             manager.updateAppWidget(appWidgetId, views)
-            Log.d(TAG, "updateWidget: Frissítés befejezve (ID: $appWidgetId)")
+            Log.d(TAG, "updateWidget: update finished (ID: $appWidgetId)")
         }
 
         private fun formatStatic(ms: Long): String {

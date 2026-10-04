@@ -16,6 +16,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import com.szunyoghtamas.stopwatch.state.StopwatchLapStore
 
 class StopwatchMethodChannel : MethodChannel.MethodCallHandler {
     companion object {
@@ -27,7 +28,7 @@ class StopwatchMethodChannel : MethodChannel.MethodCallHandler {
         private var eventSink: EventChannel.EventSink? = null
 
         fun pushStateUpdate(context: Context) {
-            Log.d(TAG, "pushStateUpdate: Állapot küldése a Flutternek")
+            Log.d(TAG, "pushStateUpdate: sending state to Flutter")
             StopwatchState.init(context)
             val state = StopwatchState.asMap()
             Handler(Looper.getMainLooper()).post { eventSink?.success(state) }
@@ -38,7 +39,7 @@ class StopwatchMethodChannel : MethodChannel.MethodCallHandler {
     private var pendingPermissionResult: MethodChannel.Result? = null
 
     fun register(flutterEngine: FlutterEngine, activity: Activity) {
-        Log.d(TAG, "register: Csatornák regisztrálása")
+        Log.d(TAG, "register: registering channels")
         this.activity = activity
         StopwatchState.init(activity.applicationContext)
 
@@ -59,10 +60,10 @@ class StopwatchMethodChannel : MethodChannel.MethodCallHandler {
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-        Log.d(TAG, "onMethodCall: Hívott metódus = ${call.method}")
+        Log.d(TAG, "onMethodCall: called method = ${call.method}")
         when (call.method) {
             "getState" -> {
-                Log.d(TAG, "onMethodCall: getState lekérve")
+                Log.d(TAG, "onMethodCall: getState requested")
                 result.success(StopwatchState.asMap())
             }
 
@@ -94,6 +95,7 @@ class StopwatchMethodChannel : MethodChannel.MethodCallHandler {
             "notifyReset" -> {
                 Log.d(TAG, "onMethodCall: notifyReset")
                 StopwatchState.reset()
+                activity?.applicationContext?.let { StopwatchLapStore.clear(it) }
                 activity?.applicationContext?.let { StopwatchSurfaces.refresh(it, true) }
                 result.success(null)
             }
@@ -105,12 +107,29 @@ class StopwatchMethodChannel : MethodChannel.MethodCallHandler {
             }
 
             "requestNotificationPermission" -> {
-                Log.d(TAG, "onMethodCall: requestNotificationPermission indítva")
+                Log.d(TAG, "onMethodCall: requestNotificationPermission started")
                 requestNotificationPermission(result)
             }
 
+            "getLaps" -> {
+                val json = activity?.applicationContext?.let { StopwatchLapStore.get(it) }
+                Log.d(TAG, "onMethodCall: getLaps -> ${json?.length ?: 0} characters")
+                result.success(json)
+            }
+
+            "saveLaps" -> {
+                val json = call.argument<String>("laps")
+                if (json == null) {
+                    result.error("bad_args", "laps missing", null)
+                    return
+                }
+                Log.d(TAG, "onMethodCall: saveLaps -> ${json.length} characters")
+                activity?.applicationContext?.let { StopwatchLapStore.save(it, json) }
+                result.success(null)
+            }
+
             else -> {
-                Log.w(TAG, "onMethodCall: Nem implementált metódus: ${call.method}")
+                Log.w(TAG, "onMethodCall: method not implemented: ${call.method}")
                 result.notImplemented()
             }
         }
@@ -124,25 +143,25 @@ class StopwatchMethodChannel : MethodChannel.MethodCallHandler {
 
     private fun requestNotificationPermission(result: MethodChannel.Result) {
         val act = activity ?: run {
-            Log.w(TAG, "requestNotificationPermission: Activity null")
+            Log.w(TAG, "requestNotificationPermission: activity is null")
             return result.success(false)
         }
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || hasNotificationPermission()) {
-            Log.d(TAG, "requestNotificationPermission: Nincs szükség engedélykérésre (vagy már megvan)")
+            Log.d(TAG, "requestNotificationPermission: no permission request needed (or already granted)")
             result.success(true)
             return
         }
 
         pendingPermissionResult = result
-        Log.d(TAG, "requestNotificationPermission: Engedélykérő dialog megjelenítése")
+        Log.d(TAG, "requestNotificationPermission: showing permission request dialog")
         ActivityCompat.requestPermissions(act, arrayOf(Manifest.permission.POST_NOTIFICATIONS), NOTIFICATION_PERMISSION_REQUEST_CODE)
     }
 
     fun onRequestPermissionsResult(requestCode: Int, grantResults: IntArray): Boolean {
         if (requestCode != NOTIFICATION_PERMISSION_REQUEST_CODE) return false
         val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
-        Log.d(TAG, "onRequestPermissionsResult: Engedély megadva? = $granted")
+        Log.d(TAG, "onRequestPermissionsResult: permission granted? = $granted")
         pendingPermissionResult?.success(granted)
         pendingPermissionResult = null
         return true

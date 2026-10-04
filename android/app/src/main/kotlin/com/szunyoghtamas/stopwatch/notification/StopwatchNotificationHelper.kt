@@ -26,7 +26,7 @@ object StopwatchNotificationHelper {
 
     fun createChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Log.d(TAG, "createChannel: Értesítési csatorna létrehozása (ha még nincs)")
+            Log.d(TAG, "createChannel: creating notification channel (if it doesn't exist yet)")
             val channel = NotificationChannel(CHANNEL_ID, "Stopper", NotificationManager.IMPORTANCE_DEFAULT)
                 .apply { setShowBadge(false) }
             context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
@@ -42,7 +42,7 @@ object StopwatchNotificationHelper {
     }
 
     fun update(context: Context) {
-        Log.d(TAG, "update: Értesítés frissítése indítva")
+        Log.d(TAG, "update: notification update started")
         StopwatchState.init(context)
         createChannel(context)
 
@@ -50,7 +50,7 @@ object StopwatchNotificationHelper {
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.w(TAG, "update: Nincs POST_NOTIFICATIONS engedély, kilépés")
+            Log.w(TAG, "update: POST_NOTIFICATIONS permission missing, exiting")
             return
         }
 
@@ -58,7 +58,7 @@ object StopwatchNotificationHelper {
         val startedAt = StopwatchState.startedAtEpochMs
         val accumulated = StopwatchState.accumulatedMs
 
-        Log.d(TAG, "update: Állapot -> isRunning=$isRunning, startedAt=$startedAt, acc=$accumulated")
+        Log.d(TAG, "update: state -> isRunning=$isRunning, startedAt=$startedAt, acc=$accumulated")
 
         val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
         val launchPendingIntent = launchIntent?.let {
@@ -74,11 +74,11 @@ object StopwatchNotificationHelper {
             val epochWhen = startedAt - accumulated
             val elapsedSinceEpochWhen = System.currentTimeMillis() - epochWhen
             val base = SystemClock.elapsedRealtime() - elapsedSinceEpochWhen
-            Log.d(TAG, "update: Értesítés futó állapotban (Chronometer mód), base=$base")
+            Log.d(TAG, "update: notification in running state (Chronometer mode), base=$base")
             customView.setChronometer(R.id.notification_time_text, base, null, true)
         } else {
             val timeString = formatStatic(accumulated)
-            Log.d(TAG, "update: Értesítés álló állapotban, mutatott idő=$timeString")
+            Log.d(TAG, "update: notification in stopped state, displayed time=$timeString")
             customView.setChronometer(R.id.notification_time_text, 0L, null, false)
             customView.setTextViewText(R.id.notification_time_text, timeString)
         }
@@ -103,11 +103,11 @@ object StopwatchNotificationHelper {
         launchPendingIntent?.let { builder.setContentIntent(it) }
 
         NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, builder.build())
-        Log.d(TAG, "update: Értesítés sikeresen elküldve")
+        Log.d(TAG, "update: notification sent successfully")
     }
 
     fun cancel(context: Context) {
-        Log.d(TAG, "cancel: Értesítés törlése")
+        Log.d(TAG, "cancel: cancelling notification")
         NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
     }
 

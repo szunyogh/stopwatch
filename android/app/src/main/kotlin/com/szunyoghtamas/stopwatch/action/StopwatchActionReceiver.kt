@@ -41,7 +41,7 @@ class StopwatchActionReceiver : BroadcastReceiver() {
             }
         }
 
-        Log.d(TAG, "onReceive: frissítjük a felületeket és a Flutter állapotot")
+        Log.d(TAG, "onReceive: refreshing surfaces and Flutter state")
         StopwatchSurfaces.refresh(context)
         StopwatchMethodChannel.pushStateUpdate(context)
     }

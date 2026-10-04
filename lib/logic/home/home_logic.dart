@@ -51,6 +51,10 @@ class HomeLogic extends BaseLogic<HomeState> {
     try {
       logger.i('[HomeLogic] _init');
 
+      await _loadLaps();
+
+      if (_disposed) return;
+
       _initEventChannel();
       await _syncFromNative();
 
@@ -63,6 +67,22 @@ class HomeLogic extends BaseLogic<HomeState> {
       if (!hasPermission) await _bridge.requestNotificationPermission();
     } catch (error, stack) {
       logger.e('[HomeLogic] _init error', error: error, stackTrace: stack);
+    }
+  }
+
+  Future<void> _loadLaps() async {
+    try {
+      final laps = await _bridge.getLaps();
+
+      logger.i('[HomeLogic] _loadLaps laps: ${laps.length}');
+
+      if (_disposed || laps.isEmpty) return;
+
+      _lapStartElapsed = laps.last.totalTime;
+
+      state = state.copyWith(laps: laps);
+    } catch (error, stack) {
+      logger.e('[HomeLogic] _loadLaps error', error: error, stackTrace: stack);
     }
   }
 
@@ -203,6 +223,8 @@ class HomeLogic extends BaseLogic<HomeState> {
       _lapStartElapsed = elapsed;
 
       state = state.copyWith(laps: [...state.laps, item], time: elapsed, currentTime: Duration.zero);
+
+      _bridge.saveLaps(state.laps);
     } catch (error, stack) {
       logger.e('[HomeLogic] addLap', error: error, stackTrace: stack);
     }

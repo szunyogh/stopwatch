@@ -9,18 +9,18 @@ object StopwatchSurfaces {
     private const val TAG = "[Widget] Surfaces"
 
     fun refresh(context: Context, isReset: Boolean = false) {
-        Log.d(TAG, "refresh hívva, isReset: $isReset")
+        Log.d(TAG, "refresh called, isReset: $isReset")
         StopwatchState.init(context)
 
         if(isReset) {
-            Log.d(TAG, "refresh: Notification törlése (cancel)")
+            Log.d(TAG, "refresh: cancelling notification (cancel)")
             StopwatchNotificationHelper.cancel(context)
         } else {
-            Log.d(TAG, "refresh: Notification frissítése (update)")
+            Log.d(TAG, "refresh: updating notification (update)")
             StopwatchNotificationHelper.update(context)
         }
 
-        Log.d(TAG, "refresh: Widgetek frissítésének (updateAll) indítása")
+        Log.d(TAG, "refresh: starting widget update (updateAll)")
         StopwatchWidgetProvider.updateAll(context)
     }
 }

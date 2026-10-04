@@ -10,12 +10,25 @@ enum StopwatchSharedState {
     private static let keyIsRunning = "isRunning"
     private static let keyStartedAt = "startedAtEpochMs"
     private static let keyAccumulated = "accumulatedMs"
+    private static let keyLaps = "laps"
 
     private static var defaults: UserDefaults {
         guard let d = UserDefaults(suiteName: appGroupId) else {
             fatalError("App Group '\(appGroupId)' not configured")
         }
         return d
+    }
+
+    static var lapsJson: String? {
+        defaults.string(forKey: keyLaps)
+    }
+
+    static func saveLaps(_ json: String) {
+        defaults.set(json, forKey: keyLaps)
+    }
+
+    static func clearLaps() {
+        defaults.removeObject(forKey: keyLaps)
     }
 
     static var isRunning: Bool {
