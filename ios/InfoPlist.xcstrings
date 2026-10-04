@@ -7,13 +7,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Stopwatch"
+            "value" : "SZStopwatch"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Stopperóra"
+            "value" : "SZStopperóra"
           }
         }
       }
