@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Stopwatch</string>
+    <string name="app_name">SZStopwatch</string>
+    <string name="widget_name">Stopwatch</string>
     <string name="widget_description">Quick start/stop stopwatch from home screen.</string>
     <string name="widget_button_text_start">Start</string>
     <string name="widget_button_text_stop">Stop</string>
