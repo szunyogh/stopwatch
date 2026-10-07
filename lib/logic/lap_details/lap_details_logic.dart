@@ -8,8 +8,6 @@ final lapDetailsLogic = NotifierProvider.autoDispose<LapDetailsLogic, LapDetails
 class LapDetailsLogic extends BaseLogic<LapDetailsState> {
   @override
   LapDetailsState build() {
-    initLogger();
-
     ref.onDispose(() => logger.i('[LapDetailsLogic] disposed'));
 
     return const LapDetailsState();

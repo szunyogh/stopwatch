@@ -3,10 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:logger/logger.dart';
 
 import 'package:stopwatch/core/router.dart';
-import 'package:stopwatch/logic/logger.dart';
 import 'package:stopwatch/ui/page/home.dart';
 
 void setupMockNativeChannels() {
@@ -25,10 +23,7 @@ void main() {
 
   Widget buildTestableWidget() {
     return ProviderScope(
-      overrides: [
-        loggerProvider.overrideWithValue(Logger(level: Level.nothing)),
-        appRouterProvider.overrideWith((ref) => AppRouter(ref)),
-      ],
+      overrides: [appRouterProvider.overrideWith((ref) => AppRouter(ref))],
       child: ScreenUtilInit(
         designSize: const Size(360, 690),
         builder: (context, child) => const MaterialApp(home: HomePage()),

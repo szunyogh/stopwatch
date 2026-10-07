@@ -1,12 +1,10 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:logger/logger.dart';
 
 import 'package:stopwatch/core/router.dart';
 import 'package:stopwatch/logic/home/home_logic.dart';
 import 'package:stopwatch/logic/home/home_state.dart';
-import 'package:stopwatch/logic/logger.dart';
 
 void setupMockNativeChannels() {
   const methodChannel = MethodChannel('stopwatch/native');
@@ -42,12 +40,7 @@ void main() {
   setUp(() {
     setupMockNativeChannels();
 
-    container = ProviderContainer(
-      overrides: [
-        loggerProvider.overrideWithValue(Logger(level: Level.nothing)),
-        appRouterProvider.overrideWith((ref) => AppRouter(ref)),
-      ],
-    );
+    container = ProviderContainer(overrides: [appRouterProvider.overrideWith((ref) => AppRouter(ref))]);
 
     sub = container.listen<HomeState>(homeLogic, (prev, next) {});
     logic = container.read(homeLogic.notifier);

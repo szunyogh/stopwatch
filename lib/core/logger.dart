@@ -1,8 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 
-final loggerProvider = Provider((ref) {
-  return Logger(
+mixin class LoggerMixin {
+  Logger get logger => Logger(
     filter: DevelopmentFilter(),
     output: null,
     printer: HybridPrinter(
@@ -12,4 +11,4 @@ final loggerProvider = Provider((ref) {
       error: PrettyPrinter(colors: false),
     ),
   );
-});
+}

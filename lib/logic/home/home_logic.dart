@@ -30,8 +30,6 @@ class HomeLogic extends BaseLogic<HomeState> {
 
   @override
   HomeState build() {
-    initLogger();
-
     _ticker = Ticker(_onTick);
 
     ref.onDispose(() {

@@ -1,9 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:logger/logger.dart';
 
 import 'package:stopwatch/logic/lap_details/lap_details_logic.dart';
-import 'package:stopwatch/logic/logger.dart';
 import 'package:stopwatch/model/lap.dart';
 
 void main() {
@@ -13,7 +11,7 @@ void main() {
   late LapDetailsLogic logic;
 
   setUp(() {
-    container = ProviderContainer(overrides: [loggerProvider.overrideWithValue(Logger(level: Level.nothing))]);
+    container = ProviderContainer();
     logic = container.read(lapDetailsLogic.notifier);
   });
 
