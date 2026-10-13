@@ -2,11 +2,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:stopwatch/core/duration_formatter.dart';
-import 'package:stopwatch/l10n/app_localizations.dart';
+import 'package:stopwatch/core/router.gr.dart';
 import 'package:stopwatch/logic/home/home_logic.dart';
-import 'package:stopwatch/model/lap.dart';
-import 'package:stopwatch/ui/widget/analog_clock.dart';
 
 @RoutePage()
 class HomePage extends ConsumerStatefulWidget {
@@ -19,120 +16,34 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top + 10;
-    return Scaffold(
-      body: Padding(padding: EdgeInsets.fromLTRB(15, topPadding, 15, 0).r, child: _Body()),
-      bottomNavigationBar: _BottomButtons(),
+    return AutoTabsRouter(
+      homeIndex: 0,
+      routes: const [StopwatchRoute(), TimerRoute()],
+      builder: (context, child) {
+        return Scaffold(
+          body: Padding(padding: EdgeInsets.fromLTRB(15, topPadding, 15, 0).r, child: child),
+          bottomNavigationBar: const _BottomNavigationBar(),
+        );
+      },
     );
   }
 }
 
-class _Body extends ConsumerWidget {
-  const _Body();
+class _BottomNavigationBar extends ConsumerWidget {
+  const _BottomNavigationBar();
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final logic = ref.read(homeLogic.notifier);
-
-    final time = ref.watch(homeLogic.select((value) => value.time));
-    final currentTime = ref.watch(homeLogic.select((value) => value.currentTime));
-    final laps = ref.watch(homeLogic.select((value) => value.laps));
-
-    return SizedBox(
-      width: double.infinity,
-      child: Column(
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 10;
+    return Container(
+      padding: EdgeInsets.fromLTRB(15, 10, 15, 5 + bottomPadding).r,
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          AnalogClock(elapsed: time),
-          SizedBox(height: 20.h),
-          Text(DurationElapsedFormatter.toElapsedTime(time), style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontFeatures: [FontFeature.tabularFigures()])),
-          Text(
-            DurationElapsedFormatter.toElapsedTime(currentTime),
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface, fontFeatures: [FontFeature.tabularFigures()]),
-          ),
-          SizedBox(height: 10.h),
-          if (laps.isNotEmpty)
-            Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10).r,
-                child: ListView.separated(
-                  padding: EdgeInsets.symmetric(vertical: 10.h),
-                  itemBuilder: (context, index) => _LapItem(laps[index], laps[index].order, onTap: (ctx) => logic.onTap(laps[index], laps[index].order)),
-                  separatorBuilder: (context, index) => SizedBox(height: 10.h),
-                  itemCount: laps.length,
-                ),
-              ),
-            ),
+          ElevatedButton.icon(onPressed: () => logic.navigateStopwatch(), label: Icon(Icons.watch_later_outlined)),
+          SizedBox(width: 15.w),
+          ElevatedButton.icon(onPressed: () => logic.navigateTimer(), label: Icon(Icons.timer_sharp)),
         ],
-      ),
-    );
-  }
-}
-
-class _BottomButtons extends ConsumerWidget {
-  const _BottomButtons();
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final logic = ref.read(homeLogic.notifier);
-
-    final isRunning = ref.watch(homeLogic.select((value) => value.isRunning));
-    final enabledReset = ref.watch(homeLogic.select((value) => value.time > Duration.zero));
-
-    final bottomPadding = MediaQuery.of(context).padding.bottom + 10;
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(15, 15, 15, bottomPadding).r,
-      child: Row(
-        children: [
-          Expanded(
-            child: TextButton(
-              onPressed: enabledReset ? () => logic.lapResetPressed() : null,
-              child: Text(isRunning ? AppLocalizations.of(context)?.lap ?? '' : AppLocalizations.of(context)?.reset ?? ''),
-            ),
-          ),
-          SizedBox(width: 10.w),
-          Expanded(
-            child: TextButton(onPressed: () => logic.startStopPressed(), child: Text(isRunning ? AppLocalizations.of(context)?.stop ?? '' : AppLocalizations.of(context)?.start ?? '')),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LapItem extends StatelessWidget {
-  final LapModel lap;
-  final Function(BuildContext) onTap;
-  final Object tag;
-  const _LapItem(this.lap, this.tag, {required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      key: GlobalObjectKey(tag),
-      borderRadius: BorderRadius.circular(10).r,
-      onTap: () => onTap(context),
-      child: Container(
-        padding: EdgeInsets.fromLTRB(15, 10, 15, 10).r,
-        decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(10).r),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('${lap.order}', style: Theme.of(context).textTheme.bodyMedium),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(AppLocalizations.of(context)?.lapTime ?? '', style: Theme.of(context).textTheme.bodySmall),
-                Text(DurationElapsedFormatter.toElapsedTime(lap.time), style: Theme.of(context).textTheme.bodyMedium),
-              ],
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(AppLocalizations.of(context)?.lapTotalTime ?? '', style: Theme.of(context).textTheme.bodySmall),
-                Text(DurationElapsedFormatter.toElapsedTime(lap.totalTime), style: Theme.of(context).textTheme.bodyMedium),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }
