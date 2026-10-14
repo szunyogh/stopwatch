@@ -3,25 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 
-// ─────────────────────────────────────────────────────────────
-// 1. WIDGET: csak konfiguráció (nincs saját Element)
-// ─────────────────────────────────────────────────────────────
 class SlidingTimeDisplay extends LeafRenderObjectWidget {
   const SlidingTimeDisplay({super.key, required this.elapsed, required this.textStyle, this.countdown = false, this.duration = const Duration(milliseconds: 500), this.onPicked});
 
-  /// Stopper módban az eltelt, időzítő módban a hátralévő idő.
   final Duration elapsed;
 
-  /// true: felfelé kerekít, és nincs ezredmásodperc-kijelzés.
   final bool countdown;
 
-  /// Fontos: legyen benne `color` és `fontFeatures: [FontFeature.tabularFigures()]`.
   final TextStyle textStyle;
 
-  /// Egy számjegy-csúszás hossza.
   final Duration duration;
 
-  /// Ha nem null, a számjegyek ujjhúzással állíthatók (időválasztó mód).
   final ValueChanged<Duration>? onPicked;
 
   @override
@@ -34,13 +26,10 @@ class SlidingTimeDisplay extends LeafRenderObjectWidget {
       ..duration = duration
       ..countdown = countdown
       ..onPicked = onPicked
-      ..elapsed = elapsed; // a végén, hogy már az új beállításokkal számoljon
+      ..elapsed = elapsed;
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// 2. Segéd: egy stílushoz tartozó, előre kiszámolt karakterek
-// ─────────────────────────────────────────────────────────────
 class _GlyphSet {
   _GlyphSet(TextStyle style) {
     for (final t in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', '.']) {
@@ -84,7 +73,6 @@ class _GlyphSet {
 
 const int _slots = 6; // H1 H2 M1 M2 S1 S2
 
-// Stopper: lefelé kerekítve. Visszaszámlálás: FELFELÉ kerekítve.
 List<int> _digitsOf(Duration d, {required bool countdown}) {
   final ms = d.isNegative ? 0 : d.inMilliseconds;
   final total = countdown ? (ms + 999) ~/ 1000 : ms ~/ 1000;
@@ -96,32 +84,22 @@ List<int> _digitsOf(Duration d, {required bool countdown}) {
 
 Duration _durationOf(List<int> d) => Duration(hours: d[0] * 10 + d[1], minutes: d[2] * 10 + d[3], seconds: d[4] * 10 + d[5]);
 
-// A perc és a másodperc tízesei 0..5, a többi 0..9.
 int _maxDigit(int slot) => (slot == 2 || slot == 4) ? 5 : 9;
 
-// ─────────────────────────────────────────────────────────────
-// 3. RENDERBOX
-// ─────────────────────────────────────────────────────────────
 class RenderSlidingTime extends RenderBox {
-  RenderSlidingTime({required Duration elapsed, required bool countdown, required TextStyle textStyle, required Duration duration, this.onPicked})
-    : _elapsed = elapsed,
-      _countdown = countdown,
-      _textStyle = textStyle,
-      _duration = duration {
+  RenderSlidingTime({required this._elapsed, required this._countdown, required this._textStyle, required this._duration, this.onPicked}) {
     _rebuildGlyphs();
     _sync(animate: false);
   }
 
-  // ── konfiguráció ──
   Duration _elapsed;
   set elapsed(Duration value) {
     if (value == _elapsed) return;
-    // Az egész idő iránya dönt (59 -> 00 váltásnál a számjegyenkénti összehasonlítás megtévesztő).
     final dir = value < _elapsed ? -1 : 1;
     _elapsed = value;
     final changed = _sync(dir: dir);
     if (changed) _updateTicker();
-    if (changed || _showMs) markNeedsPaint(); // időzítőnél csak akkor festünk, ha van mit
+    if (changed || _showMs) markNeedsPaint();
   }
 
   bool _countdown;
@@ -149,14 +127,12 @@ class RenderSlidingTime extends RenderBox {
   bool get _showMs => !_countdown;
   bool get _pickerActive => onPicked != null;
 
-  // ── számjegy-állapot ──
   final List<int> _current = List<int>.filled(_slots, 0);
   final List<int> _previous = List<int>.filled(_slots, 0);
-  final List<double> _progress = List<double>.filled(_slots, 1.0); // 1.0 = áll
-  final List<int> _direction = List<int>.filled(_slots, 1); // +1: felfelé csúszik ki, -1: lefelé
+  final List<double> _progress = List<double>.filled(_slots, 1.0);
+  final List<int> _direction = List<int>.filled(_slots, 1);
   int _ms = 0;
 
-  /// Az _elapsed-ből frissíti a számjegyeket. true, ha változott valami.
   bool _sync({int dir = 1, bool animate = true}) {
     final next = _digitsOf(_elapsed, countdown: _countdown);
     var changed = false;
@@ -179,9 +155,8 @@ class RenderSlidingTime extends RenderBox {
 
   bool get _isAnimating => _progress.any((p) => p < 1.0);
 
-  // ── karakterek ──
   late _GlyphSet _big;
-  late _GlyphSet _small; // a ".000" része, fele akkora betűméret
+  late _GlyphSet _small;
   bool _glyphsReady = false;
 
   void _rebuildGlyphs() {
@@ -194,7 +169,6 @@ class RenderSlidingTime extends RenderBox {
     _glyphsReady = true;
   }
 
-  // ── Ticker: csak a csúszó animációhoz, attach/detach az életciklusa ──
   Ticker? _ticker;
   Duration _lastTick = Duration.zero;
 
@@ -202,7 +176,7 @@ class RenderSlidingTime extends RenderBox {
   void attach(PipelineOwner owner) {
     super.attach(owner);
     _ticker = Ticker(_onTick, debugLabel: 'SlidingTime');
-    _updateTicker(); // lehet, hogy már csúszik valami
+    _updateTicker();
   }
 
   @override
@@ -216,7 +190,7 @@ class RenderSlidingTime extends RenderBox {
     final t = _ticker;
     if (t == null) return;
     if (_isAnimating && !t.isActive) {
-      _lastTick = Duration.zero; // a Ticker minden indításkor 0-ról számol
+      _lastTick = Duration.zero;
       t.start();
     } else if (!_isAnimating && t.isActive) {
       t.stop();
@@ -232,10 +206,9 @@ class RenderSlidingTime extends RenderBox {
       _progress[i] = (_progress[i] + step).clamp(0.0, 1.0);
     }
     markNeedsPaint();
-    _updateTicker(); // ha minden megállt, leáll a Ticker
+    _updateTicker();
   }
 
-  // ── időválasztó: ujjhúzás karakterenként ──
   late final VerticalDragGestureRecognizer _drag = VerticalDragGestureRecognizer(debugOwner: this)
     ..onStart = _onDragStart
     ..onUpdate = _onDragUpdate;
@@ -249,7 +222,7 @@ class RenderSlidingTime extends RenderBox {
   @override
   void handleEvent(PointerEvent event, BoxHitTestEntry entry) {
     if (event is PointerDownEvent && _pickerActive) {
-      _dragSlot = _slotAt(entry.localPosition.dx); // melyik számjegyen kezdődött az érintés
+      _dragSlot = _slotAt(entry.localPosition.dx);
       _drag.addPointer(event);
     }
   }
@@ -258,32 +231,31 @@ class RenderSlidingTime extends RenderBox {
 
   void _onDragUpdate(DragUpdateDetails d) {
     if (!_pickerActive) return;
-    final step = _big.height * 0.5; // ennyi ujjmozgás = egy számjegynyi lépés
+    final step = _big.height * 0.5;
     _dragAccum += d.delta.dy;
     while (_dragAccum >= step) {
       _dragAccum -= step;
-      _stepDigit(_dragSlot, -1); // lehúzás: 0 -> 9 (lecsúszik)
+      _stepDigit(_dragSlot, -1);
     }
     while (_dragAccum <= -step) {
       _dragAccum += step;
-      _stepDigit(_dragSlot, 1); // felhúzás: 0 -> 1
+      _stepDigit(_dragSlot, 1);
     }
   }
 
   void _stepDigit(int slot, int delta) {
     final count = _maxDigit(slot) + 1;
     _previous[slot] = _current[slot];
-    _current[slot] = (_current[slot] + delta) % count; // a Dart % mindig nemnegatív
-    _direction[slot] = delta; // az ujjad irányába csúszik
+    _current[slot] = (_current[slot] + delta) % count;
+    _direction[slot] = delta;
     _progress[slot] = 0.0;
     final picked = _durationOf(_current);
-    _elapsed = picked; // helyi, azonnali frissítés; a szülő visszaadott értéke ugyanez lesz
+    _elapsed = picked;
     markNeedsPaint();
     _updateTicker();
     onPicked?.call(picked);
   }
 
-  // ── geometria ──
   double _slotX(int i) => i * _big.digitWidth + (i ~/ 2) * _big.colonWidth;
 
   int _slotAt(double dx) {
@@ -307,7 +279,6 @@ class RenderSlidingTime extends RenderBox {
     size = constraints.constrain(_contentSize());
   }
 
-  // ── rajzolás ──
   @override
   void paint(PaintingContext context, Offset offset) {
     context.pushClipRect(needsCompositing, offset, Offset.zero & size, _paintContent);
@@ -318,11 +289,9 @@ class RenderSlidingTime extends RenderBox {
     final dw = _big.digitWidth;
     final h = _big.height;
 
-    // kettőspontok
     _big.paint(canvas, _GlyphSet.colon, offset.dx + _slotX(2) - _big.colonWidth, offset.dy, _big.colonWidth);
     _big.paint(canvas, _GlyphSet.colon, offset.dx + _slotX(4) - _big.colonWidth, offset.dy, _big.colonWidth);
 
-    // csúszó számjegyek
     for (var i = 0; i < _slots; i++) {
       final x = offset.dx + _slotX(i);
       final p = _progress[i];
@@ -336,7 +305,6 @@ class RenderSlidingTime extends RenderBox {
       }
     }
 
-    // ".000": nem animált, fele akkora, közös alapvonalon a nagy számokkal
     if (_showMs) {
       var x = offset.dx + _slotX(_slots - 1) + dw;
       final y = offset.dy + _big.baseline - _small.baseline;
