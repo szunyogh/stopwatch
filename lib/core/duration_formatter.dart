@@ -5,7 +5,7 @@ class DurationElapsedFormatter {
     if (duration == null) return '';
 
     final hours = duration.inHours;
-    final minutes = duration.inMinutes;
+    final minutes = duration.inMinutes % 60;
     final seconds = duration.inSeconds % 60;
     final milliseconds = duration.inMilliseconds % 1000;
 

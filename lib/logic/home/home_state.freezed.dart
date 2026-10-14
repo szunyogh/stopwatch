@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$HomeState {
 
- Duration get time; bool get isRunning; List<LapModel> get laps; Duration? get currentTime;
+ Rect get stopwatchButtonRect; Rect get timerButtonRect;
 /// Create a copy of HomeState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $HomeStateCopyWith<HomeState> get copyWith => _$HomeStateCopyWithImpl<HomeState>
 @override
 bool operator ==(Object other) {
   final _this = this as HomeState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HomeState&&(identical(other.time, _this.time) || other.time == _this.time)&&(identical(other.isRunning, _this.isRunning) || other.isRunning == _this.isRunning)&&const DeepCollectionEquality().equals(other.laps, _this.laps)&&(identical(other.currentTime, _this.currentTime) || other.currentTime == _this.currentTime));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HomeState&&(identical(other.stopwatchButtonRect, _this.stopwatchButtonRect) || other.stopwatchButtonRect == _this.stopwatchButtonRect)&&(identical(other.timerButtonRect, _this.timerButtonRect) || other.timerButtonRect == _this.timerButtonRect));
 }
 
 
 @override
 int get hashCode {
   final _this = this as HomeState;
-  return Object.hash(runtimeType,_this.time,_this.isRunning,const DeepCollectionEquality().hash(_this.laps),_this.currentTime);
+  return Object.hash(runtimeType,_this.stopwatchButtonRect,_this.timerButtonRect);
 }
 
 @override
 String toString() {
   final _this = this as HomeState;
-  return 'HomeState(time: ${_this.time}, isRunning: ${_this.isRunning}, laps: ${_this.laps}, currentTime: ${_this.currentTime})';
+  return 'HomeState(stopwatchButtonRect: ${_this.stopwatchButtonRect}, timerButtonRect: ${_this.timerButtonRect})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $HomeStateCopyWith<$Res>  {
   factory $HomeStateCopyWith(HomeState value, $Res Function(HomeState) _then) = _$HomeStateCopyWithImpl;
 @useResult
 $Res call({
- Duration time, bool isRunning, List<LapModel> laps, Duration? currentTime
+ Rect stopwatchButtonRect, Rect timerButtonRect
 });
 
 
@@ -68,13 +68,11 @@ class _$HomeStateCopyWithImpl<$Res>
 
 /// Create a copy of HomeState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? time = null,Object? isRunning = null,Object? laps = null,Object? currentTime = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? stopwatchButtonRect = null,Object? timerButtonRect = null,}) {
   return _then(HomeState(
-time: null == time ? _self.time : time // ignore: cast_nullable_to_non_nullable
-as Duration,isRunning: null == isRunning ? _self.isRunning : isRunning // ignore: cast_nullable_to_non_nullable
-as bool,laps: null == laps ? _self.laps : laps // ignore: cast_nullable_to_non_nullable
-as List<LapModel>,currentTime: freezed == currentTime ? _self.currentTime : currentTime // ignore: cast_nullable_to_non_nullable
-as Duration?,
+stopwatchButtonRect: null == stopwatchButtonRect ? _self.stopwatchButtonRect : stopwatchButtonRect // ignore: cast_nullable_to_non_nullable
+as Rect,timerButtonRect: null == timerButtonRect ? _self.timerButtonRect : timerButtonRect // ignore: cast_nullable_to_non_nullable
+as Rect,
   ));
 }
 
@@ -159,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Duration time,  bool isRunning,  List<LapModel> laps,  Duration? currentTime)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Rect stopwatchButtonRect,  Rect timerButtonRect)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _HomeState() when $default != null:
-return $default(_that.time,_that.isRunning,_that.laps,_that.currentTime);case _:
+return $default(_that.stopwatchButtonRect,_that.timerButtonRect);case _:
   return orElse();
 
 }
@@ -180,10 +178,10 @@ return $default(_that.time,_that.isRunning,_that.laps,_that.currentTime);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Duration time,  bool isRunning,  List<LapModel> laps,  Duration? currentTime)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Rect stopwatchButtonRect,  Rect timerButtonRect)  $default,) {final _that = this;
 switch (_that) {
 case _HomeState():
-return $default(_that.time,_that.isRunning,_that.laps,_that.currentTime);case _:
+return $default(_that.stopwatchButtonRect,_that.timerButtonRect);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -200,10 +198,10 @@ return $default(_that.time,_that.isRunning,_that.laps,_that.currentTime);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Duration time,  bool isRunning,  List<LapModel> laps,  Duration? currentTime)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Rect stopwatchButtonRect,  Rect timerButtonRect)?  $default,) {final _that = this;
 switch (_that) {
 case _HomeState() when $default != null:
-return $default(_that.time,_that.isRunning,_that.laps,_that.currentTime);case _:
+return $default(_that.stopwatchButtonRect,_that.timerButtonRect);case _:
   return null;
 
 }
@@ -215,19 +213,11 @@ return $default(_that.time,_that.isRunning,_that.laps,_that.currentTime);case _:
 
 
 class _HomeState extends HomeState {
-  const _HomeState({this.time = Duration.zero, this.isRunning = false,  List<LapModel> laps = const [], this.currentTime = null}): _laps = laps,super._();
+  const _HomeState({this.stopwatchButtonRect = Rect.zero, this.timerButtonRect = Rect.zero}): super._();
   
 
-@override@JsonKey() final  Duration time;
-@override@JsonKey() final  bool isRunning;
- final  List<LapModel> _laps;
-@override@JsonKey() List<LapModel> get laps {
-  if (_laps is EqualUnmodifiableListView) return _laps;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_laps);
-}
-
-@override@JsonKey() final  Duration? currentTime;
+@override@JsonKey() final  Rect stopwatchButtonRect;
+@override@JsonKey() final  Rect timerButtonRect;
 
 /// Create a copy of HomeState
 /// with the given fields replaced by the non-null parameter values.
@@ -239,18 +229,18 @@ _$HomeStateCopyWith<_HomeState> get copyWith => __$HomeStateCopyWithImpl<_HomeSt
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _HomeState&&(identical(other.time, time) || other.time == time)&&(identical(other.isRunning, isRunning) || other.isRunning == isRunning)&&const DeepCollectionEquality().equals(other.laps, _laps)&&(identical(other.currentTime, currentTime) || other.currentTime == currentTime));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _HomeState&&(identical(other.stopwatchButtonRect, stopwatchButtonRect) || other.stopwatchButtonRect == stopwatchButtonRect)&&(identical(other.timerButtonRect, timerButtonRect) || other.timerButtonRect == timerButtonRect));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,time,isRunning,const DeepCollectionEquality().hash(_laps),currentTime);
+    return Object.hash(runtimeType,stopwatchButtonRect,timerButtonRect);
 }
 
 @override
 String toString() {
-    return 'HomeState(time: $time, isRunning: $isRunning, laps: $laps, currentTime: $currentTime)';
+    return 'HomeState(stopwatchButtonRect: $stopwatchButtonRect, timerButtonRect: $timerButtonRect)';
 }
 
 
@@ -261,7 +251,7 @@ abstract mixin class _$HomeStateCopyWith<$Res> implements $HomeStateCopyWith<$Re
   factory _$HomeStateCopyWith(_HomeState value, $Res Function(_HomeState) _then) = __$HomeStateCopyWithImpl;
 @override @useResult
 $Res call({
- Duration time, bool isRunning, List<LapModel> laps, Duration? currentTime
+ Rect stopwatchButtonRect, Rect timerButtonRect
 });
 
 
@@ -278,13 +268,11 @@ class __$HomeStateCopyWithImpl<$Res>
 
 /// Create a copy of HomeState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? time = null,Object? isRunning = null,Object? laps = null,Object? currentTime = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? stopwatchButtonRect = null,Object? timerButtonRect = null,}) {
   return _then(_HomeState(
-time: null == time ? _self.time : time // ignore: cast_nullable_to_non_nullable
-as Duration,isRunning: null == isRunning ? _self.isRunning : isRunning // ignore: cast_nullable_to_non_nullable
-as bool,laps: null == laps ? _self._laps : laps // ignore: cast_nullable_to_non_nullable
-as List<LapModel>,currentTime: freezed == currentTime ? _self.currentTime : currentTime // ignore: cast_nullable_to_non_nullable
-as Duration?,
+stopwatchButtonRect: null == stopwatchButtonRect ? _self.stopwatchButtonRect : stopwatchButtonRect // ignore: cast_nullable_to_non_nullable
+as Rect,timerButtonRect: null == timerButtonRect ? _self.timerButtonRect : timerButtonRect // ignore: cast_nullable_to_non_nullable
+as Rect,
   ));
 }
 

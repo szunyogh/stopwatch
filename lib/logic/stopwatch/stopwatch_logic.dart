@@ -78,7 +78,7 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
 
       _lapStartElapsed = laps.last.totalTime;
 
-      state = state.copyWith(laps: laps);
+      changeState((state) => state.copyWith(laps: laps));
     } catch (error, stack) {
       logger.e('[StopwatchLogic] _loadLaps error', error: error, stackTrace: stack);
     }
@@ -129,7 +129,7 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
     final elapsed = anchor.elapsed;
     final lapStart = _lapStartElapsed;
 
-    state = state.copyWith(time: elapsed, isRunning: anchor.isRunning, currentTime: lapStart == null ? null : elapsed - lapStart);
+    changeState((state) => state.copyWith(time: elapsed, isRunning: anchor.isRunning, currentTime: lapStart == null ? null : elapsed - lapStart));
 
     if (anchor.isRunning) {
       if (!_ticker.isActive) _ticker.start();
@@ -144,7 +144,7 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
     final elapsed = _anchor.elapsed;
     final lapStart = _lapStartElapsed;
 
-    state = state.copyWith(time: elapsed, currentTime: lapStart == null ? null : elapsed - lapStart);
+    changeState((state) => state.copyWith(time: elapsed, currentTime: lapStart == null ? null : elapsed - lapStart));
   }
 
   void onTap(LapModel lap, Object tag) {
@@ -196,7 +196,7 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
 
       _lapStartElapsed = null;
 
-      state = state.copyWith(laps: const [], currentTime: null);
+      changeState((state) => state.copyWith(laps: const [], currentTime: null));
 
       _setAnchor(_zeroNative);
 
@@ -220,7 +220,7 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
 
       _lapStartElapsed = elapsed;
 
-      state = state.copyWith(laps: [...state.laps, item], time: elapsed, currentTime: Duration.zero);
+      changeState((state) => state.copyWith(laps: [...state.laps, item], time: elapsed, currentTime: Duration.zero));
 
       _bridge.saveLaps(state.laps);
     } catch (error, stack) {
