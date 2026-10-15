@@ -29,4 +29,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lapDetails => 'Lap time';
+
+  @override
+  String get stopwatch => 'Stopwatch';
+
+  @override
+  String get timer => 'Timer';
 }

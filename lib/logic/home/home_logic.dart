@@ -2,24 +2,45 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stopwatch/core/router.gr.dart';
+import 'package:stopwatch/core/stopwatch_native_bridge.dart';
 import 'package:stopwatch/logic/base.dart';
 import 'package:stopwatch/logic/home/home_state.dart';
+import 'package:stopwatch/model/stopwatch_native_state.dart';
 
 final homeLogic = NotifierProvider<HomeLogic, HomeState>(HomeLogic.new);
 
 class HomeLogic extends BaseLogic<HomeState> {
+  final _bridge = StopwatchNativeBridge.instance;
+
+  late final AppLifecycleListener _lifecycle;
+
   @override
   HomeState build() {
     _init();
 
+    _lifecycle = AppLifecycleListener(onResume: _openPendingTab);
+    _openPendingTab();
+
     ref.onDispose(() {
       logger.i('[HomeLogic] disposed');
+      _lifecycle.dispose();
     });
 
     return const HomeState();
   }
 
-  void _init() {
+  Future<void> _openPendingTab() async {
+    try {
+      final kind = await _bridge.consumePendingTab();
+      if (kind == null) return;
+
+      kind == NativeKind.timer ? navigateTimer() : navigateStopwatch();
+    } catch (error, stack) {
+      logger.e('[HomeLogic] _openPendingTab error', error: error, stackTrace: stack);
+    }
+  }
+
+  Future<void> _init() async {
     try {
       logger.i('[HomeLogic] _init');
 
@@ -28,6 +49,12 @@ class HomeLogic extends BaseLogic<HomeState> {
         final timerButtonRect = _getRectFromTag('timer_icon_button');
         changeState((state) => state.copyWith(stopwatchButtonRect: stopwatchButtonRect, timerButtonRect: timerButtonRect));
       });
+
+      final hasPermission = await _bridge.hasNotificationPermission();
+
+      logger.i('[HomeLogic] _init hasPermission: $hasPermission');
+
+      if (!hasPermission) await _bridge.requestNotificationPermission();
     } catch (error, stack) {
       logger.e('[HomeLogic] _init error', error: error, stackTrace: stack);
     }

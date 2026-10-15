@@ -6,5 +6,7 @@
     "stop": "Stop",
     "lapTime": "Lap time",
     "lapTotalTime": "Total time",
-    "lapDetails": "Lap time"
+    "lapDetails": "Lap time",
+    "stopwatch": "Stopwatch",
+    "timer": "Timer"
 }

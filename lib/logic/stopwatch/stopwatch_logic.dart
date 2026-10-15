@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,7 +13,8 @@ import 'package:stopwatch/model/stopwatch_native_state.dart';
 final stopwatchLogic = NotifierProvider.autoDispose<StopwatchLogic, StopwatchState>(StopwatchLogic.new);
 
 class StopwatchLogic extends BaseLogic<StopwatchState> {
-  static const _zeroNative = StopwatchNativeState(isRunning: false, startedAtEpochMs: null, accumulatedMs: 0);
+  static const _kind = NativeKind.stopwatch;
+  static const _zeroNative = StopwatchNativeState(kind: _kind, isRunning: false, startedAtEpochMs: null, accumulatedMs: 0);
 
   late final Ticker _ticker;
   StreamSubscription<StopwatchNativeState>? _nativeEventsSub;
@@ -55,14 +55,6 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
 
       _initEventChannel();
       await _syncFromNative();
-
-      if (_disposed || !Platform.isAndroid) return;
-
-      final hasPermission = await _bridge.hasNotificationPermission();
-
-      logger.i('[StopwatchLogic] _init hasPermission: $hasPermission');
-
-      if (!hasPermission) await _bridge.requestNotificationPermission();
     } catch (error, stack) {
       logger.e('[StopwatchLogic] _init error', error: error, stackTrace: stack);
     }
@@ -88,18 +80,20 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
     try {
       logger.i('[StopwatchLogic] _initEventChannel');
 
-      _nativeEventsSub ??= _bridge.stateUpdates.listen(
-        (native) {
-          if (_disposed) return;
+      _nativeEventsSub ??= _bridge
+          .stateUpdates(_kind)
+          .listen(
+            (native) {
+              if (_disposed) return;
 
-          logger.i('[StopwatchLogic] native event: ${native.logText}');
+              logger.i('[StopwatchLogic] native event: ${native.logText}');
 
-          _setAnchor(native);
-        },
-        onError: (Object error, StackTrace stack) {
-          logger.e('[StopwatchLogic] event stream error', error: error, stackTrace: stack);
-        },
-      );
+              _setAnchor(native);
+            },
+            onError: (Object error, StackTrace stack) {
+              logger.e('[StopwatchLogic] event stream error', error: error, stackTrace: stack);
+            },
+          );
     } catch (error, stack) {
       logger.e('[StopwatchLogic] _initEventChannel error', error: error, stackTrace: stack);
     }
@@ -108,7 +102,7 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
   Future<void> _syncFromNative() async {
     try {
       final versionBefore = _anchorVersion;
-      final native = await _bridge.getState();
+      final native = await _bridge.getState(_kind);
 
       if (_disposed) return;
 
@@ -166,9 +160,9 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
       final accumulatedMs = _anchor.elapsed.inMilliseconds;
       final startedAtEpochMs = DateTime.now().millisecondsSinceEpoch;
 
-      _setAnchor(StopwatchNativeState(isRunning: true, startedAtEpochMs: startedAtEpochMs, accumulatedMs: accumulatedMs));
+      _setAnchor(StopwatchNativeState(kind: _kind, isRunning: true, startedAtEpochMs: startedAtEpochMs, accumulatedMs: accumulatedMs));
 
-      _bridge.notifyStart(startedAtEpochMs: startedAtEpochMs, accumulatedMs: accumulatedMs);
+      _bridge.notifyStart(kind: _kind, startedAtEpochMs: startedAtEpochMs, accumulatedMs: accumulatedMs);
     } catch (error, stack) {
       logger.e('[StopwatchLogic] start', error: error, stackTrace: stack);
     }
@@ -182,9 +176,9 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
 
       final accumulatedMs = _anchor.elapsed.inMilliseconds;
 
-      _setAnchor(StopwatchNativeState(isRunning: false, startedAtEpochMs: null, accumulatedMs: accumulatedMs));
+      _setAnchor(StopwatchNativeState(kind: _kind, isRunning: false, startedAtEpochMs: null, accumulatedMs: accumulatedMs));
 
-      _bridge.notifyStop(accumulatedMs: accumulatedMs);
+      _bridge.notifyStop(kind: _kind, accumulatedMs: accumulatedMs);
     } catch (error, stack) {
       logger.e('[StopwatchLogic] stop', error: error, stackTrace: stack);
     }
@@ -200,7 +194,7 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
 
       _setAnchor(_zeroNative);
 
-      _bridge.notifyReset();
+      _bridge.notifyReset(kind: _kind);
     } catch (error, stack) {
       logger.e('[StopwatchLogic] reset', error: error, stackTrace: stack);
     }

@@ -11,7 +11,13 @@ class StopwatchNativeBridge {
   static const _methodChannel = MethodChannel('stopwatch/native');
   static const _eventChannel = EventChannel('stopwatch/native_events');
 
-  Stream<StopwatchNativeState> get stateUpdates => _eventChannel.receiveBroadcastStream().map((event) => StopwatchNativeState.fromMap(event as Map));
+  late final Stream<StopwatchNativeState> _updates = _eventChannel.receiveBroadcastStream().map((event) => StopwatchNativeState.fromMap(event as Map));
+  Stream<StopwatchNativeState> stateUpdates(NativeKind kind) => _updates.where((state) => state.kind == kind);
+
+  Future<NativeKind?> consumePendingTab() async {
+    final raw = await _methodChannel.invokeMethod<String>('consumePendingTab');
+    return raw == null ? null : NativeKind.fromName(raw);
+  }
 
   Future<bool> hasNotificationPermission() async {
     final result = await _methodChannel.invokeMethod<bool>('hasNotificationPermission');
@@ -23,20 +29,26 @@ class StopwatchNativeBridge {
     return result ?? false;
   }
 
-  Future<StopwatchNativeState> getState() async {
-    final result = await _methodChannel.invokeMethod<Map<dynamic, dynamic>>('getState');
-    return StopwatchNativeState.fromMap(result ?? const {});
+  Future<StopwatchNativeState> getState(NativeKind kind) async {
+    final result = await _methodChannel.invokeMethod<Map<dynamic, dynamic>>('getState', {'kind': kind.name});
+    return StopwatchNativeState.fromMap({'kind': kind.name, ...?result});
   }
 
-  Future<void> notifyStart({required int startedAtEpochMs, required int accumulatedMs}) {
-    return _methodChannel.invokeMethod('notifyStart', {'startedAtEpochMs': startedAtEpochMs, 'accumulatedMs': accumulatedMs});
+  Future<void> notifyStart({required NativeKind kind, required int startedAtEpochMs, required int accumulatedMs}) {
+    return _methodChannel.invokeMethod('notifyStart', {'kind': kind.name, 'startedAtEpochMs': startedAtEpochMs, 'accumulatedMs': accumulatedMs});
   }
 
-  Future<void> notifyStop({required int accumulatedMs}) {
-    return _methodChannel.invokeMethod('notifyStop', {'accumulatedMs': accumulatedMs});
+  Future<void> notifyStop({required NativeKind kind, required int accumulatedMs}) {
+    return _methodChannel.invokeMethod('notifyStop', {'kind': kind.name, 'accumulatedMs': accumulatedMs});
   }
 
-  Future<void> notifyReset() => _methodChannel.invokeMethod('notifyReset');
+  Future<void> notifyReset({required NativeKind kind, int accumulatedMs = 0}) {
+    return _methodChannel.invokeMethod('notifyReset', {'kind': kind.name, 'accumulatedMs': accumulatedMs});
+  }
+
+  Future<void> notifySetTimer({required int totalMs}) {
+    return _methodChannel.invokeMethod('notifySetTimer', {'kind': NativeKind.timer.name, 'totalMs': totalMs});
+  }
 
   Future<List<LapModel>> getLaps() async {
     final raw = await _methodChannel.invokeMethod<String>('getLaps');
@@ -45,9 +57,7 @@ class StopwatchNativeBridge {
 
     final list = jsonDecode(raw) as List<dynamic>;
 
-    final laps = list.map((item) => LapModel.fromJson(item as Map<String, dynamic>)).toList();
-
-    return laps;
+    return list.map((item) => LapModel.fromJson(item as Map<String, dynamic>)).toList();
   }
 
   Future<void> saveLaps(List<LapModel> laps) {

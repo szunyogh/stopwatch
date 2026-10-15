@@ -17,6 +17,40 @@
           }
         }
       }
+    },
+    "timer_finished_body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The specified time limit has expired."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A megadott határidő lejárt."
+          }
+        }
+      }
+    },
+    "timer_finished_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timer finished"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az időzítő lejárt"
+          }
+        }
+      }
     }
   },
   "version" : "1.3"

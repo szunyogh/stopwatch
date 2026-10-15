@@ -6,5 +6,7 @@
     "stop": "Leállítás",
     "lapTime": "Kör idő",
     "lapTotalTime": "Teljes idő",
-    "lapDetails": "Kör idő"
+    "lapDetails": "Kör idő",
+    "stopwatch": "Stopperóra",
+    "timer": "Időzítő"
 }

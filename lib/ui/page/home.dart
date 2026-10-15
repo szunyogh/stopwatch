@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:stopwatch/core/router.gr.dart';
+import 'package:stopwatch/l10n/app_localizations.dart';
 import 'package:stopwatch/logic/home/home_logic.dart';
 
 @RoutePage()
@@ -65,13 +66,13 @@ class _BottomNavigationBar extends ConsumerWidget {
                     key: GlobalObjectKey('stopwatch_icon_button'),
                     onTap: () => logic.navigateStopwatch(),
                     icon: Icon(CupertinoIcons.stopwatch, color: theme.colorScheme.onSurface),
-                    label: 'Stopperóra',
+                    label: AppLocalizations.of(context)?.stopwatch ?? '',
                   ),
                   _IconButton(
                     key: GlobalObjectKey('timer_icon_button'),
                     onTap: () => logic.navigateTimer(),
                     icon: Icon(CupertinoIcons.hourglass, color: theme.colorScheme.onSurface),
-                    label: 'Időzítő',
+                    label: AppLocalizations.of(context)?.timer ?? '',
                   ),
                 ],
               ),

@@ -1,6 +1,40 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "timer_finished_body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The specified time limit has expired."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A megadott határidő lejárt."
+          }
+        }
+      }
+    },
+    "timer_finished_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timer finished"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az időzítő lejárt"
+          }
+        }
+      }
+    },
     "widget_button_text_start" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -65,6 +99,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stopperóra"
+          }
+        }
+      }
+    },
+    "widget_name_timer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timer"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Időzítő"
           }
         }
       }

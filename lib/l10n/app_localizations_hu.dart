@@ -29,4 +29,10 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get lapDetails => 'Kör idő';
+
+  @override
+  String get stopwatch => 'Stopperóra';
+
+  @override
+  String get timer => 'Időzítő';
 }

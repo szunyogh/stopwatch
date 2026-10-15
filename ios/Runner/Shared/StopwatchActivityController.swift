@@ -7,75 +7,67 @@ private let activityLogger = Logger(subsystem: "com.szunyoghtamas.stopwatch", ca
 public class StopwatchActivityController {
     private static let activeActivityIdKey = "com.szunyoghtamas.stopwatch.activeActivityId"
     private static let appGroupSuiteName = "group.com.szunyoghtamas.stopwatch"
-    
-    public static func start() async {
-        let sharedDefaults = UserDefaults(suiteName: appGroupSuiteName)
 
-        if let savedId = sharedDefaults?.string(forKey: activeActivityIdKey),
-            Activity<StopwatchAttributes>.activities.contains(where: { $0.id == savedId }) {
+    private static var defaults: UserDefaults? { UserDefaults(suiteName: appGroupSuiteName) }
 
-            await update(activityId: savedId)
-            activityLogger.notice("[Widget] Resumed existing activity via update(activityId:).")
+    private static func relevance(kind: TimeKind, state: StopwatchAttributes.ContentState) -> Double {
+        var score = state.isRunning ? 100.0 : 0.0
+        if StopwatchSharedState.widgetMode == kind { score += 10 }
+        return score
+    }
+
+    private static func content(kind: TimeKind) -> ActivityContent<StopwatchAttributes.ContentState> {
+        let state = StopwatchSharedState.contentState(kind: kind)
+        return ActivityContent(state: state, staleDate: state.endDate, relevanceScore: relevance(kind: kind, state: state))
+    }
+
+    private static func savedId(kind: TimeKind) -> String? {
+        defaults?.string(forKey: kind.key(activeActivityIdKey))
+    }
+
+    public static func start(kind: TimeKind) async {
+        if let id = savedId(kind: kind), Activity<StopwatchAttributes>.activities.contains(where: { $0.id == id }) {
+            activityLogger.notice("[Widget] [\(kind.rawValue)] Resumed existing activity.")
+        } else {
+            do {
+                let activity = try Activity.request(attributes: StopwatchAttributes(), content: content(kind: kind), pushType: nil)
+                defaults?.set(activity.id, forKey: kind.key(activeActivityIdKey))
+                activityLogger.notice("[Widget] [\(kind.rawValue)] Started activity: \(activity.id)")
+            } catch {
+                activityLogger.error("[Widget] [\(kind.rawValue)] Failed to start: \(error.localizedDescription)")
+                return
+            }
+        }
+
+        await refreshAll()
+    }
+
+    public static func update(kind: TimeKind) async {
+        guard let id = savedId(kind: kind) else {
+            activityLogger.notice("[Widget] [\(kind.rawValue)] No saved activity ID.")
             return
         }
-
-        let initialState = StopwatchSharedState.contentState()
-        let attributes = StopwatchAttributes()
-
-        do {
-            let content = ActivityContent(state: initialState, staleDate: nil)
-            let activity = try Activity.request(
-                attributes: attributes,
-                content: content,
-                pushType: nil
-            )
-
-            sharedDefaults?.set(activity.id, forKey: activeActivityIdKey)
-
-            activityLogger.notice("[Widget] Started and saved Activity ID: \(activity.id)")
-        } catch {
-            activityLogger.error("[Widget] Failed to start: \(error.localizedDescription)")
-        }
-    }
-    
-    public static func update(activityId: String? = nil) async {
-        let targetId: String?
-        
-        if let providedId = activityId {
-            targetId = providedId
-        } else {
-            targetId = UserDefaults(suiteName: appGroupSuiteName)?.string(forKey: activeActivityIdKey)
-        }
-        
-        guard let savedId = targetId else {
-            activityLogger.notice("[Widget] [ActivityController] No saved activity ID found.")
+        guard let activity = Activity<StopwatchAttributes>.activities.first(where: { $0.id == id }) else {
+            activityLogger.notice("[Widget] [\(kind.rawValue)] Activity \(id) not found in system.")
             return
         }
-        
-        let targetActivity = Activity<StopwatchAttributes>.activities.first { $0.id == savedId }
-        let state = StopwatchSharedState.contentState()
-        let content = ActivityContent(state: state, staleDate: nil)
-        
-        if let activity = targetActivity {
-            activityLogger.notice("[Widget] [ActivityController] Updating exact activity ID: \(activity.id)")
-            await activity.update(content)
-        } else {
-            activityLogger.notice("[Widget] [ActivityController] Activity with ID \(savedId) not found in system.")
+        await activity.update(content(kind: kind))
+    }
+
+    public static func refreshAll() async {
+        for kind in TimeKind.allCases {
+            await update(kind: kind)
         }
     }
-    
-    public static func end() async {
-        guard let savedId = UserDefaults(suiteName: appGroupSuiteName)?.string(forKey: activeActivityIdKey) else { return }
-            
-        let targetActivity = Activity<StopwatchAttributes>.activities.first { $0.id == savedId }
-        
-        let state = StopwatchSharedState.contentState()
-        let content = ActivityContent(state: state, staleDate: nil)
-        
-        if let activity = targetActivity {
-            await activity.end(content, dismissalPolicy: .immediate)
+
+    public static func end(kind: TimeKind) async {
+        guard let id = savedId(kind: kind) else { return }
+
+        if let activity = Activity<StopwatchAttributes>.activities.first(where: { $0.id == id }) {
+            await activity.end(content(kind: kind), dismissalPolicy: .immediate)
         }
-        
-        UserDefaults(suiteName: appGroupSuiteName)?.removeObject(forKey: activeActivityIdKey)
+        defaults?.removeObject(forKey: kind.key(activeActivityIdKey))
+
+        await refreshAll()
     }
 }
