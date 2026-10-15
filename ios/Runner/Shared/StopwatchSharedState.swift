@@ -134,24 +134,3 @@ enum StopwatchSharedState {
         return dict
     }
 }
-
-enum TimerAlarm {
-    private static let identifier = "com.szunyoghtamas.stopwatch.timerFinished"
-
-    static func schedule(endAtEpochMs: Int) {
-        let interval = Double(endAtEpochMs - StopwatchSharedState.nowMs) / 1000
-        guard interval > 0 else { return }
-
-        let content = UNMutableNotificationContent()
-        content.title = String(localized: "timer_finished_title")
-        content.body = String(localized: "timer_finished_body")
-        content.sound = .default
-
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
-        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: identifier, content: content, trigger: trigger))
-    }
-
-    static func cancel() {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [identifier])
-    }
-}

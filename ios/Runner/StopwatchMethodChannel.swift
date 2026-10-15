@@ -51,9 +51,13 @@ final class StopwatchMethodChannel: NSObject {
 
             case "requestNotificationPermission":
                 UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in
-                    DispatchQueue.main.async { result(granted) }
+                    Task {
+                        #if canImport(AlarmKit)
+                            if #available(iOS 26.0, *) { await AlarmKitTimer.requestAuthorization() }
+                        #endif
+                            DispatchQueue.main.async { result(granted) }
+                    }
                 }
-
             case "getState":
                 let state = StopwatchSharedState.asDictionary(kind: kind)
                 methodChannelLogger.notice("[Widget] [MethodChannel] getState(\(kind.rawValue)) -> \(String(describing: state))")

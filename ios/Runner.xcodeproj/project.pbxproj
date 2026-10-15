@@ -22,6 +22,7 @@
 		C1005A973065801400343677 /* ActivityKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C1005A963065801400343677 /* ActivityKit.framework */; };
 		C1005A993065802200343677 /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C1005A983065802200343677 /* AppIntents.framework */; };
 		C1005AB1306586DB00343677 /* StopwatchMethodChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1005AB0306586DA00343677 /* StopwatchMethodChannel.swift */; };
+		C18DBD9830814BCF00CE6A7F /* timer_alarm.caf in Resources */ = {isa = PBXBuildFile; fileRef = C18DBD9730814BCF00CE6A7F /* timer_alarm.caf */; };
 		C1D960F230714C67003750EF /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C1D960F130714C67003750EF /* InfoPlist.xcstrings */; };
 		C1D960F330714C68003750EF /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C1D960F130714C67003750EF /* InfoPlist.xcstrings */; };
 /* End PBXBuildFile section */
@@ -105,6 +106,7 @@
 		C1005AB0306586DA00343677 /* StopwatchMethodChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopwatchMethodChannel.swift; sourceTree = "<group>"; };
 		C1592DE330712599002735FF /* hu */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hu; path = hu.lproj/Main.strings; sourceTree = "<group>"; };
 		C1592DE430712599002735FF /* hu */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hu; path = hu.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
+		C18DBD9730814BCF00CE6A7F /* timer_alarm.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = timer_alarm.caf; sourceTree = "<group>"; };
 		C1D960F130714C67003750EF /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -124,6 +126,7 @@
 				StopwatchAttributes.swift,
 				StopwatchLaunch.swift,
 				StopwatchSharedState.swift,
+				TimerAlarm.swift,
 			);
 			target = C1005A7330657CA200343677 /* StopwatchWidgetExtension */;
 		};
@@ -212,6 +215,7 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
+				C18DBD9730814BCF00CE6A7F /* timer_alarm.caf */,
 				C1005AB0306586DA00343677 /* StopwatchMethodChannel.swift */,
 				C1005AA03065862B00343677 /* Shared */,
 				C1005A9130657D4100343677 /* Runner.entitlements */,
@@ -375,6 +379,7 @@
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
+				C18DBD9830814BCF00CE6A7F /* timer_alarm.caf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

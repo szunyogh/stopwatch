@@ -18,6 +18,23 @@
         }
       }
     },
+    "timer_finished_stop" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leállítás"
+          }
+        }
+      }
+    },
     "timer_finished_title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -30,7 +47,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Az időzítő lejárt"
+            "value" : "Lejárt az időzítő"
           }
         }
       }

@@ -18,36 +18,19 @@
         }
       }
     },
-    "timer_finished_body" : {
+    "NSAlarmKitUsageDescription" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The specified time limit has expired."
+            "value" : "When your timer finishes, the app sounds an alarm so you notice it even if your phone is silenced or locked."
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A megadott határidő lejárt."
-          }
-        }
-      }
-    },
-    "timer_finished_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Timer finished"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Az időzítő lejárt"
+            "value" : "Az időzítő lejártakor ébresztőként szólaltatjuk meg a jelzést, hogy akkor is észrevedd, ha a telefon némítva van vagy le van zárva."
           }
         }
       }
