@@ -58,6 +58,11 @@ final class StopwatchMethodChannel: NSObject {
                             DispatchQueue.main.async { result(granted) }
                     }
                 }
+            case "notifyTimerFinished":
+                StopwatchSharedState.settleExpiredTimer()
+                StopwatchSharedState.reloadWidgets()
+                Task { await StopwatchActivityController.end(kind: .timer) }
+                result(nil)
             case "getState":
                 let state = StopwatchSharedState.asDictionary(kind: kind)
                 methodChannelLogger.notice("[Widget] [MethodChannel] getState(\(kind.rawValue)) -> \(String(describing: state))")

@@ -6,7 +6,8 @@ import AppIntents
 struct StopwatchLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: StopwatchAttributes.self) { context in
-            let running = context.state.isRunning && !context.isStale
+            let state = context.state.resolved(isStale: context.isStale)
+            let running = state.isRunning
 
             HStack(spacing: 12) {
                 Image("StopwatchIcon")
@@ -16,11 +17,11 @@ struct StopwatchLiveActivity: Widget {
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(context.state.kind == .timer ? "widget_name_timer" : "widget_name")
+                    Text(state.kind == .timer ? "widget_name_timer" : "widget_name")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.secondary)
 
-                    LiveActivityTimeText(state: context.state, showMilliseconds: context.state.kind == .stopwatch)
+                    LiveActivityTimeText(state: state, showMilliseconds: state.kind == .stopwatch)
                         .font(.system(size: 28, weight: .bold))
                         .monospacedDigit()
                         .foregroundStyle(.primary)
@@ -28,16 +29,17 @@ struct StopwatchLiveActivity: Widget {
 
                 Spacer(minLength: 8)
 
-                ActivityActionButton(kind: context.state.kind, isRunning: running)
+                ActivityActionButton(kind: state.kind, isRunning: running)
                     .frame(width: 110)
             }
             .padding(16)
             .activityBackgroundTint(Color(uiColor: .systemBackground))
-            .widgetURL(StopwatchLaunch.url(for: context.state.kind))
+            .widgetURL(StopwatchLaunch.url(for: state.kind))
 
         } dynamicIsland: { context in
-            let running = context.state.isRunning && !context.isStale
-            let symbol = context.state.kind == .timer ? "hourglass" : "stopwatch"
+            let state = context.state.resolved(isStale: context.isStale)
+            let running = state.isRunning
+            let symbol = state.kind == .timer ? "hourglass" : "stopwatch"
 
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
@@ -52,13 +54,13 @@ struct StopwatchLiveActivity: Widget {
 
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(spacing: 6) {
-                        LiveActivityTimeText(state: context.state, showMilliseconds: context.state.kind == .stopwatch)
+                        LiveActivityTimeText(state: state, showMilliseconds: state.kind == .stopwatch)
                             .font(.system(size: 36, weight: .bold))
                             .monospacedDigit()
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity, alignment: .center)
 
-                        ActivityActionButton(kind: context.state.kind, isRunning: running)
+                        ActivityActionButton(kind: state.kind, isRunning: running)
                     }
                     .padding(.horizontal, 8)
                     .padding(.bottom, 2)
@@ -67,7 +69,7 @@ struct StopwatchLiveActivity: Widget {
                 Image(systemName: symbol)
                     .font(.system(size: 14, weight: .semibold))
             } compactTrailing: {
-                LiveActivityTimeText(state: context.state, showMilliseconds: false)
+                LiveActivityTimeText(state: state, showMilliseconds: false)
                     .font(.system(size: 13, weight: .bold))
                     .monospacedDigit()
                     .multilineTextAlignment(.trailing)
@@ -77,7 +79,7 @@ struct StopwatchLiveActivity: Widget {
                 Image(systemName: symbol)
                     .font(.system(size: 14, weight: .semibold))
             }
-            .widgetURL(StopwatchLaunch.url(for: context.state.kind))
+            .widgetURL(StopwatchLaunch.url(for: state.kind))
         }
     }
 }

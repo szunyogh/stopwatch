@@ -30,7 +30,7 @@ enum StopwatchSharedState {
 
     static var nowMs: Int { Int(Date().timeIntervalSince1970 * 1000) }
 
-    private static func reloadWidgets() {
+    static func reloadWidgets() {
         WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
     }
 
@@ -101,20 +101,30 @@ enum StopwatchSharedState {
         reloadWidgets()
     }
 
-    static func contentState(kind: TimeKind) -> StopwatchAttributes.ContentState {
-        var running = isRunning(kind: kind)
-        var startedAt = startedAtEpochMs(kind: kind)
-        var accumulated = accumulatedMs(kind: kind)
+    static func contentState(kind: TimeKind, asOf date: Date = Date()) -> StopwatchAttributes.ContentState {
+        let running = isRunning(kind: kind)
+        let startedAt = startedAtEpochMs(kind: kind)
+        let accumulated = accumulatedMs(kind: kind)
+        let total: Int? = kind == .timer ? totalMs() : nil
 
-        if kind == .timer, running, let s = startedAt, s + accumulated <= nowMs {
-            running = false
-            startedAt = nil
-            accumulated = 0
+        if kind == .timer, running, let s = startedAt, s + accumulated <= Int(date.timeIntervalSince1970 * 1000) {
+            return .init(startedAtEpochMs: nil, accumulatedMs: total ?? 0, isRunning: false, kind: .timer, totalMs: total)
         }
+        return .init(startedAtEpochMs: startedAt, accumulatedMs: accumulated, isRunning: running, kind: kind, totalMs: total)
+    }
+    
+    @discardableResult
+    static func settleExpiredTimer() -> Bool {
+        let kind = TimeKind.timer
+        guard isRunning(kind: kind),
+              let s = startedAtEpochMs(kind: kind),
+              s + accumulatedMs(kind: kind) <= nowMs else { return false }
 
-        let state = StopwatchAttributes.ContentState(startedAtEpochMs: startedAt, accumulatedMs: accumulated, isRunning: running, kind: kind)
-        sharedStateLogger.notice("[Widget] [SharedState] contentState(\(kind.rawValue)) -> \(String(describing: state), privacy: .public)")
-        return state
+        sharedStateLogger.notice("[Widget] [SharedState] SETTLE expired timer -> reset to \(totalMs())")
+        defaults.set(false, forKey: kind.key(keyIsRunning))
+        defaults.set(0, forKey: kind.key(keyStartedAt))
+        defaults.set(totalMs(), forKey: kind.key(keyAccumulated))
+        return true
     }
 
     static func timerEndDate() -> Date? {

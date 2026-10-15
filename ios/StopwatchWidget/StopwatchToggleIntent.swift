@@ -119,3 +119,18 @@ struct ToggleWidgetModeIntent: AppIntent {
         return .result()
     }
 }
+
+@available(iOS 26.0, *)
+struct TimerAlarmStopIntent: LiveActivityIntent {
+    static let title: LocalizedStringResource = "Stop timer alarm"
+    static var isDiscoverable: Bool { false }
+
+    init() {}
+
+    func perform() async throws -> some IntentResult {
+        StopwatchSharedState.settleExpiredTimer()
+        StopwatchSharedState.reloadWidgets()
+        await StopwatchActivityController.end(kind: .timer)
+        return .result()
+    }
+}

@@ -83,7 +83,7 @@ enum AlarmKitTimer {
             let stopButton = AlarmButton(text: "timer_finished_stop", textColor: .white, systemImageName: "stop.fill")
             let alert = AlarmPresentation.Alert(title: "timer_finished_title", stopButton: stopButton)
             let attributes = AlarmAttributes(presentation: AlarmPresentation(alert: alert), metadata: TimerAlarmMetadata(), tintColor: .red)
-            let configuration = AlarmManager.AlarmConfiguration.alarm(schedule: .fixed(endDate), attributes: attributes, sound: .named("timer_alarm.caf"))
+            let configuration = AlarmManager.AlarmConfiguration.alarm(schedule: .fixed(endDate), attributes: attributes, stopIntent: TimerAlarmStopIntent(), sound: .named("timer_alarm.caf"))
 
             let id = UUID()
             _ = try await manager.schedule(id: id, configuration: configuration)

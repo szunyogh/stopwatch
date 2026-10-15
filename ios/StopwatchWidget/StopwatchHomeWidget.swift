@@ -22,16 +22,20 @@ struct StopwatchTimelineProvider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<StopwatchEntry>) -> Void) {
-        let entry = makeEntry()
-        widgetLogger.notice("[Widget] getTimeline -> kind: \(entry.kind.rawValue), toggle: \(entry.showsToggle)")
+        StopwatchSharedState.settleExpiredTimer()
 
-        let policy: TimelineReloadPolicy = StopwatchSharedState.timerEndDate().map { TimelineReloadPolicy.after($0.addingTimeInterval(1)) } ?? .never
-        completion(Timeline(entries: [entry], policy: policy))
+        var entries = [makeEntry()]
+        let end = StopwatchSharedState.timerEndDate()
+
+        if let end { entries.append(makeEntry(at: end)) }
+
+        let policy: TimelineReloadPolicy = end.map { .after($0.addingTimeInterval(1)) } ?? .never
+        completion(Timeline(entries: entries, policy: policy))
     }
 
-    private func makeEntry() -> StopwatchEntry {
-        let stopwatch = StopwatchSharedState.contentState(kind: .stopwatch)
-        let timer = StopwatchSharedState.contentState(kind: .timer)
+    private func makeEntry(at date: Date = Date()) -> StopwatchEntry {
+        let stopwatch = StopwatchSharedState.contentState(kind: .stopwatch, asOf: date)
+        let timer = StopwatchSharedState.contentState(kind: .timer, asOf: date)
 
         let both = stopwatch.isRunning && timer.isRunning
         let kind: TimeKind
@@ -45,7 +49,7 @@ struct StopwatchTimelineProvider: TimelineProvider {
             kind = StopwatchSharedState.widgetMode
         }
 
-        return StopwatchEntry(date: Date(), kind: kind, state: kind == .timer ? timer : stopwatch, showsToggle: both)
+        return StopwatchEntry(date: date, kind: kind, state: kind == .timer ? timer : stopwatch, showsToggle: both)
     }
 }
 

@@ -111,8 +111,8 @@ class TimerLogic extends BaseLogic<TimerState> {
   void _finish(StopwatchNativeState from) {
     logger.i('[TimerLogic] finished');
 
-    _setAnchor(StopwatchNativeState(kind: _kind, isRunning: false, startedAtEpochMs: null, accumulatedMs: 0, totalMs: from.totalMs));
-    _bridge.notifyStop(kind: _kind, accumulatedMs: 0);
+    _setAnchor(StopwatchNativeState(kind: _kind, isRunning: false, startedAtEpochMs: null, accumulatedMs: from.totalMs ?? 0, totalMs: from.totalMs));
+    _bridge.notifyTimerFinished();
   }
 
   void _onTick(Duration _) {

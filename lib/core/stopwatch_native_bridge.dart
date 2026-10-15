@@ -19,6 +19,8 @@ class StopwatchNativeBridge {
     return raw == null ? null : NativeKind.fromName(raw);
   }
 
+  Future<void> notifyTimerFinished() => _methodChannel.invokeMethod('notifyTimerFinished', {'kind': NativeKind.timer.name});
+
   Future<bool> hasNotificationPermission() async {
     final result = await _methodChannel.invokeMethod<bool>('hasNotificationPermission');
     return result ?? false;
