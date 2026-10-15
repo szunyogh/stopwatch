@@ -42,6 +42,16 @@ enum StopwatchActions {
         DarwinNotification.post()
         await StopwatchActivityController.update(kind: kind)
     }
+    
+    static func finishTimerAlarm() async {
+        let expired = StopwatchSharedState.settleExpiredTimer()
+
+        guard expired || !StopwatchSharedState.isRunning(kind: .timer) else { return }
+
+        LegacyAlarm.cancel()
+        StopwatchSharedState.reloadWidgets()
+        await StopwatchActivityController.end(kind: .timer)
+    }
 }
 
 struct StopwatchStartIntent: AppIntent {
@@ -128,9 +138,7 @@ struct TimerAlarmStopIntent: LiveActivityIntent {
     init() {}
 
     func perform() async throws -> some IntentResult {
-        StopwatchSharedState.settleExpiredTimer()
-        StopwatchSharedState.reloadWidgets()
-        await StopwatchActivityController.end(kind: .timer)
+        await StopwatchActions.finishTimerAlarm()
         return .result()
     }
 }

@@ -30,11 +30,22 @@ enum TimerAlarm {
 }
 
 enum LegacyAlarm {
-    private static let prefix = "com.szunyoghtamas.stopwatch.timerFinished"
+    static let prefix = "com.szunyoghtamas.stopwatch.timerFinished"
+    static let categoryId = "timerFinished"
+    static let stopActionId = "timerFinished.stop"
+
     private static let count = 20
     private static let spacing: TimeInterval = 30
 
     private static var ids: [String] { (0..<count).map { "\(prefix).\($0)" } }
+
+    static func owns(_ identifier: String) -> Bool { identifier.hasPrefix(prefix) }
+
+    static func registerCategory() {
+        let stop = UNNotificationAction(identifier: stopActionId, title: String(localized: "timer_finished_stop"), options: [.destructive])
+        let category = UNNotificationCategory(identifier: categoryId, actions: [stop], intentIdentifiers: [], options: [.customDismissAction])
+        UNUserNotificationCenter.current().setNotificationCategories([category])
+    }
 
     static func schedule(endDate: Date) {
         let center = UNUserNotificationCenter.current()
@@ -46,6 +57,8 @@ enum LegacyAlarm {
             content.body = String(localized: "timer_finished_body")
             content.sound = UNNotificationSound(named: UNNotificationSoundName("timer_alarm.caf"))
             content.interruptionLevel = .timeSensitive
+            content.categoryIdentifier = categoryId
+            content.threadIdentifier = prefix
 
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: base + Double(i) * spacing, repeats: false)
             center.add(UNNotificationRequest(identifier: ids[i], content: content, trigger: trigger))
@@ -56,6 +69,14 @@ enum LegacyAlarm {
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: ids)
         center.removeDeliveredNotifications(withIdentifiers: ids)
+    }
+
+    static func handle(_ response: UNNotificationResponse) async {
+        if response.actionIdentifier == UNNotificationDefaultActionIdentifier {
+            StopwatchLaunch.set(.timer)
+        }
+        
+        await StopwatchActions.finishTimerAlarm()
     }
 }
 

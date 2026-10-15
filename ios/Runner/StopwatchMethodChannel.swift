@@ -59,9 +59,7 @@ final class StopwatchMethodChannel: NSObject {
                     }
                 }
             case "notifyTimerFinished":
-                StopwatchSharedState.settleExpiredTimer()
-                StopwatchSharedState.reloadWidgets()
-                Task { await StopwatchActivityController.end(kind: .timer) }
+                Task { await StopwatchActions.finishTimerAlarm() }
                 result(nil)
             case "getState":
                 let state = StopwatchSharedState.asDictionary(kind: kind)
