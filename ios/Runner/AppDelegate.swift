@@ -11,6 +11,8 @@ import UIKit
 
     UNUserNotificationCenter.current().delegate = self
     LegacyAlarm.registerCategory()
+      
+    StopwatchLaunch.opener = { url in _ = await UIApplication.shared.open(url) }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

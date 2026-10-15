@@ -41,8 +41,6 @@ final class StopwatchMethodChannel: NSObject {
         let kind = TimeKind(rawValue: args?["kind"] as? String ?? "") ?? .stopwatch
 
         switch call.method {
-            case "consumePendingTab":
-                result(StopwatchLaunch.consume()?.rawValue)
             case "hasNotificationPermission":
                 UNUserNotificationCenter.current().getNotificationSettings { settings in
                     let granted = [.authorized, .provisional, .ephemeral].contains(settings.authorizationStatus)

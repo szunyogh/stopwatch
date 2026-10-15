@@ -27,10 +27,21 @@ class _ApplicationState extends ConsumerState<Application> {
           debugShowCheckedModeBanner: false,
           localizationsDelegates: const [AppLocalizations.delegate, GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate],
           supportedLocales: AppLocalizations.supportedLocales,
-          routerConfig: ref.read(appRouterProvider).config(),
+          routerConfig: ref.read(appRouterProvider).config(deepLinkTransformer: _deepLinkTransformer),
           builder: (context, child) => child ?? Container(),
         );
       },
     );
+  }
+
+  Future<Uri> _deepLinkTransformer(Uri uri) async {
+    if (uri.scheme == 'com.szunyoghtamas.stopwatch' && uri.host == 'open') {
+      final tab = uri.pathSegments.isNotEmpty ? uri.pathSegments.first : '';
+
+      if (tab.isEmpty) return uri;
+
+      return Uri(path: '/$tab');
+    }
+    return uri;
   }
 }

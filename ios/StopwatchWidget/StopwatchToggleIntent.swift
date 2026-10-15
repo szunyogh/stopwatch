@@ -79,8 +79,8 @@ struct StopwatchStartIntent: AppIntent {
 
     func perform() async throws -> some IntentResult {
         let kind = TimeKind(rawValue: kindRaw) ?? .stopwatch
-        StopwatchLaunch.set(kind)
         await StopwatchActions.start(kind: kind, fromLiveActivity: fromLiveActivity)
+        await StopwatchLaunch.open(kind)
         return .result()
     }
 }
@@ -110,8 +110,8 @@ struct StopwatchStopIntent: AppIntent {
 
     func perform() async throws -> some IntentResult {
         let kind = TimeKind(rawValue: kindRaw) ?? .stopwatch
-        StopwatchLaunch.set(kind)
         await StopwatchActions.stop(kind: kind, fromLiveActivity: fromLiveActivity)
+        await StopwatchLaunch.open(kind)
         return .result()
     }
 }

@@ -5,39 +5,21 @@ import 'package:stopwatch/core/router.gr.dart';
 import 'package:stopwatch/core/stopwatch_native_bridge.dart';
 import 'package:stopwatch/logic/base.dart';
 import 'package:stopwatch/logic/home/home_state.dart';
-import 'package:stopwatch/model/stopwatch_native_state.dart';
 
 final homeLogic = NotifierProvider<HomeLogic, HomeState>(HomeLogic.new);
 
 class HomeLogic extends BaseLogic<HomeState> {
   final _bridge = StopwatchNativeBridge.instance;
 
-  late final AppLifecycleListener _lifecycle;
-
   @override
   HomeState build() {
     _init();
 
-    _lifecycle = AppLifecycleListener(onResume: _openPendingTab);
-    _openPendingTab();
-
     ref.onDispose(() {
       logger.i('[HomeLogic] disposed');
-      _lifecycle.dispose();
     });
 
     return const HomeState();
-  }
-
-  Future<void> _openPendingTab() async {
-    try {
-      final kind = await _bridge.consumePendingTab();
-      if (kind == null) return;
-
-      kind == NativeKind.timer ? navigateTimer() : navigateStopwatch();
-    } catch (error, stack) {
-      logger.e('[HomeLogic] _openPendingTab error', error: error, stackTrace: stack);
-    }
   }
 
   Future<void> _init() async {

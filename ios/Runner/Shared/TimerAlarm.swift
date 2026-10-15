@@ -72,11 +72,11 @@ enum LegacyAlarm {
     }
 
     static func handle(_ response: UNNotificationResponse) async {
-        if response.actionIdentifier == UNNotificationDefaultActionIdentifier {
-            StopwatchLaunch.set(.timer)
-        }
-        
         await StopwatchActions.finishTimerAlarm()
+
+        if response.actionIdentifier == UNNotificationDefaultActionIdentifier {
+            await StopwatchLaunch.open(.timer)
+        }
     }
 }
 

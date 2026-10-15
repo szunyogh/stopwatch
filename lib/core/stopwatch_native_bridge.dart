@@ -14,11 +14,6 @@ class StopwatchNativeBridge {
   late final Stream<StopwatchNativeState> _updates = _eventChannel.receiveBroadcastStream().map((event) => StopwatchNativeState.fromMap(event as Map));
   Stream<StopwatchNativeState> stateUpdates(NativeKind kind) => _updates.where((state) => state.kind == kind);
 
-  Future<NativeKind?> consumePendingTab() async {
-    final raw = await _methodChannel.invokeMethod<String>('consumePendingTab');
-    return raw == null ? null : NativeKind.fromName(raw);
-  }
-
   Future<void> notifyTimerFinished() => _methodChannel.invokeMethod('notifyTimerFinished', {'kind': NativeKind.timer.name});
 
   Future<bool> hasNotificationPermission() async {
