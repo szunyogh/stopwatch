@@ -13,6 +13,7 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -104,10 +105,13 @@ object TimerAlarm {
 
     private fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+
+        val soundUri = "android.resource://${context.packageName}/${R.raw.alarm}".toUri()
+
         val channel = NotificationChannel(CHANNEL_ID, context.getString(R.string.notification_channel_alarm), NotificationManager.IMPORTANCE_HIGH).apply {
             setSound(
-                RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
-                AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build(),
+                soundUri,
+                AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build()
             )
             enableVibration(true)
             vibrationPattern = longArrayOf(0, 800, 400, 800, 400, 800)
@@ -130,10 +134,13 @@ object TimerAlarm {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
+        val soundUri = "android.resource://${context.packageName}/${R.raw.alarm}".toUri()
+
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_timer)
             .setContentTitle(context.getString(R.string.timer_finished_title))
             .setContentText(context.getString(R.string.timer_finished_body))
+            .setSound(soundUri)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
