@@ -92,7 +92,6 @@ enum AlarmKitTimer {
         _ = try? await AlarmManager.shared.requestAuthorization()
     }
 
-    /// true, ha sikerült beütemezni.
     static func schedule(endDate: Date) async -> Bool {
         let manager = AlarmManager.shared
         do {

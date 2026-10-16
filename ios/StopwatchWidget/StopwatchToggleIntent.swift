@@ -24,7 +24,7 @@ enum StopwatchActions {
         intentLogger.notice("[Widget] [Intent] start(\(kind.rawValue)) -> startedAt: \(nowMs), accumulated: \(accumulatedMs)")
 
         StopwatchSharedState.start(kind: kind, startedAtEpochMs: nowMs, accumulatedMs: accumulatedMs, fromIntent: !fromLiveActivity)
-        DarwinNotification.post()
+        DarwinNotification.post(kind: kind)
         await StopwatchActivityController.start(kind: kind)
     }
 
@@ -39,7 +39,7 @@ enum StopwatchActions {
         intentLogger.notice("[Widget] [Intent] stop(\(kind.rawValue)) -> accumulated: \(valueMs)")
 
         StopwatchSharedState.stop(kind: kind, accumulatedMs: valueMs, fromIntent: !fromLiveActivity)
-        DarwinNotification.post()
+        DarwinNotification.post(kind: kind)
         await StopwatchActivityController.update(kind: kind)
     }
     
@@ -50,6 +50,7 @@ enum StopwatchActions {
 
         LegacyAlarm.cancel()
         StopwatchSharedState.reloadWidgets()
+        DarwinNotification.post(kind: .timer)
         await StopwatchActivityController.end(kind: .timer)
     }
 }

@@ -12,7 +12,7 @@ final class StopwatchMethodChannel: NSObject {
     private static let eventChannelName = "stopwatch/native_events"
 
     private var eventSink: FlutterEventSink?
-    private var darwinObserver: DarwinNotificationObserver?
+    private var darwinObservers: [DarwinNotificationObserver] = []
 
     func register(with registrar: FlutterPluginRegistrar) {
         methodChannelLogger.notice("[Widget] [MethodChannel] Registering method and event channels...")
@@ -25,9 +25,9 @@ final class StopwatchMethodChannel: NSObject {
         let eventChannel = FlutterEventChannel(name: Self.eventChannelName, binaryMessenger: registrar.messenger())
         eventChannel.setStreamHandler(self)
 
-        darwinObserver = DarwinNotificationObserver { [weak self] in
-            DispatchQueue.main.async {
-                for kind in TimeKind.allCases {
+        darwinObservers = TimeKind.allCases.map { kind in
+            DarwinNotificationObserver(name: DarwinNotification.name(for: kind)) { [weak self] in
+                DispatchQueue.main.async {
                     self?.eventSink?(StopwatchSharedState.asDictionary(kind: kind))
                 }
             }

@@ -35,11 +35,11 @@ class StopwatchMethodChannel : MethodChannel.MethodCallHandler {
 
         private var eventSink: EventChannel.EventSink? = null
 
-        fun pushStateUpdate(context: Context) {
-            Log.d(TAG, "pushStateUpdate: sending state to Flutter")
+        fun pushStateUpdate(context: Context, kind: Kind) {
+            Log.d(TAG, "pushStateUpdate(${kind.key}): sending state to Flutter")
             StopwatchState.init(context)
-            val states = Kind.entries.map { StopwatchState.asMap(it) }
-            Handler(Looper.getMainLooper()).post { states.forEach { eventSink?.success(it) } }
+            val state = StopwatchState.asMap(kind)
+            Handler(Looper.getMainLooper()).post { eventSink?.success(state) }
         }
     }
 

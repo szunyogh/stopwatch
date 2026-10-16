@@ -99,7 +99,7 @@ object TimerAlarm {
         StopwatchState.settleExpiredTimer()
         showAlarm(context)
         StopwatchSurfaces.refresh(context)
-        StopwatchMethodChannel.pushStateUpdate(context)
+        StopwatchMethodChannel.pushStateUpdate(context, Kind.TIMER)
     }
 
     private fun ensureChannel(context: Context) {

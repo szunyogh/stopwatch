@@ -39,12 +39,12 @@ class StopwatchActionReceiver : BroadcastReceiver() {
         when (intent.action) {
             ACTION_START -> StopwatchActions.start(context, kind)
             ACTION_STOP -> StopwatchActions.stop(context, kind)
-            ACTION_TOGGLE -> StopwatchActions.toggleMode(context)
+            ACTION_TOGGLE -> return StopwatchActions.toggleMode(context)
             ACTION_DISMISS -> return StopwatchNotificationHelper.update(context, kind)
             ACTION_DISMISS_ALARM -> return TimerAlarm.dismiss(context)
         }
 
         Log.d(TAG, "onReceive: pushing state to Flutter")
-        StopwatchMethodChannel.pushStateUpdate(context)
+        StopwatchMethodChannel.pushStateUpdate(context, kind)
     }
 }
