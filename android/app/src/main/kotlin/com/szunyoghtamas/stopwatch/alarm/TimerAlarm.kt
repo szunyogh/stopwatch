@@ -30,6 +30,7 @@ import com.szunyoghtamas.stopwatch.bridge.StopwatchMethodChannel
 import com.szunyoghtamas.stopwatch.state.Kind
 import com.szunyoghtamas.stopwatch.state.StopwatchState
 import com.szunyoghtamas.stopwatch.state.StopwatchSurfaces
+import androidx.core.net.toUri
 
 object TimerAlarm {
     private const val CHANNEL_ID = "timer_alarm_channel"
@@ -48,9 +49,24 @@ object TimerAlarm {
         unschedule(context)
         if (endAtEpochMs <= StopwatchState.now()) return
 
+        val alarmManager = context.getSystemService(AlarmManager::class.java)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (!alarmManager.canScheduleExactAlarms()) {
+                Log.w(TAG, "schedule: nincs SCHEDULE_EXACT_ALARM engedély!")
+
+                val intent = Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                    data = "package:${context.packageName}".toUri()
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(intent)
+                return
+            }
+        }
+
         Log.d(TAG, "schedule: end=$endAtEpochMs")
         StopwatchState.alarmEndAt = endAtEpochMs
-        context.getSystemService(AlarmManager::class.java).setAlarmClock(
+        alarmManager.setAlarmClock(
             AlarmManager.AlarmClockInfo(endAtEpochMs, StopwatchLaunch.openIntent(context, Kind.TIMER)),
             firePendingIntent(context),
         )
