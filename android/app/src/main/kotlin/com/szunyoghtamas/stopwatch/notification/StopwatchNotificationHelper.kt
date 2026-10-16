@@ -29,7 +29,7 @@ object StopwatchNotificationHelper {
     fun createChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Log.d(TAG, "createChannel: creating notification channel (if it doesn't exist yet)")
-            val channel = NotificationChannel(CHANNEL_ID, "Stopper", NotificationManager.IMPORTANCE_DEFAULT)
+            val channel = NotificationChannel(CHANNEL_ID, context.getString(R.string.notification_channel_basic), NotificationManager.IMPORTANCE_DEFAULT)
                 .apply { setShowBadge(false) }
             context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }

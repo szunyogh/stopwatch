@@ -35,7 +35,7 @@ class _TimerPageState extends ConsumerState<TimerPage> {
               elapsed: time,
               countdown: true,
               onPicked: isRunning ? null : logic.setTime,
-              textStyle: (Theme.of(context).textTheme.headlineLarge ?? TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+              textStyle: (Theme.of(context).textTheme.displayLarge ?? TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
             ),
           ),
         ),

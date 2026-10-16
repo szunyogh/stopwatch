@@ -231,7 +231,7 @@ class RenderSlidingTime extends RenderBox {
 
   void _onDragUpdate(DragUpdateDetails d) {
     if (!_pickerActive) return;
-    final step = _big.height * 0.5;
+    final step = _big.height;
     _dragAccum += d.delta.dy;
     while (_dragAccum >= step) {
       _dragAccum -= step;

@@ -7,13 +7,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The specified time limit has expired."
+            "value" : "The set time has expired."
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A megadott határidő lejárt."
+            "value" : "A megadott idő lejárt."
           }
         }
       }
