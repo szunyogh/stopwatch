@@ -16,17 +16,14 @@ class HomeLogic extends BaseLogic<HomeState> {
   final _bridge = StopwatchNativeBridge.instance;
 
   late final AppLifecycleListener _lifecycle;
-  StreamSubscription<void>? _tabPingSub;
 
   @override
   HomeState build() {
     _init();
 
-    _tabPingSub = _bridge.pendingTabPings.listen((_) => _openPendingTab());
     _lifecycle = AppLifecycleListener(onResume: _openPendingTab);
 
     ref.onDispose(() {
-      _tabPingSub?.cancel();
       _lifecycle.dispose();
       logger.i('[HomeLogic] disposed');
     });

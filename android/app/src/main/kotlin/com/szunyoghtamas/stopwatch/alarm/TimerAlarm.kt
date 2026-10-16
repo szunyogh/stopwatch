@@ -1,5 +1,7 @@
 package com.szunyoghtamas.stopwatch.alarm
 
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.app.Activity
 import android.app.AlarmManager
 import android.app.Notification
@@ -9,18 +11,15 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.Typeface
 import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.Gravity
+import android.view.View
 import android.view.WindowManager
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.szunyoghtamas.stopwatch.R
@@ -53,7 +52,7 @@ object TimerAlarm {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!alarmManager.canScheduleExactAlarms()) {
-                Log.w(TAG, "schedule: nincs SCHEDULE_EXACT_ALARM engedély!")
+                Log.w(TAG, "schedule: missing SCHEDULE_EXACT_ALARM permission!")
 
                 val intent = Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
                     data = "package:${context.packageName}".toUri()
@@ -193,33 +192,43 @@ class TimerAlarmActivity : Activity() {
         }
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        val title = TextView(this).apply {
-            text = getString(R.string.timer_finished_title)
-            textSize = 36f
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
-            gravity = Gravity.CENTER
+        setContentView(R.layout.activity_timer_alarm)
+
+        startPulseAnimation(findViewById(R.id.pulse_1), 0L)
+        startPulseAnimation(findViewById(R.id.pulse_2), 800L)
+        startPulseAnimation(findViewById(R.id.pulse_3), 1600L)
+
+
+        findViewById<Button>(R.id.btn_alarm_stop).setOnClickListener {
+            TimerAlarm.dismiss(this@TimerAlarmActivity)
+            finish()
         }
-        val stop = Button(this).apply {
-            text = getString(R.string.timer_finished_stop)
-            textSize = 22f
-            setOnClickListener {
-                TimerAlarm.dismiss(this@TimerAlarmActivity)
-                finish()
-            }
+    }
+
+    private fun startPulseAnimation(view: View, delay: Long) {
+        val scaleX = ObjectAnimator.ofFloat(view, "scaleX", 1f, 3.5f).apply {
+            repeatCount = ObjectAnimator.INFINITE
+            repeatMode = ObjectAnimator.RESTART
+        }
+        val scaleY = ObjectAnimator.ofFloat(view, "scaleY", 1f, 3.5f).apply {
+            repeatCount = ObjectAnimator.INFINITE
+            repeatMode = ObjectAnimator.RESTART
         }
 
-        setContentView(
-            LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.CENTER
-                setBackgroundColor(0xFFB3261E.toInt())
-                setPadding(64, 64, 64, 64)
-                addView(title, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
-                addView(stop, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 220))
-            },
-        )
+        val alpha = ObjectAnimator.ofFloat(view, "alpha", 1f, 0f).apply {
+            repeatCount = ObjectAnimator.INFINITE
+            repeatMode = ObjectAnimator.RESTART
+        }
+
+        AnimatorSet().apply {
+            playTogether(scaleX, scaleY, alpha)
+            duration = 2400L
+            startDelay = delay
+            interpolator = AccelerateDecelerateInterpolator()
+            start()
+        }
     }
+
 
     override fun onDestroy() {
         if (current === this) current = null

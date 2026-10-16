@@ -32,11 +32,11 @@ class MainActivity : FlutterActivity() {
 
         if (intent.getBooleanExtra(StopwatchLaunch.EXTRA_DISMISS_ALARM, false)) {
             intent.removeExtra(StopwatchLaunch.EXTRA_DISMISS_ALARM)
-            TimerAlarm.dismiss(this) // az értesítésre koppintás elnémítja a szóló jelzést
+            TimerAlarm.dismiss(this)
         }
 
         intent.getStringExtra(StopwatchLaunch.EXTRA_TAB)?.let { tab ->
-            intent.removeExtra(StopwatchLaunch.EXTRA_TAB) // elforgatásnál ne ismétlődjön
+            intent.removeExtra(StopwatchLaunch.EXTRA_TAB)
             StopwatchLaunch.deliver(tab)
         }
     }

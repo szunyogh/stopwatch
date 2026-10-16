@@ -7,26 +7,15 @@ import 'package:stopwatch/model/lap.dart';
 import 'package:stopwatch/model/stopwatch_native_state.dart';
 
 class StopwatchNativeBridge {
-  StopwatchNativeBridge._() {
-    if (Platform.isAndroid) {
-      _methodChannel.setMethodCallHandler((call) async {
-        if (call.method == 'pendingTabChanged') _tabPings.add(null);
-        return null;
-      });
-    }
-  }
+  StopwatchNativeBridge._();
 
   static final StopwatchNativeBridge instance = StopwatchNativeBridge._();
 
   static const _methodChannel = MethodChannel('stopwatch/native');
   static const _eventChannel = EventChannel('stopwatch/native_events');
 
-  final _tabPings = StreamController<void>.broadcast();
-
   late final Stream<StopwatchNativeState> _updates = _eventChannel.receiveBroadcastStream().map((event) => StopwatchNativeState.fromMap(event as Map));
   Stream<StopwatchNativeState> stateUpdates(NativeKind kind) => _updates.where((state) => state.kind == kind);
-
-  Stream<void> get pendingTabPings => _tabPings.stream;
 
   Future<NativeKind?> consumePendingTab() async {
     if (!Platform.isAndroid) return null;

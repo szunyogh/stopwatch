@@ -38,9 +38,8 @@ class StopwatchWidgetProvider : AppWidgetProvider() {
             StopwatchState.init(context)
 
             val stopwatch = StopwatchState.state(Kind.STOPWATCH)
-            val timer = StopwatchState.state(Kind.TIMER) // a lejárt timer reset állapotban jön
+            val timer = StopwatchState.state(Kind.TIMER)
 
-            // Ha csak az egyik fut, az látszik. Ha mindkettő, a kapcsoló dönt. Ha egyik sem, az utolsó mód.
             val both = stopwatch.isRunning && timer.isRunning
             val kind = when {
                 both -> StopwatchState.widgetMode

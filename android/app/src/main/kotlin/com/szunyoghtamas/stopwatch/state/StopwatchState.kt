@@ -77,10 +77,10 @@ object StopwatchState {
         }
     }
 
-    fun settleExpiredTimer(): Boolean {
+    fun settleExpiredTimer() {
         val s = raw(Kind.TIMER)
-        val end = s.endAtEpochMs ?: return false
-        if (end > now()) return false
+        val end = s.endAtEpochMs ?: return
+        if (end > now()) return
 
         Log.d(TAG, "settleExpiredTimer: reset to ${s.totalMs}")
         prefs.edit {
@@ -88,7 +88,6 @@ object StopwatchState {
             putLong(Kind.TIMER.k(KEY_STARTED_AT), 0L)
             putLong(Kind.TIMER.k(KEY_ACCUMULATED), s.totalMs ?: 0L)
         }
-        return true
     }
 
     var widgetMode: Kind

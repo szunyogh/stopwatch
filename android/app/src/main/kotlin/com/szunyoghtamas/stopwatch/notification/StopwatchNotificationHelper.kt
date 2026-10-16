@@ -99,7 +99,7 @@ object StopwatchNotificationHelper {
             .setOnlyAlertOnce(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setDeleteIntent(StopwatchActionReceiver.pending(context, StopwatchActionReceiver.ACTION_DISMISS, kind))
-            .setContentIntent(StopwatchLaunch.openIntent(context, kind)) // koppintás: a megfelelő fülre
+            .setContentIntent(StopwatchLaunch.openIntent(context, kind))
 
         NotificationManagerCompat.from(context).notify(notificationId(kind), builder.build())
         Log.d(TAG, "update(${kind.key}): notification sent successfully")

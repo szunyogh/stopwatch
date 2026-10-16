@@ -59,5 +59,7 @@ flutter {
 }
 
 dependencies {
+    implementation("androidx.constraintlayout:constraintlayout:2.2.2")
     implementation("androidx.core:core-ktx:1.19.1")
+    implementation("com.google.android.material:material:1.14.0")
 }

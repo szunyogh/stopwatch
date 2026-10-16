@@ -7,6 +7,7 @@ import com.szunyoghtamas.stopwatch.state.Kind
 import com.szunyoghtamas.stopwatch.state.StopwatchLapStore
 import com.szunyoghtamas.stopwatch.state.StopwatchState
 import com.szunyoghtamas.stopwatch.state.StopwatchSurfaces
+import com.szunyoghtamas.stopwatch.widget.StopwatchWidgetProvider
 
 object StopwatchActions {
     private const val TAG = "[Widget] Actions"
@@ -17,7 +18,7 @@ object StopwatchActions {
         if (startedAt == null && s.isRunning) return
 
         var acc = accumulated ?: s.accumulatedMs
-        if (kind == Kind.TIMER && acc <= 0) acc = s.totalMs ?: 0L // lejárt / 0-n álló: a beállított időről újra
+        if (kind == Kind.TIMER && acc <= 0) acc = s.totalMs ?: 0L
         if (kind == Kind.TIMER && acc <= 0) return
 
         val begin = startedAt ?: StopwatchState.now()
@@ -67,6 +68,6 @@ object StopwatchActions {
     fun toggleMode(context: Context) {
         StopwatchState.init(context)
         StopwatchState.widgetMode = if (StopwatchState.widgetMode == Kind.STOPWATCH) Kind.TIMER else Kind.STOPWATCH
-        com.szunyoghtamas.stopwatch.widget.StopwatchWidgetProvider.updateAll(context)
+        StopwatchWidgetProvider.updateAll(context)
     }
 }

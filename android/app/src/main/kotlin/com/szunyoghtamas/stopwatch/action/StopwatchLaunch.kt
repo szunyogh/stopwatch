@@ -12,8 +12,6 @@ object StopwatchLaunch {
 
     @Volatile private var pending: String? = null
 
-    var onPendingChanged: (() -> Unit)? = null
-
     fun openIntent(context: Context, kind: Kind, dismissAlarm: Boolean = false): PendingIntent {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -26,7 +24,6 @@ object StopwatchLaunch {
 
     fun deliver(tab: String) {
         pending = tab
-        onPendingChanged?.invoke()
     }
 
     fun consume(): String? = pending.also { pending = null }

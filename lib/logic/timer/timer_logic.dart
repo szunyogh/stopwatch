@@ -94,7 +94,10 @@ class TimerLogic extends BaseLogic<TimerState> {
   }
 
   void _setAnchor(StopwatchNativeState anchor) {
-    if (anchor.isFinished) return _finish(anchor);
+    if (anchor.isFinished) {
+      logger.i('[TimerLogic] _setAnchor - ${_anchor.isFinished}');
+      return _finish(anchor);
+    }
 
     _anchor = anchor;
     _anchorVersion++;
@@ -118,7 +121,10 @@ class TimerLogic extends BaseLogic<TimerState> {
   void _onTick(Duration _) {
     if (_disposed) return;
 
-    if (_anchor.isFinished) return _finish(_anchor);
+    if (_anchor.isFinished) {
+      logger.i('[TimerLogic] _onTick - ${_anchor.isFinished}');
+      return _finish(_anchor);
+    }
 
     changeState((state) => state.copyWith(time: _anchor.elapsed));
   }

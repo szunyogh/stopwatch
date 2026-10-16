@@ -65,16 +65,6 @@ class StopwatchMethodChannel : MethodChannel.MethodCallHandler {
                     eventSink = null
                 }
             })
-
-        StopwatchLaunch.onPendingChanged = {
-            Handler(Looper.getMainLooper()).post {
-                try {
-                    methodChannel.invokeMethod("pendingTabChanged", null)
-                } catch (e: Exception) {
-                    Log.w(TAG, "pendingTabChanged: Dart not ready", e)
-                }
-            }
-        }
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
