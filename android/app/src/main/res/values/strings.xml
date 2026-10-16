@@ -6,4 +6,9 @@
     <string name="widget_button_text_start">Start</string>
     <string name="widget_button_text_stop">Stop</string>
     <string name="widget_play_description">Stopwatch Start</string>
+    <string name="widget_name_timer">Timer</string>
+    <string name="notification_channel_alarm">Timer alarm</string>
+    <string name="timer_finished_title">Timer finished</string>
+    <string name="timer_finished_body">Your timer has reached zero.</string>
+    <string name="timer_finished_stop">Stop</string>
 </resources>

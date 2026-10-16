@@ -6,5 +6,10 @@
     <string name="widget_button_text_start">Indítás</string>
     <string name="widget_button_text_stop">Leállítás</string>
     <string name="widget_play_description">Stopperóra Indítás</string>
+    <string name="widget_name_timer">Időzítő</string>
+    <string name="notification_channel_alarm">Időzítő ébresztő</string>
+    <string name="timer_finished_title">Lejárt az időzítő</string>
+    <string name="timer_finished_body">Az időzítőd elérte a nullát.</string>
+    <string name="timer_finished_stop">Leállítás</string>
 </resources>
 

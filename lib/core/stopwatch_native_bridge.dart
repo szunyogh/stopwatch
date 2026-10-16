@@ -1,18 +1,51 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show Platform;
 
 import 'package:flutter/services.dart';
 import 'package:stopwatch/model/lap.dart';
 import 'package:stopwatch/model/stopwatch_native_state.dart';
 
 class StopwatchNativeBridge {
-  StopwatchNativeBridge._();
+  StopwatchNativeBridge._() {
+    if (Platform.isAndroid) {
+      _methodChannel.setMethodCallHandler((call) async {
+        if (call.method == 'pendingTabChanged') _tabPings.add(null);
+        return null;
+      });
+    }
+  }
+
   static final StopwatchNativeBridge instance = StopwatchNativeBridge._();
 
   static const _methodChannel = MethodChannel('stopwatch/native');
   static const _eventChannel = EventChannel('stopwatch/native_events');
 
+  final _tabPings = StreamController<void>.broadcast();
+
   late final Stream<StopwatchNativeState> _updates = _eventChannel.receiveBroadcastStream().map((event) => StopwatchNativeState.fromMap(event as Map));
   Stream<StopwatchNativeState> stateUpdates(NativeKind kind) => _updates.where((state) => state.kind == kind);
+
+  Stream<void> get pendingTabPings => _tabPings.stream;
+
+  Future<NativeKind?> consumePendingTab() async {
+    if (!Platform.isAndroid) return null;
+
+    final raw = await _methodChannel.invokeMethod<String>('consumePendingTab');
+    return raw == null ? null : NativeKind.fromName(raw);
+  }
+
+  Future<bool> canUseFullScreenIntent() async {
+    if (!Platform.isAndroid) return true;
+
+    return await _methodChannel.invokeMethod<bool>('canUseFullScreenIntent') ?? true;
+  }
+
+  Future<void> openFullScreenIntentSettings() async {
+    if (!Platform.isAndroid) return;
+
+    await _methodChannel.invokeMethod('openFullScreenIntentSettings');
+  }
 
   Future<void> notifyTimerFinished() => _methodChannel.invokeMethod('notifyTimerFinished', {'kind': NativeKind.timer.name});
 

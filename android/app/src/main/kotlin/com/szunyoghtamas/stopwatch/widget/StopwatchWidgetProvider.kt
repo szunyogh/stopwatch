@@ -1,18 +1,20 @@
 package com.szunyoghtamas.stopwatch.widget
 
-import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
+import android.os.Build
 import android.os.SystemClock
 import android.util.Log
+import android.view.View
 import android.widget.RemoteViews
 import com.szunyoghtamas.stopwatch.R
 import com.szunyoghtamas.stopwatch.action.StopwatchActionReceiver
+import com.szunyoghtamas.stopwatch.action.StopwatchLaunch
+import com.szunyoghtamas.stopwatch.state.Kind
 import com.szunyoghtamas.stopwatch.state.StopwatchState
-import java.util.Locale
+import com.szunyoghtamas.stopwatch.state.TimeFormat
 
 class StopwatchWidgetProvider : AppWidgetProvider() {
 
@@ -33,61 +35,61 @@ class StopwatchWidgetProvider : AppWidgetProvider() {
         }
 
         private fun updateWidget(context: Context, manager: AppWidgetManager, appWidgetId: Int) {
-            Log.d(TAG, "updateWidget: starting (ID: $appWidgetId)")
             StopwatchState.init(context)
-            val isRunning = StopwatchState.isRunning
-            val startedAt = StopwatchState.startedAtEpochMs
-            val accumulated = StopwatchState.accumulatedMs
 
-            Log.d(TAG, "updateWidget (ID: $appWidgetId): isRunning=$isRunning, startedAt=$startedAt, acc=$accumulated")
+            val stopwatch = StopwatchState.state(Kind.STOPWATCH)
+            val timer = StopwatchState.state(Kind.TIMER) // a lejárt timer reset állapotban jön
+
+            // Ha csak az egyik fut, az látszik. Ha mindkettő, a kapcsoló dönt. Ha egyik sem, az utolsó mód.
+            val both = stopwatch.isRunning && timer.isRunning
+            val kind = when {
+                both -> StopwatchState.widgetMode
+                stopwatch.isRunning -> Kind.STOPWATCH
+                timer.isRunning -> Kind.TIMER
+                else -> StopwatchState.widgetMode
+            }
+            val s = if (kind == Kind.TIMER) timer else stopwatch
+
+            Log.d(TAG, "updateWidget (ID: $appWidgetId): kind=${kind.key}, isRunning=${s.isRunning}, both=$both")
 
             val views = RemoteViews(context.packageName, R.layout.widget_stopwatch)
 
-            val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-            val appOpenIntent = launchIntent?.let {
-                PendingIntent.getActivity(
-                    context, 0, it,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-            }
-            appOpenIntent?.let { views.setOnClickPendingIntent(R.id.widget_root, it) }
+            views.setOnClickPendingIntent(R.id.widget_root, StopwatchLaunch.openIntent(context, kind))
 
-            if (isRunning && startedAt != null) {
-                val epochWhen = startedAt - accumulated
-                val elapsedSinceEpochWhen = System.currentTimeMillis() - epochWhen
-                val base = SystemClock.elapsedRealtime() - elapsedSinceEpochWhen
-                Log.d(TAG, "updateWidget (ID: $appWidgetId): running mode - setting Chronometer, base=$base")
-                views.setChronometer(R.id.widget_time_text, base, null, true)
+            views.setTextViewText(R.id.widget_title, context.getString(if (kind == Kind.TIMER) R.string.widget_name_timer else R.string.widget_name))
+
+            views.setViewVisibility(R.id.widget_toggle, if (both) View.VISIBLE else View.GONE)
+            views.setInt(R.id.widget_toggle_stopwatch, "setImageAlpha", if (kind == Kind.STOPWATCH) 255 else 90)
+            views.setInt(R.id.widget_toggle_timer, "setImageAlpha", if (kind == Kind.TIMER) 255 else 90)
+            views.setOnClickPendingIntent(R.id.widget_toggle, StopwatchActionReceiver.pending(context, StopwatchActionReceiver.ACTION_TOGGLE, kind))
+
+            if (s.isRunning) {
+                val value = s.valueMs()
+                val realtime = SystemClock.elapsedRealtime()
+
+                if (kind == Kind.TIMER) {
+                    views.setChronometerCountDown(R.id.widget_time_text, true)
+                    views.setChronometer(R.id.widget_time_text, realtime + value + 999, null, true) // +999: felfelé kerekít, mint az app
+                } else {
+                    views.setChronometerCountDown(R.id.widget_time_text, false)
+                    views.setChronometer(R.id.widget_time_text, realtime - value, null, true)
+                }
             } else {
-                val timeString = formatStatic(accumulated)
-                Log.d(TAG, "updateWidget (ID: $appWidgetId): stopped mode - setting static text: $timeString")
+                views.setChronometerCountDown(R.id.widget_time_text, false)
                 views.setChronometer(R.id.widget_time_text, 0L, null, false)
-                views.setTextViewText(R.id.widget_time_text, timeString)
+                views.setTextViewText(R.id.widget_time_text, TimeFormat.format(s.valueMs(), kind))
             }
 
-            val buttonText = if (isRunning) R.string.widget_button_text_stop else R.string.widget_button_text_start
-            val buttonBackground = if (isRunning) R.drawable.rounded_button_stop_bg else R.drawable.rounded_button_start_bg
-
+            val buttonText = if (s.isRunning) R.string.widget_button_text_stop else R.string.widget_button_text_start
+            val buttonBackground = if (s.isRunning) R.drawable.rounded_button_stop_bg else R.drawable.rounded_button_start_bg
             views.setTextViewText(R.id.widget_action_button, context.getString(buttonText))
             views.setInt(R.id.widget_action_button, "setBackgroundResource", buttonBackground)
 
-            val action = if (isRunning) StopwatchActionReceiver.ACTION_STOP else StopwatchActionReceiver.ACTION_START
-            Log.d(TAG, "updateWidget (ID: $appWidgetId): setting button action -> $action")
-
-            val intent = Intent(context, StopwatchActionReceiver::class.java).apply { this.action = action }
-            val pendingIntent = PendingIntent.getBroadcast(
-                context, action.hashCode(), intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            views.setOnClickPendingIntent(R.id.widget_action_button, pendingIntent)
+            val action = if (s.isRunning) StopwatchActionReceiver.ACTION_STOP else StopwatchActionReceiver.ACTION_START
+            views.setOnClickPendingIntent(R.id.widget_action_button, StopwatchActionReceiver.pending(context, action, kind))
 
             manager.updateAppWidget(appWidgetId, views)
             Log.d(TAG, "updateWidget: update finished (ID: $appWidgetId)")
-        }
-
-        private fun formatStatic(ms: Long): String {
-            val totalSeconds = ms / 1000
-            return String.format(locale = Locale.US, "%02d:%02d", totalSeconds / 60, totalSeconds % 60)
         }
     }
 }

@@ -3,9 +3,7 @@ package com.szunyoghtamas.stopwatch.notification
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.SystemClock
@@ -16,13 +14,17 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.szunyoghtamas.stopwatch.R
 import com.szunyoghtamas.stopwatch.action.StopwatchActionReceiver
+import com.szunyoghtamas.stopwatch.action.StopwatchLaunch
+import com.szunyoghtamas.stopwatch.state.Kind
+import com.szunyoghtamas.stopwatch.state.KindState
 import com.szunyoghtamas.stopwatch.state.StopwatchState
-import java.util.Locale
+import com.szunyoghtamas.stopwatch.state.TimeFormat
 
 object StopwatchNotificationHelper {
     private const val CHANNEL_ID = "stopwatch_channel"
-    private const val NOTIFICATION_ID = 1001
     private const val TAG = "[Widget] NotifHelper"
+
+    private fun notificationId(kind: Kind) = if (kind == Kind.STOPWATCH) 1001 else 1002
 
     fun createChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -33,17 +35,24 @@ object StopwatchNotificationHelper {
         }
     }
 
-    private fun actionPendingIntent(context: Context, action: String): PendingIntent {
-        val intent = Intent(context, StopwatchActionReceiver::class.java).apply { this.action = action }
-        return PendingIntent.getBroadcast(
-            context, action.hashCode(), intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+    private fun shouldShow(s: KindState): Boolean = when {
+        s.isRunning -> true
+        s.kind == Kind.STOPWATCH -> s.accumulatedMs > 0
+        else -> s.accumulatedMs in 1 until (s.totalMs ?: 0L)
     }
 
-    fun update(context: Context) {
-        Log.d(TAG, "update: notification update started")
+    fun update(context: Context) = Kind.entries.forEach { update(context, it) }
+
+    fun update(context: Context, kind: Kind) {
+        Log.d(TAG, "update(${kind.key}): notification update started")
         StopwatchState.init(context)
+
+        val s = StopwatchState.state(kind)
+        if (!shouldShow(s)) {
+            cancel(context, kind)
+            return
+        }
+
         createChannel(context)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -54,65 +63,50 @@ object StopwatchNotificationHelper {
             return
         }
 
-        val isRunning = StopwatchState.isRunning
-        val startedAt = StopwatchState.startedAtEpochMs
-        val accumulated = StopwatchState.accumulatedMs
-
-        Log.d(TAG, "update: state -> isRunning=$isRunning, startedAt=$startedAt, acc=$accumulated")
-
-        val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-        val launchPendingIntent = launchIntent?.let {
-            PendingIntent.getActivity(
-                context, 0, it,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-        }
-
         val customView = RemoteViews(context.packageName, R.layout.notification_stopwatch)
+        customView.setTextViewText(R.id.notification_title, context.getString(if (kind == Kind.TIMER) R.string.widget_name_timer else R.string.widget_name))
 
-        if (isRunning && startedAt != null) {
-            val epochWhen = startedAt - accumulated
-            val elapsedSinceEpochWhen = System.currentTimeMillis() - epochWhen
-            val base = SystemClock.elapsedRealtime() - elapsedSinceEpochWhen
-            Log.d(TAG, "update: notification in running state (Chronometer mode), base=$base")
-            customView.setChronometer(R.id.notification_time_text, base, null, true)
+        if (s.isRunning) {
+            val value = s.valueMs()
+            val realtime = SystemClock.elapsedRealtime()
+
+            if (kind == Kind.TIMER) {
+                customView.setChronometerCountDown(R.id.notification_time_text, true)
+                customView.setChronometer(R.id.notification_time_text, realtime + value + 999, null, true)
+            } else {
+                customView.setChronometerCountDown(R.id.notification_time_text, false)
+                customView.setChronometer(R.id.notification_time_text, realtime - value, null, true)
+            }
         } else {
-            val timeString = formatStatic(accumulated)
-            Log.d(TAG, "update: notification in stopped state, displayed time=$timeString")
+            customView.setChronometerCountDown(R.id.notification_time_text, false)
             customView.setChronometer(R.id.notification_time_text, 0L, null, false)
-            customView.setTextViewText(R.id.notification_time_text, timeString)
+            customView.setTextViewText(R.id.notification_time_text, TimeFormat.format(s.valueMs(), kind))
         }
 
-        val action = if (isRunning) StopwatchActionReceiver.ACTION_STOP else StopwatchActionReceiver.ACTION_START
-        val iconColor = if(isRunning) R.color.button_bgr_color_stop else R.color.button_bgr_color_start
+        val action = if (s.isRunning) StopwatchActionReceiver.ACTION_STOP else StopwatchActionReceiver.ACTION_START
+        val iconColor = if (s.isRunning) R.color.button_bgr_color_stop else R.color.button_bgr_color_start
 
-        customView.setImageViewResource(R.id.notification_action_button, if (isRunning) R.drawable.ic_stop else R.drawable.ic_play)
+        customView.setImageViewResource(R.id.notification_action_button, if (s.isRunning) R.drawable.ic_stop else R.drawable.ic_play)
         customView.setInt(R.id.notification_action_button, "setColorFilter", ContextCompat.getColor(context, iconColor))
-        customView.setOnClickPendingIntent(R.id.notification_action_button, actionPendingIntent(context, action))
+        customView.setOnClickPendingIntent(R.id.notification_action_button, StopwatchActionReceiver.pending(context, action, kind))
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_stat_stopwatch)
+            .setSmallIcon(if (kind == Kind.TIMER) R.drawable.ic_stat_timer else R.drawable.ic_stat_stopwatch)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setCustomContentView(customView)
             .setCustomBigContentView(customView)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setDeleteIntent(actionPendingIntent(context, StopwatchActionReceiver.ACTION_DISMISS))
+            .setDeleteIntent(StopwatchActionReceiver.pending(context, StopwatchActionReceiver.ACTION_DISMISS, kind))
+            .setContentIntent(StopwatchLaunch.openIntent(context, kind)) // koppintás: a megfelelő fülre
 
-        launchPendingIntent?.let { builder.setContentIntent(it) }
-
-        NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, builder.build())
-        Log.d(TAG, "update: notification sent successfully")
+        NotificationManagerCompat.from(context).notify(notificationId(kind), builder.build())
+        Log.d(TAG, "update(${kind.key}): notification sent successfully")
     }
 
-    fun cancel(context: Context) {
-        Log.d(TAG, "cancel: cancelling notification")
-        NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
-    }
-
-    private fun formatStatic(ms: Long): String {
-        val totalSeconds = ms / 1000
-        return String.format(locale = Locale.US, "%02d:%02d", totalSeconds / 60, totalSeconds % 60)
+    fun cancel(context: Context, kind: Kind) {
+        Log.d(TAG, "cancel(${kind.key}): cancelling notification")
+        NotificationManagerCompat.from(context).cancel(notificationId(kind))
     }
 }

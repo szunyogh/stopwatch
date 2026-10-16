@@ -1,3 +1,4 @@
+import 'package:stopwatch/core/duration_formatter.dart';
 import 'package:stopwatch/model/stopwatch_native_state.dart';
 
 extension StopwatchNativeStateLog on StopwatchNativeState {
@@ -11,11 +12,7 @@ extension StopwatchNativeStateLog on StopwatchNativeState {
   String _fmtDuration(int ms) {
     final d = Duration(milliseconds: ms);
 
-    final minutes = d.inMinutes.toString().padLeft(2, '0');
-    final seconds = (d.inSeconds % 60).toString().padLeft(2, '0');
-    final millis = (d.inMilliseconds % 1000).toString().padLeft(3, '0');
-
-    return '$minutes:$seconds.$millis';
+    return DurationElapsedFormatter.toElapsedTime(d);
   }
 
   /// epoch ms -> helyi idő, 14:03:27.512
