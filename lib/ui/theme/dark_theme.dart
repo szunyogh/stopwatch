@@ -25,7 +25,7 @@ final appDarkTheme = ThemeData(brightness: Brightness.dark).copyWith(
     headlineLarge: TextStyle(color: AppColors.white, fontSize: 50.sp, fontWeight: FontWeight.w700),
     headlineMedium: TextStyle(color: AppColors.white.withValues(alpha: .7), fontSize: 24.sp, fontWeight: FontWeight.w600),
     headlineSmall: TextStyle(color: AppColors.white, fontSize: 18.sp, fontWeight: FontWeight.w700),
-    displayLarge: TextStyle(color: AppColors.white, fontSize: 55.sp, fontWeight: FontWeight.w700),
+    displayLarge: TextStyle(color: AppColors.white, fontSize: 70.sp, fontWeight: FontWeight.w700),
   ),
   textButtonTheme: TextButtonThemeData(
     style: ButtonStyle(

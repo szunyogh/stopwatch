@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,19 +15,34 @@ class TimerPage extends ConsumerStatefulWidget {
   ConsumerState<ConsumerStatefulWidget> createState() => _TimerPageState();
 }
 
-class _TimerPageState extends ConsumerState<TimerPage> {
+class _TimerPageState extends ConsumerState<TimerPage> with SingleTickerProviderStateMixin {
   late TimerLogic logic;
+  late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
     logic = ref.read(timerLogic.notifier);
+    _animationController = AnimationController(vsync: this, duration: Duration(milliseconds: 240));
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final time = ref.watch(timerLogic.select((value) => value.time));
     final isRunning = ref.watch(timerLogic.select((value) => value.isRunning));
+    ref.listen(timerLogic.select((value) => value.isRunning), (previous, next) {
+      if (next) {
+        _animationController.forward();
+      } else {
+        _animationController.reverse();
+      }
+    });
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -33,18 +50,35 @@ class _TimerPageState extends ConsumerState<TimerPage> {
           child: Center(
             child: Row(
               children: [
-                if (!isRunning) IconButton(onPressed: () => logic.removeTime(), icon: Icon(Icons.remove_circle_outline_rounded)),
+                _SlidingIconButton(
+                  animation: _animationController,
+                  icon: IconButton(onPressed: () => logic.removeTime(), icon: Icon(Icons.remove_circle_outline_rounded)),
+                ),
                 Expanded(
                   child: Center(
-                    child: SlidingTimeDisplay(
-                      elapsed: time,
-                      countdown: true,
-                      onPicked: isRunning ? null : logic.setTime,
-                      textStyle: (Theme.of(context).textTheme.displayLarge ?? TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+                    child: AnimatedBuilder(
+                      animation: _animationController,
+                      builder: (context, child) {
+                        final s = lerpDouble(55.sp / 70.sp, 1.0, Curves.easeInOut.transform(_animationController.value))!;
+                        return Transform.scale(scale: s, filterQuality: FilterQuality.high, child: child);
+                      },
+                      child: OverflowBox(
+                        maxWidth: double.infinity,
+                        child: SlidingTimeDisplay(
+                          elapsed: time,
+                          countdown: true,
+                          onPicked: isRunning ? null : logic.setTime,
+                          textStyle: (Theme.of(context).textTheme.displayLarge ?? const TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-                if (!isRunning) IconButton(onPressed: () => logic.addTime(), icon: Icon(Icons.add_circle_outline_rounded)),
+                _SlidingIconButton(
+                  animation: _animationController,
+                  direction: Direction.right,
+                  icon: IconButton(onPressed: () => logic.addTime(), icon: Icon(Icons.add_circle_outline_rounded)),
+                ),
               ],
             ),
           ),
@@ -75,6 +109,35 @@ class _BottomButtons extends ConsumerWidget {
           child: TextButton(onPressed: () => logic.startStopPressed(), child: Text(isRunning ? AppLocalizations.of(context)?.stop ?? '' : AppLocalizations.of(context)?.start ?? '')),
         ),
       ],
+    );
+  }
+}
+
+enum Direction { left, right }
+
+class _SlidingIconButton extends AnimatedWidget {
+  final Widget icon;
+  final Direction direction;
+
+  const _SlidingIconButton({required Animation<double> animation, required this.icon, this.direction = Direction.left}) : super(listenable: animation);
+
+  Animation<double> get animation => listenable as Animation<double>;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = animation.value;
+
+    if (value == 1) {
+      return const SizedBox.shrink();
+    }
+
+    final position = direction == Direction.left ? const Offset(-1, 0) : const Offset(1, 0);
+
+    final offset = Tween<Offset>(begin: Offset.zero, end: position).transform(animation.value);
+
+    return Align(
+      widthFactor: lerpDouble(1, 0, value),
+      child: FractionalTranslation(translation: offset, child: icon),
     );
   }
 }
