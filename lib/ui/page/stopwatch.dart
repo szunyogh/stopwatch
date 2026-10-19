@@ -41,7 +41,7 @@ class _StopwatchPageState extends ConsumerState<StopwatchPage> {
               if (currentTime != null)
                 SlidingTimeDisplay(
                   elapsed: currentTime,
-                  textStyle: (Theme.of(context).textTheme.headlineMedium ?? TextStyle()).copyWith(color: Theme.of(context).colorScheme.onSurface, fontFeatures: const [FontFeature.tabularFigures()]),
+                  textStyle: (Theme.of(context).textTheme.headlineMedium ?? TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
                 ),
               SizedBox(height: 10.h),
               if (laps.isNotEmpty)
@@ -95,6 +95,7 @@ class _LapItem extends StatelessWidget {
   final LapModel lap;
   final Function(BuildContext) onTap;
   final Object tag;
+
   const _LapItem(this.lap, this.tag, {required this.onTap});
 
   @override
@@ -104,8 +105,8 @@ class _LapItem extends StatelessWidget {
       borderRadius: BorderRadius.circular(10).r,
       onTap: () => onTap(context),
       child: Container(
-        padding: EdgeInsets.fromLTRB(15, 10, 15, 10).r,
-        decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(10).r),
+        padding: const EdgeInsets.fromLTRB(15, 10, 15, 10).r,
+        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(10).r),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [

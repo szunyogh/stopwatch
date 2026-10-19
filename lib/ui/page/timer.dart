@@ -31,11 +31,21 @@ class _TimerPageState extends ConsumerState<TimerPage> {
       children: [
         Expanded(
           child: Center(
-            child: SlidingTimeDisplay(
-              elapsed: time,
-              countdown: true,
-              onPicked: isRunning ? null : logic.setTime,
-              textStyle: (Theme.of(context).textTheme.displayLarge ?? TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+            child: Row(
+              children: [
+                if (!isRunning) IconButton(onPressed: () => logic.removeTime(), icon: Icon(Icons.remove_circle_outline_rounded)),
+                Expanded(
+                  child: Center(
+                    child: SlidingTimeDisplay(
+                      elapsed: time,
+                      countdown: true,
+                      onPicked: isRunning ? null : logic.setTime,
+                      textStyle: (Theme.of(context).textTheme.displayLarge ?? TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+                    ),
+                  ),
+                ),
+                if (!isRunning) IconButton(onPressed: () => logic.addTime(), icon: Icon(Icons.add_circle_outline_rounded)),
+              ],
             ),
           ),
         ),

@@ -133,6 +133,8 @@ class TimerLogic extends BaseLogic<TimerState> {
     try {
       if (_anchor.isRunning) return;
 
+      logger.i('[TimerLogic] setTime $time');
+
       final ms = time.inMilliseconds;
 
       _setAnchor(StopwatchNativeState(kind: _kind, isRunning: false, startedAtEpochMs: null, accumulatedMs: ms, totalMs: ms));
@@ -141,6 +143,40 @@ class TimerLogic extends BaseLogic<TimerState> {
       _pickDebounce = Timer(const Duration(milliseconds: 300), _flushPick);
     } catch (error, stack) {
       logger.e('[TimerLogic] setTime error', error: error, stackTrace: stack);
+    }
+  }
+
+  void addTime() {
+    try {
+      if (_anchor.isRunning) return;
+
+      logger.i('[TimerLogic] addTime');
+
+      final ms = (_anchor.totalMs ?? 0) + 10000;
+
+      _setAnchor(StopwatchNativeState(kind: _kind, isRunning: false, startedAtEpochMs: null, accumulatedMs: ms, totalMs: ms));
+
+      _bridge.notifySetTimer(totalMs: ms);
+    } catch (error, stack) {
+      logger.e('[TimerLogic] addTime error', error: error, stackTrace: stack);
+    }
+  }
+
+  void removeTime() {
+    try {
+      if (_anchor.isRunning) return;
+
+      logger.i('[TimerLogic] removeTime');
+
+      final totalMs = _anchor.totalMs ?? 0;
+
+      final ms = totalMs <= 10000 ? 0 : totalMs - 10000;
+
+      _setAnchor(StopwatchNativeState(kind: _kind, isRunning: false, startedAtEpochMs: null, accumulatedMs: ms, totalMs: ms));
+
+      _bridge.notifySetTimer(totalMs: ms);
+    } catch (error, stack) {
+      logger.e('[TimerLogic] removeTime error', error: error, stackTrace: stack);
     }
   }
 
