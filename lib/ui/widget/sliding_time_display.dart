@@ -4,7 +4,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 
 class SlidingTimeDisplay extends LeafRenderObjectWidget {
-  const SlidingTimeDisplay({super.key, required this.elapsed, required this.textStyle, this.countdown = false, this.duration = const Duration(milliseconds: 500), this.onPicked});
+  const SlidingTimeDisplay({super.key, required this.elapsed, required this.textStyle, this.countdown = false, this.duration = const Duration(milliseconds: 300), this.onPicked});
 
   final Duration elapsed;
 
@@ -231,7 +231,7 @@ class RenderSlidingTime extends RenderBox {
 
   void _onDragUpdate(DragUpdateDetails d) {
     if (!_pickerActive) return;
-    final step = _big.height;
+    final step = _big.height * 1.5;
     _dragAccum += d.delta.dy;
     while (_dragAccum >= step) {
       _dragAccum -= step;
