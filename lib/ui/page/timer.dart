@@ -32,17 +32,19 @@ class _TimerPageState extends ConsumerState<TimerPage> with SingleTickerProvider
     super.dispose();
   }
 
+  void _isRunningListen(bool? previous, bool next) {
+    if (next) {
+      _animationController.forward();
+    } else {
+      _animationController.reverse();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final time = ref.watch(timerLogic.select((value) => value.time));
     final isRunning = ref.watch(timerLogic.select((value) => value.isRunning));
-    ref.listen(timerLogic.select((value) => value.isRunning), (previous, next) {
-      if (next) {
-        _animationController.forward();
-      } else {
-        _animationController.reverse();
-      }
-    });
+    ref.listen(timerLogic.select((value) => value.isRunning), _isRunningListen);
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
