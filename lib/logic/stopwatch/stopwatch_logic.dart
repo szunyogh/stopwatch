@@ -203,7 +203,9 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
 
       _bridge.notifyReset(kind: _kind);
 
-      if (_controller.hasClients) _controller.animateTo(0, duration: const Duration(milliseconds: 400), curve: Curves.easeOut);
+      Future.delayed(const Duration(milliseconds: 50), () {
+        if (_controller.hasClients) _controller.animateTo(0, duration: const Duration(milliseconds: 600), curve: Curves.easeOut);
+      });
     } catch (error, stack) {
       logger.e('[StopwatchLogic] reset', error: error, stackTrace: stack);
     }
@@ -253,7 +255,7 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
 
     if (!covered) return;
 
-    position.animateTo(position.maxScrollExtent, duration: const Duration(milliseconds: 400), curve: Curves.easeOut);
+    position.animateTo(position.maxScrollExtent, duration: const Duration(milliseconds: 500), curve: Curves.easeOut);
   }
 
   void lapResetPressed() {
