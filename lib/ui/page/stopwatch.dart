@@ -8,6 +8,7 @@ import 'package:stopwatch/logic/stopwatch/stopwatch_logic.dart';
 import 'package:stopwatch/model/lap.dart';
 import 'package:stopwatch/ui/widget/analog_clock.dart';
 import 'package:stopwatch/ui/widget/sliding_time_display.dart';
+import 'package:stopwatch/ui/widget/sliver_collapsing_header.dart';
 
 @RoutePage()
 class StopwatchPage extends ConsumerStatefulWidget {
@@ -18,74 +19,59 @@ class StopwatchPage extends ConsumerStatefulWidget {
 }
 
 class _StopwatchPageState extends ConsumerState<StopwatchPage> {
+  late StopwatchLogic logic;
+
+  @override
+  void initState() {
+    super.initState();
+    logic = ref.read(stopwatchLogic.notifier);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final logic = ref.read(stopwatchLogic.notifier);
-
     final time = ref.watch(stopwatchLogic.select((value) => value.time));
     final currentTime = ref.watch(stopwatchLogic.select((value) => value.currentTime));
     final laps = ref.watch(stopwatchLogic.select((value) => value.laps));
 
-    return Column(
-      children: [
-        Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AnalogClock(elapsed: time),
-              SizedBox(height: 20.h),
-              SlidingTimeDisplay(
-                elapsed: time,
-                textStyle: (Theme.of(context).textTheme.headlineLarge ?? TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
-              ),
-              if (currentTime != null)
+    final topPadding = MediaQuery.of(context).padding.top + 10;
+
+    return CustomScrollView(
+      controller: logic.controller,
+      physics: laps.isEmpty ? const NeverScrollableScrollPhysics() : null,
+      slivers: [
+        SliverCollapsingHeader(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          spacing: 10.r,
+          padding: EdgeInsets.fromLTRB(15, topPadding, 15, 10).r,
+          collapsedMainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            AnalogClock(elapsed: time),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 SlidingTimeDisplay(
-                  elapsed: currentTime,
-                  textStyle: (Theme.of(context).textTheme.headlineMedium ?? TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+                  elapsed: time,
+                  textStyle: (Theme.of(context).textTheme.headlineLarge ?? TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
                 ),
-              SizedBox(height: 10.h),
-              if (laps.isNotEmpty)
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10).r,
-                    child: ListView.separated(
-                      padding: EdgeInsets.symmetric(vertical: 10.h),
-                      itemBuilder: (context, index) => _LapItem(laps[index], laps[index].order, onTap: (ctx) => logic.onTap(laps[index], laps[index].order)),
-                      separatorBuilder: (context, index) => SizedBox(height: 10.h),
-                      itemCount: laps.length,
-                    ),
+                if (currentTime != null)
+                  SlidingTimeDisplay(
+                    elapsed: currentTime,
+                    textStyle: (Theme.of(context).textTheme.headlineMedium ?? TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
                   ),
-                ),
-            ],
+              ],
+            ),
+          ],
+        ),
+        SliverPadding(
+          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15).r,
+          sliver: SliverList.separated(
+            itemBuilder: (context, index) => _LapItem(laps[index], laps[index].order, onTap: (ctx) => logic.onTap(laps[index], laps[index].order)),
+            separatorBuilder: (context, index) => SizedBox(height: 10.h),
+            itemCount: laps.length,
           ),
         ),
-        const _BottomButtons(),
-      ],
-    );
-  }
-}
-
-class _BottomButtons extends ConsumerWidget {
-  const _BottomButtons();
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final logic = ref.read(stopwatchLogic.notifier);
-
-    final isRunning = ref.watch(stopwatchLogic.select((value) => value.isRunning));
-    final enabledReset = ref.watch(stopwatchLogic.select((value) => value.time > Duration.zero));
-
-    return Row(
-      children: [
-        Expanded(
-          child: TextButton(
-            onPressed: enabledReset ? () => logic.lapResetPressed() : null,
-            child: Text(isRunning ? AppLocalizations.of(context)?.lap ?? '' : AppLocalizations.of(context)?.reset ?? ''),
-          ),
-        ),
-        SizedBox(width: 10.w),
-        Expanded(
-          child: TextButton(onPressed: () => logic.startStopPressed(), child: Text(isRunning ? AppLocalizations.of(context)?.stop ?? '' : AppLocalizations.of(context)?.start ?? '')),
-        ),
+        SliverToBoxAdapter(child: SizedBox(height: 170.h)),
+        const SliverCollapsingHeaderFooter(),
       ],
     );
   }
@@ -105,7 +91,7 @@ class _LapItem extends StatelessWidget {
       borderRadius: BorderRadius.circular(10).r,
       onTap: () => onTap(context),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(15, 10, 15, 10).r,
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15).r,
         decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(10).r),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

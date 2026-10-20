@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stopwatch/core/router.gr.dart';
@@ -13,6 +14,8 @@ import 'package:stopwatch/model/stopwatch_native_state.dart';
 final stopwatchLogic = NotifierProvider.autoDispose<StopwatchLogic, StopwatchState>(StopwatchLogic.new);
 
 class StopwatchLogic extends BaseLogic<StopwatchState> {
+  late ScrollController _controller;
+
   static const _kind = NativeKind.stopwatch;
   static const _zeroNative = StopwatchNativeState(kind: _kind, isRunning: false, startedAtEpochMs: null, accumulatedMs: 0);
 
@@ -28,11 +31,15 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
 
   bool _disposed = false;
 
+  ScrollController get controller => _controller;
+
   @override
   StopwatchState build() {
     _ticker = Ticker(_onTick);
+    _controller = ScrollController();
 
     ref.onDispose(() {
+      _controller.dispose();
       _disposed = true;
       _nativeEventsSub?.cancel();
       _ticker.stop();
@@ -187,6 +194,8 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
   void reset() {
     try {
       logger.i('[StopwatchLogic] reset');
+
+      _controller.animateTo(0, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
 
       _lapStartElapsed = null;
 

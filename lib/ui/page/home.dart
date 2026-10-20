@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +8,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:stopwatch/core/router.gr.dart';
 import 'package:stopwatch/l10n/app_localizations.dart';
 import 'package:stopwatch/logic/home/home_logic.dart';
+import 'package:stopwatch/logic/stopwatch/stopwatch_logic.dart';
+import 'package:stopwatch/logic/timer/timer_logic.dart';
 import 'package:stopwatch/ui/widget/inner_shadow_container.dart';
 
 @RoutePage()
@@ -18,23 +22,38 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
-    final topPadding = MediaQuery.of(context).padding.top + 10;
     return AutoTabsRouter(
       homeIndex: 0,
       routes: const [StopwatchRoute(), TimerRoute()],
       builder: (context, child) {
-        return Scaffold(
-          body: Padding(padding: EdgeInsets.fromLTRB(15, topPadding, 15, 0).r, child: child),
-          bottomNavigationBar: const _BottomNavigationBar(),
-        );
+        return Scaffold(extendBody: true, body: child, bottomNavigationBar: const _BottomNavigationBar());
       },
     );
   }
 }
 
-class _BottomNavigationBar extends ConsumerWidget {
+class _BottomNavigationBar extends StatelessWidget {
   const _BottomNavigationBar();
 
+  @override
+  Widget build(BuildContext context) {
+    final index = context.watchTabsRouter.activeIndex;
+
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        child: Container(
+          color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: .3),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15).r,
+          child: Column(mainAxisSize: MainAxisSize.min, children: [if (index == 0) const _StopwatchBottomButtons() else const _TimerBottomButtons(), const _NavigationBar()]),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavigationBar extends ConsumerWidget {
+  const _NavigationBar();
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final logic = ref.read(homeLogic.notifier);
@@ -102,6 +121,55 @@ class _BottomNavigationBar extends ConsumerWidget {
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StopwatchBottomButtons extends ConsumerWidget {
+  const _StopwatchBottomButtons();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final logic = ref.read(stopwatchLogic.notifier);
+
+    final isRunning = ref.watch(stopwatchLogic.select((value) => value.isRunning));
+    final enabledReset = ref.watch(stopwatchLogic.select((value) => value.time > Duration.zero));
+
+    return Row(
+      children: [
+        Expanded(
+          child: TextButton(
+            onPressed: enabledReset ? () => logic.lapResetPressed() : null,
+            child: Text(isRunning ? AppLocalizations.of(context)?.lap ?? '' : AppLocalizations.of(context)?.reset ?? ''),
+          ),
+        ),
+        SizedBox(width: 10.w),
+        Expanded(
+          child: TextButton(onPressed: () => logic.startStopPressed(), child: Text(isRunning ? AppLocalizations.of(context)?.stop ?? '' : AppLocalizations.of(context)?.start ?? '')),
+        ),
+      ],
+    );
+  }
+}
+
+class _TimerBottomButtons extends ConsumerWidget {
+  const _TimerBottomButtons();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final logic = ref.read(timerLogic.notifier);
+
+    final isRunning = ref.watch(timerLogic.select((value) => value.isRunning));
+    final enabledReset = ref.watch(timerLogic.select((value) => value.time != logic.startTime && !value.isRunning));
+
+    return Row(
+      children: [
+        Expanded(
+          child: TextButton(onPressed: enabledReset ? () => logic.reset() : null, child: Text(AppLocalizations.of(context)?.reset ?? '')),
+        ),
+        SizedBox(width: 10.w),
+        Expanded(
+          child: TextButton(onPressed: () => logic.startStopPressed(), child: Text(isRunning ? AppLocalizations.of(context)?.stop ?? '' : AppLocalizations.of(context)?.start ?? '')),
         ),
       ],
     );
