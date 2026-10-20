@@ -19,7 +19,7 @@ class SliverCollapsingHeader extends StatefulWidget {
     this.collapsedMainAxisAlignment,
     this.snap = true,
     this.snapThreshold = 0.5,
-    this.snapDuration = const Duration(milliseconds: 250),
+    this.snapDuration = const Duration(milliseconds: 350),
     this.snapCurve = Curves.easeOut,
   });
 

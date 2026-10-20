@@ -195,8 +195,6 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
     try {
       logger.i('[StopwatchLogic] reset');
 
-      _controller.animateTo(0, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
-
       _lapStartElapsed = null;
 
       changeState((state) => state.copyWith(laps: const [], currentTime: null));
@@ -204,6 +202,8 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
       _setAnchor(_zeroNative);
 
       _bridge.notifyReset(kind: _kind);
+
+      if (_controller.hasClients) _controller.animateTo(0, duration: const Duration(milliseconds: 400), curve: Curves.easeOut);
     } catch (error, stack) {
       logger.e('[StopwatchLogic] reset', error: error, stackTrace: stack);
     }
@@ -226,9 +226,34 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
       changeState((state) => state.copyWith(laps: [...state.laps, item], time: elapsed, currentTime: Duration.zero));
 
       _bridge.saveLaps(state.laps);
+
+      final order = item.order;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottomIfCovered(order));
     } catch (error, stack) {
       logger.e('[StopwatchLogic] addLap', error: error, stackTrace: stack);
     }
+  }
+
+  void _scrollToBottomIfCovered(Object tag) {
+    if (!_controller.hasClients) return;
+    final position = _controller.position;
+
+    final itemContext = GlobalObjectKey(tag).currentContext;
+    final itemBox = (itemContext != null && itemContext.mounted) ? itemContext.findRenderObject() : null;
+    final viewportBox = position.context.notificationContext?.findRenderObject();
+
+    var covered = true;
+
+    if (itemBox is RenderBox && itemBox.attached && viewportBox is RenderBox) {
+      final itemBottom = itemBox.localToGlobal(Offset(0, itemBox.size.height)).dy;
+      final viewportBottom = viewportBox.localToGlobal(Offset(0, viewportBox.size.height)).dy;
+      final barTop = viewportBottom - MediaQuery.paddingOf(itemContext!).bottom;
+      covered = itemBottom > barTop;
+    }
+
+    if (!covered) return;
+
+    position.animateTo(position.maxScrollExtent, duration: const Duration(milliseconds: 400), curve: Curves.easeOut);
   }
 
   void lapResetPressed() {
