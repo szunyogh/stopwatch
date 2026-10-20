@@ -35,44 +35,47 @@ class _StopwatchPageState extends ConsumerState<StopwatchPage> {
 
     final topPadding = MediaQuery.of(context).padding.top + 10;
 
-    return CustomScrollView(
-      controller: logic.controller,
-      physics: laps.isEmpty ? const NeverScrollableScrollPhysics() : null,
-      slivers: [
-        SliverCollapsingHeader(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          spacing: 10.r,
-          padding: EdgeInsets.fromLTRB(15, topPadding, 15, 10).r,
-          collapsedMainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            AnalogClock(elapsed: time),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SlidingTimeDisplay(
-                  elapsed: time,
-                  textStyle: (Theme.of(context).textTheme.headlineLarge ?? TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
-                ),
-                if (currentTime != null)
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(overscroll: false),
+      child: CustomScrollView(
+        controller: logic.controller,
+        physics: laps.isEmpty ? const NeverScrollableScrollPhysics() : null,
+        slivers: [
+          SliverCollapsingHeader(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            spacing: 10.r,
+            padding: EdgeInsets.fromLTRB(15, topPadding, 15, 10).r,
+            collapsedMainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              AnalogClock(elapsed: time),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   SlidingTimeDisplay(
-                    elapsed: currentTime,
-                    textStyle: (Theme.of(context).textTheme.headlineMedium ?? TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+                    elapsed: time,
+                    textStyle: (Theme.of(context).textTheme.headlineLarge ?? TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
                   ),
-              ],
-            ),
-          ],
-        ),
-        SliverPadding(
-          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15).r,
-          sliver: SliverList.separated(
-            itemBuilder: (context, index) => _LapItem(laps[index], laps[index].order, onTap: (ctx) => logic.onTap(laps[index], laps[index].order)),
-            separatorBuilder: (context, index) => SizedBox(height: 10.h),
-            itemCount: laps.length,
+                  if (currentTime != null)
+                    SlidingTimeDisplay(
+                      elapsed: currentTime,
+                      textStyle: (Theme.of(context).textTheme.headlineMedium ?? TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+                    ),
+                ],
+              ),
+            ],
           ),
-        ),
-        SliverToBoxAdapter(child: SizedBox(height: 170.h)),
-        const SliverCollapsingHeaderFooter(),
-      ],
+          SliverPadding(
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15).r,
+            sliver: SliverList.separated(
+              itemBuilder: (context, index) => _LapItem(laps[index], laps[index].order, onTap: (ctx) => logic.onTap(laps[index], laps[index].order)),
+              separatorBuilder: (context, index) => SizedBox(height: 10.h),
+              itemCount: laps.length,
+            ),
+          ),
+          SliverToBoxAdapter(child: SizedBox(height: 170.h)),
+          const SliverCollapsingHeaderFooter(),
+        ],
+      ),
     );
   }
 }
