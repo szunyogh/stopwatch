@@ -15,7 +15,7 @@ class SliverCollapsingHeader extends StatefulWidget {
     this.collapsedScale = 0.6,
     this.color,
     this.collapsedColorOpacity = 0.3,
-    this.maxBlurSigma = 15,
+    this.maxBlurSigma = 10,
     this.collapsedMainAxisAlignment,
     this.snap = true,
     this.snapThreshold = 0.5,
@@ -54,18 +54,27 @@ class _SliverCollapsingHeaderState extends State<SliverCollapsingHeader> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final position = Scrollable.maybeOf(context, axis: Axis.vertical)?.position;
-    if (position != _position) {
-      _position?.isScrollingNotifier.removeListener(_onScrollingChanged);
-      _position = position;
-      _position?.isScrollingNotifier.addListener(_onScrollingChanged);
-    }
+    _attach();
+  }
+
+  @override
+  void didUpdateWidget(SliverCollapsingHeader old) {
+    super.didUpdateWidget(old);
+    _attach();
   }
 
   @override
   void dispose() {
     _position?.isScrollingNotifier.removeListener(_onScrollingChanged);
     super.dispose();
+  }
+
+  void _attach() {
+    final position = Scrollable.maybeOf(context, axis: Axis.vertical)?.position;
+    if (position == _position) return;
+    _position?.isScrollingNotifier.removeListener(_onScrollingChanged);
+    _position = position;
+    _position?.isScrollingNotifier.addListener(_onScrollingChanged);
   }
 
   void _onScrollingChanged() {
@@ -354,13 +363,14 @@ class RenderSliverCollapsingHeader extends RenderSliver with ContainerRenderObje
     }
 
     final sigma = lerpDouble(0, maxBlurSigma, _t)!;
-    if (sigma > 0.01) {
+    final blur = sigma > 0.5 && constraints.scrollOffset >= _shrinkRange - 0.5;
+
+    if (blur) {
       final layer = _blurLayer.layer ??= BackdropFilterLayer();
       layer.filter = ImageFilter.blur(sigmaX: sigma, sigmaY: sigma);
       _clipLayer.layer = context.pushClipRect(needsCompositing, offset, bounds, (ctx, off) => ctx.pushLayer(layer, paintContent, off), oldLayer: _clipLayer.layer);
     } else {
-      _clipLayer.layer = null;
-      paintContent(context, offset);
+      _clipLayer.layer = context.pushClipRect(needsCompositing, offset, bounds, paintContent, oldLayer: _clipLayer.layer);
     }
   }
 

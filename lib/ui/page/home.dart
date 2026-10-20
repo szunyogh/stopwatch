@@ -41,7 +41,7 @@ class _BottomNavigationBar extends StatelessWidget {
 
     return ClipRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: .3),
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15).r,

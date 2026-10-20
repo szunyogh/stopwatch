@@ -29,8 +29,6 @@ class _StopwatchPageState extends ConsumerState<StopwatchPage> {
 
   @override
   Widget build(BuildContext context) {
-    final time = ref.watch(stopwatchLogic.select((value) => value.time));
-    final currentTime = ref.watch(stopwatchLogic.select((value) => value.currentTime));
     final laps = ref.watch(stopwatchLogic.select((value) => value.laps));
 
     final topPadding = MediaQuery.of(context).padding.top + 10;
@@ -45,21 +43,8 @@ class _StopwatchPageState extends ConsumerState<StopwatchPage> {
           padding: EdgeInsets.fromLTRB(15, topPadding, 15, 10).r,
           collapsedMainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            AnalogClock(elapsed: time),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SlidingTimeDisplay(
-                  elapsed: time,
-                  textStyle: (Theme.of(context).textTheme.headlineLarge ?? TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
-                ),
-                if (currentTime != null)
-                  SlidingTimeDisplay(
-                    elapsed: currentTime,
-                    textStyle: (Theme.of(context).textTheme.headlineMedium ?? TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
-                  ),
-              ],
-            ),
+            RepaintBoundary(child: _ClockView()),
+            _TimeColumn(),
           ],
         ),
         SliverPadding(
@@ -72,6 +57,39 @@ class _StopwatchPageState extends ConsumerState<StopwatchPage> {
         ),
         SliverToBoxAdapter(child: SizedBox(height: 170.h)),
         const SliverCollapsingHeaderFooter(),
+      ],
+    );
+  }
+}
+
+class _ClockView extends ConsumerWidget {
+  const _ClockView();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final time = ref.watch(stopwatchLogic.select((s) => s.time));
+    return AnalogClock(elapsed: time);
+  }
+}
+
+class _TimeColumn extends ConsumerWidget {
+  const _TimeColumn();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final time = ref.watch(stopwatchLogic.select((s) => s.time));
+    final currentTime = ref.watch(stopwatchLogic.select((s) => s.currentTime));
+    final theme = Theme.of(context).textTheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SlidingTimeDisplay(
+          elapsed: time,
+          textStyle: (theme.headlineLarge ?? const TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+        ),
+        if (currentTime != null)
+          SlidingTimeDisplay(
+            elapsed: currentTime,
+            textStyle: (theme.headlineMedium ?? const TextStyle()).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+          ),
       ],
     );
   }

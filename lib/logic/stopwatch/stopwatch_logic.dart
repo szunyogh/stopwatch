@@ -203,8 +203,11 @@ class StopwatchLogic extends BaseLogic<StopwatchState> {
 
       _bridge.notifyReset(kind: _kind);
 
-      Future.delayed(const Duration(milliseconds: 50), () {
-        if (_controller.hasClients) _controller.animateTo(0, duration: const Duration(milliseconds: 600), curve: Curves.easeOut);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_controller.hasClients) return;
+        final pos = _controller.position;
+        if (pos.pixels > pos.maxScrollExtent) pos.jumpTo(pos.maxScrollExtent);
+        pos.animateTo(0, duration: const Duration(milliseconds: 400), curve: Curves.easeOut);
       });
     } catch (error, stack) {
       logger.e('[StopwatchLogic] reset', error: error, stackTrace: stack);

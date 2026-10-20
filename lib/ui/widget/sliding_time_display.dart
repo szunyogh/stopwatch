@@ -220,6 +220,9 @@ class RenderSlidingTime extends RenderBox {
   bool hitTestSelf(Offset position) => _pickerActive;
 
   @override
+  bool get isRepaintBoundary => true;
+
+  @override
   void handleEvent(PointerEvent event, BoxHitTestEntry entry) {
     if (event is PointerDownEvent && _pickerActive) {
       _dragSlot = _slotAt(entry.localPosition.dx);
