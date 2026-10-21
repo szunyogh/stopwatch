@@ -53,6 +53,11 @@ class StopwatchNativeBridge {
     return StopwatchNativeState.fromMap({'kind': kind.name, ...?result});
   }
 
+  Future<bool> isFirstUse(NativeKind kind) async {
+    final result = await _methodChannel.invokeMethod<bool>('isFirstUse', {'kind': kind.name});
+    return result ?? false;
+  }
+
   Future<void> notifyStart({required NativeKind kind, required int startedAtEpochMs, required int accumulatedMs}) {
     return _methodChannel.invokeMethod('notifyStart', {'kind': kind.name, 'startedAtEpochMs': startedAtEpochMs, 'accumulatedMs': accumulatedMs});
   }

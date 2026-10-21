@@ -15,17 +15,17 @@ enum TimerAlarm {
 
         Task {
             #if canImport(AlarmKit)
-            if #available(iOS 26.0, *), await AlarmKitTimer.schedule(endDate: end) { return }
+                if #available(iOS 26.0, *), await AlarmKitTimer.schedule(endDate: end) { return }
             #endif
-            LegacyAlarm.schedule(endDate: end)
+                LegacyAlarm.schedule(endDate: end)
         }
     }
 
     static func cancel() {
         #if canImport(AlarmKit)
-        if #available(iOS 26.0, *) { AlarmKitTimer.cancel() }
+            if #available(iOS 26.0, *) { AlarmKitTimer.cancel() }
         #endif
-        LegacyAlarm.cancel()
+            LegacyAlarm.cancel()
     }
 }
 
@@ -53,12 +53,12 @@ enum LegacyAlarm {
 
         for i in 0..<count {
             let content = UNMutableNotificationContent()
-            content.title = String(localized: "timer_finished_title")
-            content.body = String(localized: "timer_finished_body")
-            content.sound = UNNotificationSound(named: UNNotificationSoundName("timer_alarm.caf"))
-            content.interruptionLevel = .timeSensitive
-            content.categoryIdentifier = categoryId
-            content.threadIdentifier = prefix
+                content.title = String(localized: "timer_finished_title")
+                content.body = String(localized: "timer_finished_body")
+                content.sound = UNNotificationSound(named: UNNotificationSoundName("timer_alarm.caf"))
+                content.interruptionLevel = .timeSensitive
+                content.categoryIdentifier = categoryId
+                content.threadIdentifier = prefix
 
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: base + Double(i) * spacing, repeats: false)
             center.add(UNNotificationRequest(identifier: ids[i], content: content, trigger: trigger))
@@ -67,8 +67,8 @@ enum LegacyAlarm {
 
     static func cancel() {
         let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: ids)
-        center.removeDeliveredNotifications(withIdentifiers: ids)
+            center.removePendingNotificationRequests(withIdentifiers: ids)
+            center.removeDeliveredNotifications(withIdentifiers: ids)
     }
 
     static func handle(_ response: UNNotificationResponse) async {

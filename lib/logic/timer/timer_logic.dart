@@ -50,10 +50,13 @@ class TimerLogic extends BaseLogic<TimerState> {
     try {
       logger.i('[TimerLogic] _init');
 
-      WidgetsBinding.instance.addPostFrameCallback((timeStamp) => appRouter.push(TimerTipDialog()));
-
       _initEventChannel();
       await _syncFromNative();
+
+      final isFirstUse = await _bridge.isFirstUse(_kind);
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        if (isFirstUse) appRouter.push(TimerTipDialog());
+      });
     } catch (error, stack) {
       logger.e('[TimerLogic] _init error', error: error, stackTrace: stack);
     }

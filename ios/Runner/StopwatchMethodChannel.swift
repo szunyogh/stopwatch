@@ -63,6 +63,12 @@ final class StopwatchMethodChannel: NSObject {
                 let state = StopwatchSharedState.asDictionary(kind: kind)
                 methodChannelLogger.notice("[Widget] [MethodChannel] getState(\(kind.rawValue)) -> \(String(describing: state))")
                 result(state)
+                
+            case "isFirstUse":
+                let res = StopwatchSharedState.isFirstUse(kind: kind)
+                StopwatchSharedState.setFirstUse(kind: kind, value: true)
+                methodChannelLogger.notice("[Widget] [MethodChannel] isFirstUse(\(kind.rawValue)) -> \(String(describing: !res))")
+                result(!res)
 
             case "notifyStart":
                 guard let startedAt = args?["startedAtEpochMs"] as? Int,

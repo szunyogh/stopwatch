@@ -15,6 +15,7 @@ enum StopwatchSharedState {
     private static let widgetKind = "StopwatchHomeScreenWidget"
 
     private static let keyIsRunning = "isRunning"
+    private static let keyIsFirstUse = "isFirstUse"
     private static let keyStartedAt = "startedAtEpochMs"
     private static let keyAccumulated = "accumulatedMs"
     private static let keyTotal = "totalMs"
@@ -39,6 +40,9 @@ enum StopwatchSharedState {
     static func clearLaps() { defaults.removeObject(forKey: keyLaps) }
 
     static func isRunning(kind: TimeKind) -> Bool { defaults.bool(forKey: kind.key(keyIsRunning)) }
+    
+    static func isFirstUse(kind: TimeKind) -> Bool { defaults.bool(forKey: kind.key(keyIsFirstUse)) }
+    static func setFirstUse(kind: TimeKind, value: Bool) { defaults.set(value, forKey: kind.key(keyIsFirstUse)) }
 
     static func startedAtEpochMs(kind: TimeKind) -> Int? {
         let v = defaults.integer(forKey: kind.key(keyStartedAt))
