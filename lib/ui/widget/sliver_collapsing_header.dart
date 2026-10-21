@@ -301,7 +301,8 @@ class RenderSliverCollapsingHeader extends RenderSliver with ContainerRenderObje
 
     final scrollOffset = constraints.scrollOffset;
     final childExtent = math.max(minE, maxE - scrollOffset);
-    final t = maxE == minE ? 1.0 : clampDouble((maxE - childExtent) / (maxE - minE), 0, 1);
+    final rawT = maxE == minE ? 1.0 : clampDouble((maxE - childExtent) / (maxE - minE), 0, 1);
+    final t = rawT >= 0.999 ? 1.0 : (rawT <= 0.001 ? 0.0 : rawT);
     _t = t;
 
     final free = math.max(0.0, innerW - sumW * s - gaps);
@@ -347,6 +348,8 @@ class RenderSliverCollapsingHeader extends RenderSliver with ContainerRenderObje
     if (firstChild == null || !geo.visible) return;
     final bounds = Offset.zero & Size(constraints.crossAxisExtent, geo.paintExtent);
 
+    final animating = _t > 0 && _t < 1;
+
     void paintContent(PaintingContext ctx, Offset off) {
       final c = color;
       if (c != null) {
@@ -357,9 +360,25 @@ class RenderSliverCollapsingHeader extends RenderSliver with ContainerRenderObje
       while (child != null) {
         final current = child;
         final pd = current.parentData as _ParentData;
-        ctx.pushTransform(needsCompositing, off + pd.offset, Matrix4.diagonal3Values(pd.scale, pd.scale, 1), (ctx2, o) => ctx2.paintChild(current, o));
+        final target = off + pd.offset;
+
+        if (animating) {
+          final q = off;
+          final m = Matrix4.translationValues(target.dx, target.dy, 0)
+            ..scaleByDouble(pd.scale, pd.scale, 1, 1)
+            ..translateByDouble(-q.dx, -q.dy, 0, 1);
+          ctx.pushLayer(ImageFilterLayer(imageFilter: ImageFilter.matrix(m.storage, filterQuality: FilterQuality.high)), (c, o) => c.paintChild(current, o), q);
+        } else {
+          ctx.pushTransform(needsCompositing, target, Matrix4.diagonal3Values(pd.scale, pd.scale, 1), (c, o) => c.paintChild(current, o));
+        }
         child = childAfter(current);
       }
+    }
+
+    if (animating) {
+      _clipLayer.layer = null;
+      paintContent(context, offset);
+      return;
     }
 
     final sigma = lerpDouble(0, maxBlurSigma, _t)!;

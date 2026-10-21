@@ -302,7 +302,7 @@ class RenderSlidingTime extends RenderBox {
         _big.paint(canvas, _current[i], x, offset.dy, dw);
       } else {
         final t = Curves.easeOut.transform(p);
-        final dir = _direction[i]; // +1: a régi felfelé megy ki, az új alulról jön; -1: fordítva
+        final dir = _direction[i];
         _big.paint(canvas, _previous[i], x, offset.dy - dir * t * h, dw);
         _big.paint(canvas, _current[i], x, offset.dy + dir * (1 - t) * h, dw);
       }

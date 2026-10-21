@@ -55,14 +55,10 @@ class _TimerPageState extends ConsumerState<TimerPage> with SingleTickerProvider
             ),
             Expanded(
               child: Center(
-                child: AnimatedBuilder(
-                  animation: _animationController,
-                  builder: (context, child) {
-                    final s = lerpDouble(50.sp / 70.sp, 1.0, Curves.easeInOut.transform(_animationController.value))!;
-                    return Transform.scale(scale: s, filterQuality: FilterQuality.high, child: child);
-                  },
-                  child: OverflowBox(
-                    maxWidth: double.infinity,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10).r,
                     child: SlidingTimeDisplay(
                       elapsed: time,
                       countdown: true,
