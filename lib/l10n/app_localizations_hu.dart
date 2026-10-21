@@ -35,4 +35,14 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get timer => 'Időzítő';
+
+  @override
+  String get timerDialogTitle => 'Tipp az időzítőhöz';
+
+  @override
+  String get timerDialogContent =>
+      'Tudtad? A kijelzőn lévő számokat egyenként is elcsúsztathatod az ujjaddal a finomhangoláshoz, a + és - gombokkal pedig gyorsan hozzáadhatsz vagy elvehetsz 10 másodpercet.';
+
+  @override
+  String get timerDialogButton => 'Kipróbálom';
 }

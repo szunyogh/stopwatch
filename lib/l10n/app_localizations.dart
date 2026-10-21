@@ -151,6 +151,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Timer'**
   String get timer;
+
+  /// No description provided for @timerDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer Tip'**
+  String get timerDialogTitle;
+
+  /// No description provided for @timerDialogContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Did you know? You can swipe individual digits on the display to fine-tune the time, or use the + and - buttons to quickly add or remove 10 seconds.'**
+  String get timerDialogContent;
+
+  /// No description provided for @timerDialogButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Try it out'**
+  String get timerDialogButton;
 }
 
 class _AppLocalizationsDelegate

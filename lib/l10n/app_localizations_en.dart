@@ -35,4 +35,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get timer => 'Timer';
+
+  @override
+  String get timerDialogTitle => 'Timer Tip';
+
+  @override
+  String get timerDialogContent =>
+      'Did you know? You can swipe individual digits on the display to fine-tune the time, or use the + and - buttons to quickly add or remove 10 seconds.';
+
+  @override
+  String get timerDialogButton => 'Try it out';
 }

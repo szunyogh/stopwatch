@@ -8,5 +8,8 @@
     "lapTotalTime": "Total time",
     "lapDetails": "Lap time",
     "stopwatch": "Stopwatch",
-    "timer": "Timer"
+    "timer": "Timer",
+    "timerDialogTitle": "Timer Tip",
+    "timerDialogContent": "Did you know? You can swipe individual digits on the display to fine-tune the time, or use the + and - buttons to quickly add or remove 10 seconds.",
+    "timerDialogButton": "Try it out"
 }

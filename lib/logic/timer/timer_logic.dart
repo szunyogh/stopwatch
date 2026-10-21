@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stopwatch/core/router.gr.dart';
 import 'package:stopwatch/core/stopwatch_native_bridge.dart';
 import 'package:stopwatch/core/stopwatch_native_state_log.dart';
 import 'package:stopwatch/logic/base.dart';
@@ -47,6 +49,8 @@ class TimerLogic extends BaseLogic<TimerState> {
   Future<void> _init() async {
     try {
       logger.i('[TimerLogic] _init');
+
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) => appRouter.push(TimerTipDialog()));
 
       _initEventChannel();
       await _syncFromNative();

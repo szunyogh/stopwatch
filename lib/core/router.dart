@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stopwatch/core/dialog_popup_route.dart';
 import 'package:stopwatch/core/router.gr.dart';
 import 'package:zoom_page/zoom_page.dart';
 
@@ -39,6 +40,13 @@ class AppRouter extends RootStackRouter {
         }
 
         return ZoomGesturePageRoute<T>(settings: page, tag: tag, builder: (_) => child);
+      },
+    ),
+    CustomRoute(
+      page: TimerTipDialog.page,
+      path: '/tip-dialog',
+      customRouteBuilder: <T>(BuildContext context, Widget child, AutoRoutePage<T> page) {
+        return DialogPopupRoute<T>(child, settings: page);
       },
     ),
   ];

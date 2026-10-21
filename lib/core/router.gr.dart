@@ -10,23 +10,24 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 
-import 'package:auto_route/auto_route.dart' as _i5;
-import 'package:flutter/material.dart' as _i7;
-import 'package:stopwatch/model/lap.dart' as _i6;
+import 'package:auto_route/auto_route.dart' as _i6;
+import 'package:flutter/material.dart' as _i8;
+import 'package:stopwatch/model/lap.dart' as _i7;
 import 'package:stopwatch/ui/page/home.dart' as _i1;
 import 'package:stopwatch/ui/page/lap_details.dart' as _i2;
 import 'package:stopwatch/ui/page/stopwatch.dart' as _i3;
 import 'package:stopwatch/ui/page/timer.dart' as _i4;
+import 'package:stopwatch/ui/widget/timer_tip_dialog.dart' as _i5;
 
 /// generated route for
 /// [_i1.HomePage]
-class HomeRoute extends _i5.PageRouteInfo<void> {
-  const HomeRoute({List<_i5.PageRouteInfo>? children})
+class HomeRoute extends _i6.PageRouteInfo<void> {
+  const HomeRoute({List<_i6.PageRouteInfo>? children})
     : super(HomeRoute.name, initialChildren: children);
 
   static const String name = 'HomeRoute';
 
-  static _i5.PageInfo page = _i5.PageInfo(
+  static _i6.PageInfo page = _i6.PageInfo(
     name,
     builder: (data) {
       return const _i1.HomePage();
@@ -36,12 +37,12 @@ class HomeRoute extends _i5.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i2.LapDetailsPage]
-class LapDetailsRoute extends _i5.PageRouteInfo<LapDetailsRouteArgs> {
+class LapDetailsRoute extends _i6.PageRouteInfo<LapDetailsRouteArgs> {
   LapDetailsRoute({
-    required _i6.LapModel lap,
+    required _i7.LapModel lap,
     required Object? tag,
-    _i7.Key? key,
-    List<_i5.PageRouteInfo>? children,
+    _i8.Key? key,
+    List<_i6.PageRouteInfo>? children,
   }) : super(
          LapDetailsRoute.name,
          args: LapDetailsRouteArgs(lap: lap, tag: tag, key: key),
@@ -50,7 +51,7 @@ class LapDetailsRoute extends _i5.PageRouteInfo<LapDetailsRouteArgs> {
 
   static const String name = 'LapDetailsRoute';
 
-  static _i5.PageInfo page = _i5.PageInfo(
+  static _i6.PageInfo page = _i6.PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<LapDetailsRouteArgs>();
@@ -62,11 +63,11 @@ class LapDetailsRoute extends _i5.PageRouteInfo<LapDetailsRouteArgs> {
 class LapDetailsRouteArgs {
   const LapDetailsRouteArgs({required this.lap, required this.tag, this.key});
 
-  final _i6.LapModel lap;
+  final _i7.LapModel lap;
 
   final Object? tag;
 
-  final _i7.Key? key;
+  final _i8.Key? key;
 
   @override
   String toString() {
@@ -86,13 +87,13 @@ class LapDetailsRouteArgs {
 
 /// generated route for
 /// [_i3.StopwatchPage]
-class StopwatchRoute extends _i5.PageRouteInfo<void> {
-  const StopwatchRoute({List<_i5.PageRouteInfo>? children})
+class StopwatchRoute extends _i6.PageRouteInfo<void> {
+  const StopwatchRoute({List<_i6.PageRouteInfo>? children})
     : super(StopwatchRoute.name, initialChildren: children);
 
   static const String name = 'StopwatchRoute';
 
-  static _i5.PageInfo page = _i5.PageInfo(
+  static _i6.PageInfo page = _i6.PageInfo(
     name,
     builder: (data) {
       return const _i3.StopwatchPage();
@@ -102,16 +103,32 @@ class StopwatchRoute extends _i5.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i4.TimerPage]
-class TimerRoute extends _i5.PageRouteInfo<void> {
-  const TimerRoute({List<_i5.PageRouteInfo>? children})
+class TimerRoute extends _i6.PageRouteInfo<void> {
+  const TimerRoute({List<_i6.PageRouteInfo>? children})
     : super(TimerRoute.name, initialChildren: children);
 
   static const String name = 'TimerRoute';
 
-  static _i5.PageInfo page = _i5.PageInfo(
+  static _i6.PageInfo page = _i6.PageInfo(
     name,
     builder: (data) {
       return const _i4.TimerPage();
+    },
+  );
+}
+
+/// generated route for
+/// [_i5.TimerTipDialog]
+class TimerTipDialog extends _i6.PageRouteInfo<void> {
+  const TimerTipDialog({List<_i6.PageRouteInfo>? children})
+    : super(TimerTipDialog.name, initialChildren: children);
+
+  static const String name = 'TimerTipDialog';
+
+  static _i6.PageInfo page = _i6.PageInfo(
+    name,
+    builder: (data) {
+      return const _i5.TimerTipDialog();
     },
   );
 }

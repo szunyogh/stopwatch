@@ -8,5 +8,8 @@
     "lapTotalTime": "Teljes idő",
     "lapDetails": "Kör idő",
     "stopwatch": "Stopperóra",
-    "timer": "Időzítő"
+    "timer": "Időzítő",
+    "timerDialogTitle": "Tipp az időzítőhöz",
+    "timerDialogContent": "Tudtad? A kijelzőn lévő számokat egyenként is elcsúsztathatod az ujjaddal a finomhangoláshoz, a + és - gombokkal pedig gyorsan hozzáadhatsz vagy elvehetsz 10 másodpercet.",
+    "timerDialogButton": "Kipróbálom"
 }
