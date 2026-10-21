@@ -8,6 +8,7 @@ import androidx.core.content.edit
 object StopwatchState {
     private const val PREFS_NAME = "stopwatch_state"
     private const val KEY_IS_RUNNING = "isRunning"
+    private const val KEY_IS_FIRST_USE = "isFirstUse"
     private const val KEY_STARTED_AT = "startedAtEpochMs"
     private const val KEY_ACCUMULATED = "accumulatedMs"
     private const val KEY_TIMER_TOTAL = "timer_totalMs"
@@ -41,6 +42,15 @@ object StopwatchState {
             return KindState(kind, false, null, total, total)
         }
         return s
+    }
+
+    fun isFirstUse(kind: Kind): Boolean {
+        val isFirstUse = prefs.getBoolean(kind.k(KEY_IS_FIRST_USE), true)
+        return isFirstUse;
+    }
+
+    fun setFirstUse(kind: Kind, value: Boolean) {
+        prefs.edit { putBoolean(kind.k(KEY_IS_FIRST_USE), value) }
     }
 
     fun start(kind: Kind, startedAtEpochMs: Long, accumulatedMs: Long) {

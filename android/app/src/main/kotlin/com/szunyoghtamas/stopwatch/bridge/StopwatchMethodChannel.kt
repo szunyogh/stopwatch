@@ -76,6 +76,12 @@ class StopwatchMethodChannel : MethodChannel.MethodCallHandler {
         when (call.method) {
             "getState" -> result.success(StopwatchState.asMap(kind))
 
+            "isFirstUse" -> {
+                val res = StopwatchState.isFirstUse(kind)
+                StopwatchState.setFirstUse(kind, false)
+                result.success(res)
+            }
+
             "notifyStart" -> {
                 val startedAt = call.argument<Number>("startedAtEpochMs")?.toLong()
                 val accumulated = call.argument<Number>("accumulatedMs")?.toLong()
