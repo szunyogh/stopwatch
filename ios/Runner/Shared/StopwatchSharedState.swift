@@ -26,6 +26,9 @@ enum StopwatchSharedState {
         guard let d = UserDefaults(suiteName: appGroupId) else {
             fatalError("App Group '\(appGroupId)' not configured")
         }
+        d.register(defaults: [
+            TimeKind.timer.key(keyIsFirstUse): true,
+        ])
         return d
     }
 
