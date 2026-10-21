@@ -32,23 +32,27 @@ class _LapDetailsPageState extends ConsumerState<LapDetailsPage> {
   Widget build(BuildContext context) {
     final time = ref.watch(lapDetailsLogic.select((value) => value.lap?.time ?? Duration.zero));
     final totalTime = ref.watch(lapDetailsLogic.select((value) => value.lap?.totalTime ?? Duration.zero));
+    final topPadding = MediaQuery.of(context).padding.top + 10;
 
     return Scaffold(
       appBar: AppBar(title: Text(AppLocalizations.of(context)?.lapDetails ?? '')),
-      body: SizedBox(
-        width: double.infinity,
-        child: Column(
-          children: [
-            SizedBox(height: 40.h),
-            AnalogClock(elapsed: time),
-            SizedBox(height: 20.h),
-            Text(DurationElapsedFormatter.toElapsedTime(time), style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontFeatures: [FontFeature.tabularFigures()])),
-            Text(
-              DurationElapsedFormatter.toElapsedTime(totalTime),
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface, fontFeatures: [FontFeature.tabularFigures()]),
-            ),
-            SizedBox(height: 10.h),
-          ],
+      body: Padding(
+        padding: EdgeInsets.fromLTRB(15, topPadding, 15, 0).r,
+        child: SizedBox(
+          width: double.infinity,
+          child: Column(
+            children: [
+              SizedBox(height: 40.h),
+              AnalogClock(elapsed: time),
+              SizedBox(height: 20.h),
+              Text(
+                DurationElapsedFormatter.toElapsedTime(time),
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 40.sp, fontFeatures: [FontFeature.tabularFigures()]),
+              ),
+              Text(DurationElapsedFormatter.toElapsedTime(totalTime), style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontFeatures: [FontFeature.tabularFigures()])),
+              SizedBox(height: 10.h),
+            ],
+          ),
         ),
       ),
     );

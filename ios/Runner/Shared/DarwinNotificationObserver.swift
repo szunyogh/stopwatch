@@ -1,12 +1,14 @@
 import Foundation
 
 enum DarwinNotification {
-    static let stateChangedName = "com.szunyoghtamas.stopwatch.stateChanged"
+    static func name(for kind: TimeKind) -> String {
+        "com.szunyoghtamas.stopwatch.stateChanged.\(kind.rawValue)"
+    }
 
-    static func post() {
+    static func post(kind: TimeKind) {
         CFNotificationCenterPostNotification(
             CFNotificationCenterGetDarwinNotifyCenter(),
-            CFNotificationName(stateChangedName as CFString),
+            CFNotificationName(name(for: kind) as CFString),
             nil, nil, true
         )
     }
@@ -16,7 +18,7 @@ final class DarwinNotificationObserver {
     private let name: CFString
     private let callback: () -> Void
 
-    init(name: String = DarwinNotification.stateChangedName, callback: @escaping () -> Void) {
+    init(name: String, callback: @escaping () -> Void) {
         self.name = name as CFString
         self.callback = callback
         start()

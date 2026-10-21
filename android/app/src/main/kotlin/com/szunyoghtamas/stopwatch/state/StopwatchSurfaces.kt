@@ -8,19 +8,11 @@ import com.szunyoghtamas.stopwatch.widget.StopwatchWidgetProvider
 object StopwatchSurfaces {
     private const val TAG = "[Widget] Surfaces"
 
-    fun refresh(context: Context, isReset: Boolean = false) {
-        Log.d(TAG, "refresh called, isReset: $isReset")
+    fun refresh(context: Context) {
+        Log.d(TAG, "refresh called")
         StopwatchState.init(context)
 
-        if(isReset) {
-            Log.d(TAG, "refresh: cancelling notification (cancel)")
-            StopwatchNotificationHelper.cancel(context)
-        } else {
-            Log.d(TAG, "refresh: updating notification (update)")
-            StopwatchNotificationHelper.update(context)
-        }
-
-        Log.d(TAG, "refresh: starting widget update (updateAll)")
+        StopwatchNotificationHelper.update(context)
         StopwatchWidgetProvider.updateAll(context)
     }
 }

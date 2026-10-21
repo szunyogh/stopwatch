@@ -2,21 +2,29 @@ package com.szunyoghtamas.stopwatch.bridge
 
 import android.Manifest
 import android.app.Activity
+import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import com.szunyoghtamas.stopwatch.action.StopwatchActions
+import com.szunyoghtamas.stopwatch.action.StopwatchLaunch
+import com.szunyoghtamas.stopwatch.state.Kind
+import com.szunyoghtamas.stopwatch.state.StopwatchLapStore
 import com.szunyoghtamas.stopwatch.state.StopwatchState
-import com.szunyoghtamas.stopwatch.state.StopwatchSurfaces
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
-import com.szunyoghtamas.stopwatch.state.StopwatchLapStore
+import androidx.core.net.toUri
 
 class StopwatchMethodChannel : MethodChannel.MethodCallHandler {
     companion object {
@@ -27,10 +35,10 @@ class StopwatchMethodChannel : MethodChannel.MethodCallHandler {
 
         private var eventSink: EventChannel.EventSink? = null
 
-        fun pushStateUpdate(context: Context) {
-            Log.d(TAG, "pushStateUpdate: sending state to Flutter")
+        fun pushStateUpdate(context: Context, kind: Kind) {
+            Log.d(TAG, "pushStateUpdate(${kind.key}): sending state to Flutter")
             StopwatchState.init(context)
-            val state = StopwatchState.asMap()
+            val state = StopwatchState.asMap(kind)
             Handler(Looper.getMainLooper()).post { eventSink?.success(state) }
         }
     }
@@ -43,8 +51,8 @@ class StopwatchMethodChannel : MethodChannel.MethodCallHandler {
         this.activity = activity
         StopwatchState.init(activity.applicationContext)
 
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL_NAME)
-            .setMethodCallHandler(this)
+        val methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL_NAME)
+        methodChannel.setMethodCallHandler(this)
 
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, EVENT_CHANNEL_NAME)
             .setStreamHandler(object : EventChannel.StreamHandler {
@@ -61,44 +69,65 @@ class StopwatchMethodChannel : MethodChannel.MethodCallHandler {
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         Log.d(TAG, "onMethodCall: called method = ${call.method}")
+
+        val context = activity?.applicationContext
+        val kind = Kind.from(call.argument<String>("kind"))
+
         when (call.method) {
-            "getState" -> {
-                Log.d(TAG, "onMethodCall: getState requested")
-                result.success(StopwatchState.asMap())
+            "getState" -> result.success(StopwatchState.asMap(kind))
+
+            "isFirstUse" -> {
+                val res = StopwatchState.isFirstUse(kind)
+                StopwatchState.setFirstUse(kind, false)
+                result.success(res)
             }
 
             "notifyStart" -> {
                 val startedAt = call.argument<Number>("startedAtEpochMs")?.toLong()
                 val accumulated = call.argument<Number>("accumulatedMs")?.toLong()
-                Log.d(TAG, "onMethodCall: notifyStart -> startedAt=$startedAt, accumulated=$accumulated")
+                Log.d(TAG, "notifyStart(${kind.key}) -> startedAt=$startedAt, accumulated=$accumulated")
                 if (startedAt == null || accumulated == null) {
                     result.error("bad_args", "startedAtEpochMs/accumulatedMs missing", null)
                     return
                 }
-                StopwatchState.start(startedAt, accumulated)
-                activity?.applicationContext?.let { StopwatchSurfaces.refresh(it) }
+                context?.let { StopwatchActions.start(it, kind, startedAt, accumulated) }
                 result.success(null)
             }
 
             "notifyStop" -> {
                 val accumulated = call.argument<Number>("accumulatedMs")?.toLong()
-                Log.d(TAG, "onMethodCall: notifyStop -> accumulated=$accumulated")
+                Log.d(TAG, "notifyStop(${kind.key}) -> accumulated=$accumulated")
                 if (accumulated == null) {
                     result.error("bad_args", "accumulatedMs missing", null)
                     return
                 }
-                StopwatchState.stop(accumulated)
-                activity?.applicationContext?.let { StopwatchSurfaces.refresh(it) }
+                context?.let { StopwatchActions.stop(it, kind, accumulated) }
                 result.success(null)
             }
 
             "notifyReset" -> {
-                Log.d(TAG, "onMethodCall: notifyReset")
-                StopwatchState.reset()
-                activity?.applicationContext?.let { StopwatchLapStore.clear(it) }
-                activity?.applicationContext?.let { StopwatchSurfaces.refresh(it, true) }
+                val accumulated = call.argument<Number>("accumulatedMs")?.toLong() ?: 0L
+                Log.d(TAG, "notifyReset(${kind.key}) -> accumulated=$accumulated")
+                context?.let { StopwatchActions.reset(it, kind, accumulated) }
                 result.success(null)
             }
+
+            "notifySetTimer" -> {
+                val total = call.argument<Number>("totalMs")?.toLong()
+                if (total == null) {
+                    result.error("bad_args", "totalMs missing", null)
+                    return
+                }
+                context?.let { StopwatchActions.setTimer(it, total) }
+                result.success(null)
+            }
+
+            "notifyTimerFinished" -> {
+                context?.let { StopwatchActions.onTimerExpiredInApp(it) }
+                result.success(null)
+            }
+
+            "consumePendingTab" -> result.success(StopwatchLaunch.consume())
 
             "hasNotificationPermission" -> {
                 val hasPerm = hasNotificationPermission()
@@ -111,8 +140,26 @@ class StopwatchMethodChannel : MethodChannel.MethodCallHandler {
                 requestNotificationPermission(result)
             }
 
+            "canUseFullScreenIntent" -> {
+                val ctx = context
+                result.success(
+                    ctx == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE ||
+                            ctx.getSystemService(NotificationManager::class.java).canUseFullScreenIntent(),
+                )
+            }
+
+            "openFullScreenIntentSettings" -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    activity?.startActivity(
+                        Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT,
+                            "package:${activity?.packageName}".toUri()),
+                    )
+                }
+                result.success(null)
+            }
+
             "getLaps" -> {
-                val json = activity?.applicationContext?.let { StopwatchLapStore.get(it) }
+                val json = context?.let { StopwatchLapStore.get(it) }
                 Log.d(TAG, "onMethodCall: getLaps -> ${json?.length ?: 0} characters")
                 result.success(json)
             }
@@ -124,7 +171,7 @@ class StopwatchMethodChannel : MethodChannel.MethodCallHandler {
                     return
                 }
                 Log.d(TAG, "onMethodCall: saveLaps -> ${json.length} characters")
-                activity?.applicationContext?.let { StopwatchLapStore.save(it, json) }
+                context?.let { StopwatchLapStore.save(it, json) }
                 result.success(null)
             }
 
@@ -137,7 +184,7 @@ class StopwatchMethodChannel : MethodChannel.MethodCallHandler {
 
     private fun hasNotificationPermission(): Boolean {
         val ctx = activity ?: return false
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return NotificationManagerCompat.from(ctx).areNotificationsEnabled()
         return ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
     }
 

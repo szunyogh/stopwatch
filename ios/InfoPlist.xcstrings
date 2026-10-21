@@ -17,6 +17,23 @@
           }
         }
       }
+    },
+    "NSAlarmKitUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When your timer finishes, the app sounds an alarm so you notice it even if your phone is silenced or locked."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az időzítő lejártakor ébresztőként szólaltatjuk meg a jelzést, hogy akkor is észrevedd, ha a telefon némítva van vagy le van zárva."
+          }
+        }
+      }
     }
   },
   "version" : "1.3"

@@ -1,337 +1,192 @@
-import 'dart:convert';
+import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:stopwatch/core/router.dart';
+import 'package:stopwatch/core/stopwatch_native_bridge.dart';
 import 'package:stopwatch/logic/home/home_logic.dart';
-import 'package:stopwatch/logic/home/home_state.dart';
-import 'package:stopwatch/model/lap.dart';
+import 'package:stopwatch/ui/page/stopwatch.dart';
+import 'package:stopwatch/ui/page/timer.dart';
 
-final List<MethodCall> nativeCalls = [];
-
-Iterable<MethodCall> callsOf(String method) => nativeCalls.where((call) => call.method == method);
-
-void setupMockNativeChannels({String lapsJson = '[]', Map<String, Object?>? nativeState}) {
-  nativeCalls.clear();
-
-  final messenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-
-  messenger.setMockMethodCallHandler(const MethodChannel('stopwatch/native'), (MethodCall methodCall) async {
-    nativeCalls.add(methodCall);
-
-    switch (methodCall.method) {
-      case 'hasNotificationPermission':
-      case 'requestNotificationPermission':
-        return true;
-      case 'getState':
-        return nativeState ?? {'isRunning': false, 'startedAtEpochMs': null, 'accumulatedMs': 0};
-      case 'getLaps':
-        return lapsJson;
-      default:
-        return null;
-    }
-  });
-
-  messenger.setMockMethodCallHandler(const MethodChannel('stopwatch/native_events'), (_) async => null);
-}
+import '../helpers/test_helpers.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late ProviderContainer container;
-  late HomeLogic logic;
-  late ProviderSubscription<HomeState> sub;
+  setUp(() => StopwatchNativeBridge.isAndroid = () => true);
+  tearDown(() => StopwatchNativeBridge.isAndroid = () => Platform.isAndroid);
 
-  ProviderContainer createContainer() => ProviderContainer(overrides: [appRouterProvider.overrideWith((ref) => AppRouter(ref))]);
+  Future<ProviderContainer> bootHomeLogic(WidgetTester tester) async {
+    final container = createTestContainer();
+    addTearDown(container.dispose);
+    container.listen(homeLogic, (prev, next) {});
 
-  setUp(() {
-    setupMockNativeChannels();
+    tester.binding.scheduleFrame();
+    await settleInit(tester);
+    await tester.pump();
 
-    container = createContainer();
-
-    sub = container.listen<HomeState>(homeLogic, (prev, next) {});
-    logic = container.read(homeLogic.notifier);
-  });
-
-  tearDown(() {
-    sub.close();
-    container.dispose();
-  });
+    return container;
+  }
 
   group('HomeLogic Unit Tests', () {
-    Future<void> waitRealTime(WidgetTester tester, int ms) async {
-      await tester.runAsync(() async => await Future.delayed(Duration(milliseconds: ms)));
-      await tester.pump();
-    }
+    group('HomeLogic - permissions', () {
+      testWidgets('1. Does not request the notification permission when it is already granted', (tester) async {
+        setupMockNativeChannels(hasNotificationPermission: true);
 
-    Future<void> settleInit(WidgetTester tester) => waitRealTime(tester, 20);
+        await bootHomeLogic(tester);
 
-    testWidgets('1. Start button starts the timer and time increases', (tester) async {
-      await settleInit(tester);
+        expect(callsOf('hasNotificationPermission'), hasLength(1));
+        expect(callsOf('requestNotificationPermission'), isEmpty);
+      });
 
-      expect(logic.state.time, Duration.zero);
-      expect(logic.state.isRunning, false);
+      testWidgets('2. Requests the notification permission when it is missing', (tester) async {
+        setupMockNativeChannels(hasNotificationPermission: false);
 
-      logic.start();
-      await tester.pump();
-      expect(logic.state.isRunning, true);
+        await bootHomeLogic(tester);
 
-      await waitRealTime(tester, 50);
-      expect(logic.state.time.inMilliseconds, greaterThan(0));
+        expect(callsOf('hasNotificationPermission'), hasLength(1));
+        expect(callsOf('requestNotificationPermission'), hasLength(1));
+      });
 
-      final startCall = callsOf('notifyStart').single;
-      expect((startCall.arguments as Map)['accumulatedMs'], 0);
-      expect((startCall.arguments as Map)['startedAtEpochMs'], greaterThan(0));
+      testWidgets('3. Full-screen intent settings are only checked on Android', (tester) async {
+        setupMockNativeChannels();
 
-      logic.stop();
+        await bootHomeLogic(tester);
+
+        expect(callsOf('canUseFullScreenIntent'), isEmpty);
+        expect(callsOf('openFullScreenIntentSettings'), isEmpty);
+      }, skip: Platform.isAndroid);
+
+      testWidgets('4. Native errors during init are swallowed', (tester) async {
+        setupMockNativeChannels();
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(const MethodChannel('stopwatch/native'), (call) async {
+          throw PlatformException(code: 'boom');
+        });
+
+        final container = await bootHomeLogic(tester);
+
+        expect(tester.takeException(), isNull);
+        expect(container.read(homeLogic).stopwatchButtonRect, Rect.zero);
+      });
     });
 
-    testWidgets('2. Pause button stops the timer and time does not increase further', (tester) async {
-      await settleInit(tester);
+    group('HomeLogic - pending tab without UI', () {
+      testWidgets('5. Asks for the pending tab once and does not fail without a router', (tester) async {
+        setupMockNativeChannels();
 
-      logic.start();
-      await tester.pump();
-      await waitRealTime(tester, 50);
-      expect(logic.state.time.inMilliseconds, greaterThan(0));
+        await bootHomeLogic(tester);
 
-      logic.stop();
-      await tester.pump();
-      expect(logic.state.isRunning, false);
+        expect(callsOf('consumePendingTab'), hasLength(1));
+        expect(tester.takeException(), isNull);
+      });
 
-      final timeAfterStop = logic.state.time;
-      expect(timeAfterStop.inMilliseconds, greaterThan(0));
+      testWidgets('6. Gives up silently after the retries when no router is mounted', (tester) async {
+        setupMockNativeChannels(pendingTab: 'timer');
 
-      await waitRealTime(tester, 50);
-      expect(logic.state.time, timeAfterStop);
+        await bootHomeLogic(tester);
+        for (var i = 0; i < 10; i++) {
+          await tester.pump();
+        }
 
-      final stopCall = callsOf('notifyStop').single;
-      expect((stopCall.arguments as Map)['accumulatedMs'], timeAfterStop.inMilliseconds);
+        expect(callsOf('consumePendingTab'), hasLength(1));
+        expect(tester.takeException(), isNull);
+      });
     });
 
-    testWidgets('3. Reset button sets time to zero and stops the timer', (tester) async {
-      await settleInit(tester);
+    group('HomeLogic - with UI', () {
+      testWidgets('7. Measures the position of both navigation buttons after the first frame', (tester) async {
+        setupMockNativeChannels();
 
-      logic.start();
-      await tester.pump();
-      await waitRealTime(tester, 50);
-      expect(logic.state.time.inMilliseconds, greaterThan(0));
+        final container = await pumpAppReady(tester);
+        final state = container.read(homeLogic);
 
-      logic.reset();
-      await tester.pump();
+        expect(state.stopwatchButtonRect, isNot(Rect.zero));
+        expect(state.timerButtonRect, isNot(Rect.zero));
+        expect(state.timerButtonRect.left, greaterThan(state.stopwatchButtonRect.left));
+        expect(state.timerButtonRect.size, state.stopwatchButtonRect.size);
 
-      expect(logic.state.time, Duration.zero);
-      expect(logic.state.isRunning, false);
-      expect(logic.state.laps, isEmpty);
-      expect(logic.state.currentTime, isNull);
-      expect(callsOf('notifyReset'), hasLength(1));
-    });
+        await unmountApp(tester);
+      });
 
-    testWidgets('4. Multiple start calls are ignored while already running', (tester) async {
-      await settleInit(tester);
+      testWidgets('8. Stays on the stopwatch tab when there is no pending tab', (tester) async {
+        setupMockNativeChannels();
 
-      logic.start();
-      logic.start();
-      logic.start();
-      await tester.pump();
-      expect(logic.state.isRunning, true);
+        final container = await pumpAppReady(tester);
 
-      expect(callsOf('notifyStart'), hasLength(1));
+        expect(activeTab(container), 0);
+        expect(find.byType(StopwatchPage), findsOneWidget);
 
-      await waitRealTime(tester, 100);
-      final time1 = logic.state.time.inMilliseconds;
+        await unmountApp(tester);
+      });
 
-      await waitRealTime(tester, 100);
-      final time2 = logic.state.time.inMilliseconds;
+      testWidgets('9. Opens the pending timer tab on startup', (tester) async {
+        setupMockNativeChannels(pendingTab: 'timer');
 
-      final difference = time2 - time1;
-      expect(difference, closeTo(100, 50));
+        final container = await pumpAppReady(tester);
 
-      logic.stop();
-    });
+        expect(activeTab(container), 1);
+        expect(find.byType(TimerPage), findsOneWidget);
+        expect(callsOf('consumePendingTab'), hasLength(1));
 
-    testWidgets('5. addLap creates a lap entry when timer is running', (tester) async {
-      await settleInit(tester);
+        await unmountApp(tester);
+      });
 
-      logic.start();
-      await tester.pump();
-      await waitRealTime(tester, 100);
+      testWidgets('10. Opens the pending stopwatch tab when the app is resumed', (tester) async {
+        setupMockNativeChannels();
 
-      logic.addLap();
+        final container = await pumpAppReady(tester);
+        container.read(homeLogic.notifier).navigateTimer();
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(activeTab(container), 1);
 
-      expect(logic.state.currentTime, Duration.zero);
-      expect(logic.state.laps.length, 1);
+        mockPendingTab = 'stopwatch';
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+        await waitRealTime(tester, 20);
+        await tester.pump(const Duration(milliseconds: 300));
 
-      final lap0 = logic.state.laps.first;
-      expect(lap0.order, 1);
-      expect(lap0.time.inMilliseconds, greaterThan(0));
-      expect(lap0.totalTime, lap0.time);
+        expect(activeTab(container), 0);
+        expect(callsOf('consumePendingTab'), hasLength(2));
 
-      await tester.pump();
-      expect(logic.state.currentTime, isNotNull);
-      expect(logic.state.currentTime!.inMilliseconds, lessThan(50));
+        await unmountApp(tester);
+      });
 
-      final saved = jsonDecode(callsOf('saveLaps').single.arguments['laps'] as String) as List<dynamic>;
-      expect(saved, hasLength(1));
+      testWidgets('11. Opens the pending timer tab when the app is resumed', (tester) async {
+        setupMockNativeChannels();
 
-      logic.stop();
-    });
+        final container = await pumpAppReady(tester);
+        expect(activeTab(container), 0);
 
-    testWidgets('6. addLap does nothing when timer is not running', (tester) async {
-      await settleInit(tester);
+        mockPendingTab = 'timer';
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+        await waitRealTime(tester, 20);
+        await tester.pump(const Duration(milliseconds: 300));
 
-      logic.addLap();
-      await tester.pump();
-      expect(logic.state.laps, isEmpty);
+        expect(activeTab(container), 1);
 
-      logic.start();
-      await tester.pump();
-      await waitRealTime(tester, 50);
-      logic.stop();
-      await tester.pump();
+        await unmountApp(tester);
+      });
 
-      logic.addLap();
-      await tester.pump();
-      expect(logic.state.laps, isEmpty);
-      expect(callsOf('saveLaps'), isEmpty);
-    });
+      testWidgets('12. navigateTimer and navigateStopwatch switch the active tab', (tester) async {
+        setupMockNativeChannels();
 
-    testWidgets('7. currentTime tracks lap time correctly', (tester) async {
-      await settleInit(tester);
+        final container = await pumpAppReady(tester);
+        final logic = container.read(homeLogic.notifier);
 
-      logic.start();
-      await tester.pump();
-      await waitRealTime(tester, 100);
+        logic.navigateTimer();
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(activeTab(container), 1);
 
-      logic.addLap();
-      expect(logic.state.currentTime, Duration.zero);
+        logic.navigateStopwatch();
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(activeTab(container), 0);
 
-      await waitRealTime(tester, 100);
-      expect(logic.state.currentTime!.inMilliseconds, greaterThan(50));
-      expect(logic.state.time.inMilliseconds, greaterThan(logic.state.currentTime!.inMilliseconds));
-
-      logic.stop();
-    });
-
-    testWidgets('8. Lap order increments correctly', (tester) async {
-      await settleInit(tester);
-
-      logic.start();
-      await tester.pump();
-
-      for (int i = 0; i < 5; i++) {
-        await waitRealTime(tester, 30);
-        logic.addLap();
-      }
-      await tester.pump();
-
-      expect(logic.state.laps.length, 5);
-      for (int i = 0; i < 5; i++) {
-        expect(logic.state.laps[i].order, i + 1);
-      }
-
-      logic.stop();
-    });
-
-    testWidgets('9. Reset clears laps and the current lap time', (tester) async {
-      await settleInit(tester);
-
-      logic.start();
-      await tester.pump();
-      await waitRealTime(tester, 50);
-
-      logic.addLap();
-      await waitRealTime(tester, 50);
-
-      logic.stop();
-      await tester.pump();
-
-      expect(logic.state.laps, hasLength(1));
-      expect(logic.state.currentTime, isNotNull);
-
-      logic.reset();
-      await tester.pump();
-
-      expect(logic.state.laps, isEmpty);
-      expect(logic.state.time, Duration.zero);
-      expect(logic.state.currentTime, isNull);
-    });
-
-    testWidgets('10. lapResetPressed adds a lap while running and resets while stopped', (tester) async {
-      await settleInit(tester);
-
-      logic.start();
-      await tester.pump();
-      await waitRealTime(tester, 50);
-
-      logic.lapResetPressed();
-      expect(logic.state.laps, hasLength(1));
-
-      logic.stop();
-      await tester.pump();
-      expect(logic.state.time.inMilliseconds, greaterThan(0));
-
-      logic.lapResetPressed();
-      await tester.pump();
-      expect(logic.state.time, Duration.zero);
-      expect(logic.state.laps, isEmpty);
-    });
-
-    testWidgets('11. startStopPressed toggles between running and stopped', (tester) async {
-      await settleInit(tester);
-
-      logic.startStopPressed();
-      await tester.pump();
-      expect(logic.state.isRunning, true);
-
-      logic.startStopPressed();
-      await tester.pump();
-      expect(logic.state.isRunning, false);
-    });
-
-    testWidgets('12. Saved laps and the stopped native state are restored on init', (tester) async {
-      await settleInit(tester); // a setUp-ban létrehozott logika _init()-je ne keveredjen a mock cseréjével
-
-      final savedLaps = [
-        LapModel(time: const Duration(seconds: 5), totalTime: const Duration(seconds: 5), order: 1),
-        LapModel(time: const Duration(seconds: 10), totalTime: const Duration(seconds: 15), order: 2),
-      ];
-
-      setupMockNativeChannels(lapsJson: jsonEncode(savedLaps.map((lap) => lap.toJson()).toList()), nativeState: {'isRunning': false, 'startedAtEpochMs': null, 'accumulatedMs': 20000});
-
-      final restoredContainer = createContainer();
-      addTearDown(restoredContainer.dispose);
-      restoredContainer.listen<HomeState>(homeLogic, (prev, next) {});
-
-      await waitRealTime(tester, 20);
-
-      final state = restoredContainer.read(homeLogic);
-      expect(state.laps.map((lap) => lap.order), [1, 2]);
-      expect(state.isRunning, false);
-      expect(state.time, const Duration(seconds: 20));
-      expect(state.currentTime, const Duration(seconds: 5));
-    });
-
-    testWidgets('13. A native state that is already running is continued on init', (tester) async {
-      await settleInit(tester);
-
-      final startedAt = DateTime.now().millisecondsSinceEpoch - 5000;
-
-      setupMockNativeChannels(nativeState: {'isRunning': true, 'startedAtEpochMs': startedAt, 'accumulatedMs': 1000});
-
-      final restoredContainer = createContainer();
-      addTearDown(restoredContainer.dispose);
-      restoredContainer.listen<HomeState>(homeLogic, (prev, next) {});
-
-      await waitRealTime(tester, 20);
-
-      final state = restoredContainer.read(homeLogic);
-      expect(state.isRunning, true);
-      expect(state.time.inMilliseconds, greaterThanOrEqualTo(6000));
-
-      restoredContainer.read(homeLogic.notifier).stop();
-      await tester.pump();
+        await unmountApp(tester);
+      });
     });
   });
 }

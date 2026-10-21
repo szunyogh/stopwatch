@@ -14,12 +14,7 @@ class AnalogClock extends StatelessWidget {
       width: 150.w,
       height: 150.w,
       child: CustomPaint(
-        painter: _ClockPainter(
-          elapsed: elapsed,
-          primaryColor: Theme.of(context).colorScheme.primary,
-          onSurfaceColor: Theme.of(context).colorScheme.onSurface,
-          surfaceColor: Theme.of(context).colorScheme.surface,
-        ),
+        painter: _ClockPainter(elapsed: elapsed, primaryColor: Theme.of(context).colorScheme.primary, onSurfaceColor: Theme.of(context).colorScheme.onSurface),
       ),
     );
   }
@@ -29,36 +24,33 @@ class _ClockPainter extends CustomPainter {
   final Duration elapsed;
   final Color primaryColor;
   final Color onSurfaceColor;
-  final Color surfaceColor;
 
-  _ClockPainter({required this.elapsed, required this.primaryColor, required this.onSurfaceColor, required this.surfaceColor});
+  _ClockPainter({required this.elapsed, required this.primaryColor, required this.onSurfaceColor});
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = min(size.width / 2, size.height / 2);
 
-    final backgroundPaint = Paint()
-      ..color = surfaceColor
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, radius, backgroundPaint);
-
     final borderPaint = Paint()
-      ..color = primaryColor.withValues(alpha: 0.3)
+      ..color = primaryColor.withValues(alpha: 0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3;
     canvas.drawCircle(center, radius, borderPaint);
 
     _drawClockMarkers(canvas, center, radius);
 
+    final totalHours = elapsed.inHours;
     final totalSeconds = elapsed.inSeconds;
     final seconds = totalSeconds % 60;
     final totalMinutes = elapsed.inMinutes;
     final minutes = totalMinutes % 60;
 
-    _drawHand(canvas, center, radius * 0.7, seconds / 60.0, primaryColor, 2);
+    _drawHand(canvas, center, radius * 0.4, totalHours / 60.0, primaryColor, 2);
 
-    _drawHand(canvas, center, radius * 0.55, minutes / 60.0, primaryColor.withValues(alpha: 0.3), 3);
+    _drawHand(canvas, center, radius * 0.7, seconds / 60.0, primaryColor.withValues(alpha: 0.4), 2);
+
+    _drawHand(canvas, center, radius * 0.55, minutes / 60.0, primaryColor.withValues(alpha: 0.5), 3);
 
     final centerDotPaint = Paint()
       ..color = primaryColor
@@ -68,7 +60,7 @@ class _ClockPainter extends CustomPainter {
 
   void _drawClockMarkers(Canvas canvas, Offset center, double radius) {
     final markerPaint = Paint()
-      ..color = onSurfaceColor.withValues(alpha: 0.3)
+      ..color = onSurfaceColor
       ..style = PaintingStyle.fill;
 
     for (int i = 0; i < 12; i++) {

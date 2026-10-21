@@ -7,29 +7,32 @@ final appLightTheme = ThemeData(brightness: Brightness.light).copyWith(
   primaryColor: AppColors.primaryColor,
   primaryColorDark: AppColors.primaryColorDark,
   primaryColorLight: AppColors.primaryColorLight,
+  cardColor: AppColors.primaryColor.withValues(alpha: 0.05),
   colorScheme: const ColorScheme.light(
     primary: AppColors.primaryColor,
-    primaryContainer: AppColors.primaryColorLight,
+    primaryContainer: AppColors.blue3,
     secondary: AppColors.green,
     secondaryContainer: AppColors.green2,
     surface: AppColors.white,
     onSurface: AppColors.blue2,
+    onSurfaceVariant: AppColors.blue2,
+    shadow: AppColors.black,
     error: AppColors.red,
   ),
   textTheme: TextTheme(
-    bodyLarge: TextStyle(color: AppColors.black3, fontSize: 16.sp, fontWeight: FontWeight.w500),
-    bodyMedium: TextStyle(color: AppColors.black3, fontSize: 16.sp, fontWeight: FontWeight.w500),
-    bodySmall: TextStyle(color: AppColors.black400, fontSize: 12.sp, fontWeight: FontWeight.w400),
-    headlineLarge: TextStyle(color: AppColors.black, fontSize: 50.sp, fontWeight: FontWeight.w500),
-    headlineMedium: TextStyle(color: AppColors.black, fontSize: 24.sp, fontWeight: FontWeight.w500),
+    bodyMedium: TextStyle(color: AppColors.primaryColor, fontSize: 16.sp, fontWeight: FontWeight.w500),
+    bodySmall: TextStyle(color: AppColors.primaryColor.withValues(alpha: .8), fontSize: 12.sp, fontWeight: FontWeight.w400),
+    headlineLarge: TextStyle(color: AppColors.primaryColor, fontSize: 50.sp, fontWeight: FontWeight.w700),
+    headlineMedium: TextStyle(color: AppColors.primaryColor.withValues(alpha: .7), fontSize: 24.sp, fontWeight: FontWeight.w600),
     headlineSmall: TextStyle(color: AppColors.black, fontSize: 18.sp, fontWeight: FontWeight.w700),
+    displayLarge: TextStyle(color: AppColors.primaryColor, fontSize: 70.sp, fontWeight: FontWeight.w700),
   ),
   textButtonTheme: TextButtonThemeData(
     style: ButtonStyle(
       foregroundColor: WidgetStateProperty.all(AppColors.white),
       backgroundColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.disabled)) {
-          return AppColors.grey2;
+          return AppColors.blue2;
         }
         return AppColors.primaryColor;
       }),
@@ -38,5 +41,8 @@ final appLightTheme = ThemeData(brightness: Brightness.light).copyWith(
       padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 12, horizontal: 24).r),
       textStyle: WidgetStateProperty.all(TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500)),
     ),
+  ),
+  iconButtonTheme: IconButtonThemeData(
+    style: ButtonStyle(foregroundColor: WidgetStateProperty.all(AppColors.primaryColor), backgroundColor: WidgetStateProperty.all(AppColors.blue2.withValues(alpha: .3))),
   ),
 );
