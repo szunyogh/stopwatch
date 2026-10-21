@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:stopwatch/model/lap.dart';
 import 'package:stopwatch/model/stopwatch_native_state.dart';
@@ -17,21 +18,24 @@ class StopwatchNativeBridge {
   late final Stream<StopwatchNativeState> _updates = _eventChannel.receiveBroadcastStream().map((event) => StopwatchNativeState.fromMap(event as Map));
   Stream<StopwatchNativeState> stateUpdates(NativeKind kind) => _updates.where((state) => state.kind == kind);
 
+  @visibleForTesting
+  static bool Function() isAndroid = () => Platform.isAndroid;
+
   Future<NativeKind?> consumePendingTab() async {
-    if (!Platform.isAndroid) return null;
+    if (!isAndroid()) return null;
 
     final raw = await _methodChannel.invokeMethod<String>('consumePendingTab');
     return raw == null ? null : NativeKind.fromName(raw);
   }
 
   Future<bool> canUseFullScreenIntent() async {
-    if (!Platform.isAndroid) return true;
+    if (!isAndroid()) return true;
 
     return await _methodChannel.invokeMethod<bool>('canUseFullScreenIntent') ?? true;
   }
 
   Future<void> openFullScreenIntentSettings() async {
-    if (!Platform.isAndroid) return;
+    if (!isAndroid()) return;
 
     await _methodChannel.invokeMethod('openFullScreenIntentSettings');
   }

@@ -36,6 +36,8 @@ class HomeLogic extends BaseLogic<HomeState> {
       logger.i('[HomeLogic] _init');
 
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        if (!ref.mounted) return;
+
         final stopwatchButtonRect = _getRectFromTag('stopwatch_icon_button');
         final timerButtonRect = _getRectFromTag('timer_icon_button');
         changeState((state) => state.copyWith(stopwatchButtonRect: stopwatchButtonRect, timerButtonRect: timerButtonRect));
@@ -61,7 +63,7 @@ class HomeLogic extends BaseLogic<HomeState> {
     try {
       if (!await _bridge.canUseFullScreenIntent()) await _bridge.openFullScreenIntentSettings();
     } catch (error, stack) {
-      logger.e('[TimerLogic] _ensureAlarmPermission error', error: error, stackTrace: stack);
+      logger.e('[HomeLogic] _ensureAlarmPermission error', error: error, stackTrace: stack);
     }
   }
 
@@ -89,7 +91,10 @@ class HomeLogic extends BaseLogic<HomeState> {
     if (router == null) {
       if (retries <= 0) return;
 
-      WidgetsBinding.instance.addPostFrameCallback((_) => _openTab(kind, retries: retries - 1));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!ref.mounted) return;
+        _openTab(kind, retries: retries - 1);
+      });
       WidgetsBinding.instance.scheduleFrame();
       return;
     }

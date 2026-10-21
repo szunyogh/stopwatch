@@ -1,37 +1,15 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:stopwatch/core/duration_formatter.dart';
-import 'package:stopwatch/core/router.dart';
 import 'package:stopwatch/l10n/app_localizations.dart';
-import 'package:stopwatch/model/lap.dart';
 import 'package:stopwatch/ui/page/home.dart';
 import 'package:stopwatch/ui/page/lap_details.dart';
+import 'package:stopwatch/ui/page/stopwatch.dart';
+import 'package:stopwatch/ui/page/timer.dart';
+import 'package:stopwatch/ui/widget/sliding_time_display.dart';
 
-void setupMockNativeChannels({String lapsJson = '[]', Map<String, Object?>? nativeState}) {
-  final messenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-
-  messenger.setMockMethodCallHandler(const MethodChannel('stopwatch/native'), (MethodCall methodCall) async {
-    switch (methodCall.method) {
-      case 'getState':
-        return nativeState ?? {'isRunning': false, 'startedAtEpochMs': null, 'accumulatedMs': 0};
-      case 'getLaps':
-        return lapsJson;
-      case 'hasNotificationPermission':
-      case 'requestNotificationPermission':
-        return true;
-      default:
-        return null;
-    }
-  });
-
-  messenger.setMockMethodCallHandler(const MethodChannel('stopwatch/native_events'), (_) async => null);
-}
+import '../helpers/test_helpers.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -39,249 +17,289 @@ void main() {
   late AppLocalizations l10n;
 
   setUp(() async {
-    setupMockNativeChannels();
-    l10n = await AppLocalizations.delegate.load(const Locale('hu'));
+    l10n = await loadL10n();
   });
 
-  void useTestScreen(WidgetTester tester) {
-    tester.view.physicalSize = const Size(1080, 1920);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
-  }
+  group('HomePage Unit Tests', () {
+    group('HomePage - stopwatch tab', () {
+      testWidgets('1. Initial state displays correctly', (tester) async {
+        setupMockNativeChannels();
+        await pumpAppReady(tester);
 
-  Widget localizedApp({Widget? home, RouterConfig<Object>? routerConfig}) {
-    if (routerConfig != null) {
-      return MaterialApp.router(
-        locale: const Locale('hu'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        routerConfig: routerConfig,
-      );
-    }
+        expect(find.byType(HomePage), findsOneWidget);
+        expect(find.text(l10n.start), findsOneWidget);
+        expect(find.text(l10n.reset), findsOneWidget);
+        expect(find.text(l10n.stopwatch), findsOneWidget);
+        expect(find.text(l10n.timer), findsOneWidget);
 
-    return MaterialApp(locale: const Locale('hu'), localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: home);
-  }
+        expect(displayedTime(tester), Duration.zero);
+        expect(lapItem(1), findsNothing);
 
-  Widget buildTestableWidget() {
-    return ProviderScope(
-      overrides: [appRouterProvider.overrideWith((ref) => AppRouter(ref))],
-      child: ScreenUtilInit(
-        designSize: const Size(360, 690),
-        builder: (context, child) => localizedApp(home: const HomePage()),
-      ),
-    );
-  }
+        expect(textButton(tester, l10n.reset).onPressed, isNull);
+        expect(textButton(tester, l10n.start).onPressed, isNotNull);
 
-  Future<void> waitRealTime(WidgetTester tester, int ms) async {
-    await tester.runAsync(() async => await Future.delayed(Duration(milliseconds: ms)));
-    await tester.pump();
-  }
+        await unmountApp(tester);
+      });
 
-  group('HomePage Widget Tests', () {
-    testWidgets('1. Initial state displays correctly', (WidgetTester tester) async {
-      useTestScreen(tester);
+      testWidgets('2. Start button starts the stopwatch and the UI updates', (tester) async {
+        setupMockNativeChannels();
+        await pumpAppReady(tester);
 
-      await tester.pumpWidget(buildTestableWidget());
-      await tester.pumpAndSettle();
+        await tester.tap(find.text(l10n.start));
+        await tester.pump();
 
-      expect(find.text(l10n.start), findsOneWidget);
-      expect(find.text(l10n.reset), findsOneWidget);
-      expect(find.text('00:00.000'), findsOneWidget);
-      expect(find.byType(ListView), findsNothing);
+        expect(find.text(l10n.stop), findsOneWidget);
+        expect(find.text(l10n.lap), findsOneWidget);
 
-      final resetButton = tester.widget<TextButton>(find.widgetWithText(TextButton, l10n.reset));
-      expect(resetButton.onPressed, isNull);
-    });
+        await waitRealTime(tester, 100);
+        expect(displayedTime(tester).inMilliseconds, greaterThan(0));
 
-    testWidgets('2. Start button starts the timer and UI updates', (WidgetTester tester) async {
-      useTestScreen(tester);
+        await tester.tap(find.text(l10n.stop));
+        await tester.pump();
+        await unmountApp(tester);
+      });
 
-      await tester.pumpWidget(buildTestableWidget());
-      await tester.pumpAndSettle();
+      testWidgets('3. Stop button stops the stopwatch', (tester) async {
+        setupMockNativeChannels();
+        await pumpAppReady(tester);
 
-      await tester.tap(find.text(l10n.start));
-      await tester.pump();
+        await tester.tap(find.text(l10n.start));
+        await waitRealTime(tester, 100);
 
-      expect(find.text(l10n.stop), findsOneWidget);
-      expect(find.text(l10n.lap), findsOneWidget);
+        await tester.tap(find.text(l10n.stop));
+        await tester.pump();
 
-      await waitRealTime(tester, 100);
+        expect(find.text(l10n.start), findsOneWidget);
 
-      expect(find.text('00:00.000'), findsNothing);
+        final stoppedAt = displayedTime(tester);
+        await waitRealTime(tester, 60);
+        expect(displayedTime(tester), stoppedAt);
 
-      await tester.tap(find.text(l10n.stop));
-      await tester.pump();
-    });
+        await unmountApp(tester);
+      });
 
-    testWidgets('3. Stop button stops the timer', (WidgetTester tester) async {
-      useTestScreen(tester);
+      testWidgets('4. Reset button resets the stopwatch to zero', (tester) async {
+        setupMockNativeChannels();
+        await pumpAppReady(tester);
 
-      await tester.pumpWidget(buildTestableWidget());
-      await tester.pumpAndSettle();
+        await tester.tap(find.text(l10n.start));
+        await waitRealTime(tester, 100);
 
-      await tester.tap(find.text(l10n.start));
-      await waitRealTime(tester, 100);
+        await tester.tap(find.text(l10n.stop));
+        await tester.pump();
 
-      await tester.tap(find.text(l10n.stop));
-      await tester.pump();
+        expect(textButton(tester, l10n.reset).onPressed, isNotNull);
 
-      expect(find.text(l10n.start), findsOneWidget);
-    });
+        await tester.tap(find.text(l10n.reset));
+        await tester.pump();
 
-    testWidgets('4. Reset button resets the timer to zero', (WidgetTester tester) async {
-      useTestScreen(tester);
+        expect(find.text(l10n.start), findsOneWidget);
+        expect(displayedTime(tester), Duration.zero);
+        expect(textButton(tester, l10n.reset).onPressed, isNull);
 
-      await tester.pumpWidget(buildTestableWidget());
-      await tester.pumpAndSettle();
+        await unmountApp(tester);
+      });
 
-      await tester.tap(find.text(l10n.start));
-      await waitRealTime(tester, 100);
+      testWidgets('5. Lap button adds a lap while running', (tester) async {
+        setupMockNativeChannels();
+        await pumpAppReady(tester);
 
-      await tester.tap(find.text(l10n.stop));
-      await tester.pump();
+        await tester.tap(find.text(l10n.start));
+        await waitRealTime(tester, 100);
 
-      final resetButton = tester.widget<TextButton>(find.widgetWithText(TextButton, l10n.reset));
-      expect(resetButton.onPressed, isNotNull);
+        await tester.tap(find.text(l10n.lap));
+        await tester.pump();
 
-      await tester.tap(find.text(l10n.reset));
-      await tester.pump();
+        expect(lapItem(1), findsOneWidget);
+        expect(find.text(l10n.lapTime), findsOneWidget);
+        expect(find.text(l10n.lapTotalTime), findsOneWidget);
+        expect(find.byType(SlidingTimeDisplay), findsNWidgets(2));
 
-      expect(find.text(l10n.start), findsOneWidget);
-      expect(find.text('00:00.000'), findsOneWidget);
-    });
+        await tester.tap(find.text(l10n.stop));
+        await tester.pump();
+        await unmountApp(tester);
+      });
 
-    testWidgets('5. Lap button adds laps when running', (WidgetTester tester) async {
-      useTestScreen(tester);
+      testWidgets('6. Multiple laps are displayed', (tester) async {
+        setupMockNativeChannels();
+        await pumpAppReady(tester);
 
-      await tester.pumpWidget(buildTestableWidget());
-      await tester.pumpAndSettle();
+        await tester.tap(find.text(l10n.start));
 
-      await tester.tap(find.text(l10n.start));
-      await waitRealTime(tester, 100);
+        for (int i = 0; i < 3; i++) {
+          await waitRealTime(tester, 50);
+          await tester.tap(find.text(l10n.lap));
+          await tester.pump();
+        }
 
-      await tester.tap(find.text(l10n.lap));
-      await tester.pump();
+        expect(lapItem(1), findsOneWidget);
+        expect(lapItem(2), findsOneWidget);
+        expect(lapItem(3), findsOneWidget);
+        expect(find.text(l10n.lapTime), findsNWidgets(3));
 
-      expect(find.byType(ListView), findsOneWidget);
-      expect(find.text('1'), findsOneWidget);
-      expect(find.text(l10n.lapTime), findsOneWidget);
-      expect(find.text(l10n.lapTotalTime), findsOneWidget);
+        await tester.tap(find.text(l10n.stop));
+        await tester.pump();
+        await unmountApp(tester);
+      });
 
-      await tester.tap(find.text(l10n.stop));
-      await tester.pump();
-    });
+      testWidgets('7. Reset clears all laps', (tester) async {
+        setupMockNativeChannels();
+        await pumpAppReady(tester);
 
-    testWidgets('6. Multiple laps are displayed in order', (WidgetTester tester) async {
-      useTestScreen(tester);
+        await tester.tap(find.text(l10n.start));
+        await waitRealTime(tester, 50);
 
-      await tester.pumpWidget(buildTestableWidget());
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text(l10n.start));
-
-      for (int i = 0; i < 3; i++) {
+        await tester.tap(find.text(l10n.lap));
         await waitRealTime(tester, 50);
         await tester.tap(find.text(l10n.lap));
         await tester.pump();
-      }
 
-      expect(find.text('1'), findsOneWidget);
-      expect(find.text('2'), findsOneWidget);
-      expect(find.text('3'), findsOneWidget);
-      expect(find.text(l10n.lapTime), findsNWidgets(3));
+        expect(lapItem(1), findsOneWidget);
+        expect(lapItem(2), findsOneWidget);
 
-      await tester.tap(find.text(l10n.stop));
-      await tester.pump();
+        await tester.tap(find.text(l10n.stop));
+        await tester.pump();
+
+        await tester.tap(find.text(l10n.reset));
+        await tester.pump();
+
+        expect(lapItem(1), findsNothing);
+        expect(lapItem(2), findsNothing);
+        expect(find.text(l10n.lapTime), findsNothing);
+        expect(displayedTime(tester), Duration.zero);
+
+        await unmountApp(tester);
+      });
+
+      testWidgets('8. Tapping a lap navigates to LapDetailsPage', (tester) async {
+        setupMockNativeChannels();
+        await pumpAppReady(tester);
+
+        expect(find.byType(HomePage), findsOneWidget);
+
+        await tester.tap(find.text(l10n.start));
+        await waitRealTime(tester, 100);
+        await tester.tap(find.text(l10n.lap));
+        await tester.pump();
+
+        await tester.tap(find.text(l10n.stop));
+        await tester.pump();
+
+        expect(lapItem(1), findsOneWidget);
+        expect(find.byType(LapDetailsPage), findsNothing);
+
+        await tester.tap(lapItem(1));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(LapDetailsPage), findsOneWidget);
+        expect(find.descendant(of: find.byType(AppBar), matching: find.text(l10n.lapDetails)), findsOneWidget);
+      });
+
+      testWidgets('9. Saved laps and time are restored on startup', (tester) async {
+        setupMockNativeChannels(lapsJson: lapsToJson(testLaps), nativeState: nativeStateOf(accumulatedMs: 20000));
+        await pumpAppReady(tester);
+
+        expect(lapItem(1), findsOneWidget);
+        expect(lapItem(2), findsOneWidget);
+        expect(displayedTime(tester), const Duration(seconds: 20));
+        expect(find.text(DurationElapsedFormatter.toElapsedTime(const Duration(seconds: 5))), findsWidgets);
+
+        expect(find.text(l10n.start), findsOneWidget);
+        expect(textButton(tester, l10n.reset).onPressed, isNotNull);
+
+        await unmountApp(tester);
+      });
+
+      testWidgets('10. A stopwatch that is already running natively is continued on startup', (tester) async {
+        setupMockNativeChannels(nativeState: nativeStateOf(isRunning: true, startedAtEpochMs: nowMs() - 5000, accumulatedMs: 1000));
+        await pumpAppReady(tester);
+
+        expect(find.text(l10n.stop), findsOneWidget);
+        expect(find.text(l10n.lap), findsOneWidget);
+        expect(displayedTime(tester).inMilliseconds, greaterThanOrEqualTo(6000));
+
+        await tester.tap(find.text(l10n.stop));
+        await tester.pump();
+        await unmountApp(tester);
+      });
     });
 
-    testWidgets('7. Reset clears all laps', (WidgetTester tester) async {
-      useTestScreen(tester);
+    group('HomePage - tab navigation', () {
+      testWidgets('11. Tapping the timer tab shows the timer page and its buttons', (tester) async {
+        setupMockNativeChannels();
+        final container = await pumpAppReady(tester);
 
-      await tester.pumpWidget(buildTestableWidget());
-      await tester.pumpAndSettle();
+        expect(activeTab(container), 0);
 
-      await tester.tap(find.text(l10n.start));
-      await waitRealTime(tester, 50);
+        await openTab(tester, l10n.timer);
 
-      await tester.tap(find.text(l10n.lap));
-      await waitRealTime(tester, 50);
-      await tester.tap(find.text(l10n.lap));
-      await tester.pump();
+        expect(activeTab(container), 1);
+        expect(find.byType(TimerPage), findsOneWidget);
 
-      expect(find.text('1'), findsOneWidget);
-      expect(find.text('2'), findsOneWidget);
+        expect(find.text(l10n.lap), findsNothing);
+        expect(find.text(l10n.start), findsOneWidget);
+        expect(textButton(tester, l10n.reset).onPressed, isNull);
 
-      await tester.tap(find.text(l10n.stop));
-      await tester.pump();
+        await unmountApp(tester);
+      });
 
-      await tester.tap(find.text(l10n.reset));
-      await tester.pump();
+      testWidgets('12. Tapping the stopwatch tab returns to the stopwatch page', (tester) async {
+        setupMockNativeChannels();
+        final container = await pumpAppReady(tester);
 
-      expect(find.byType(ListView), findsNothing);
-      expect(find.text('1'), findsNothing);
-      expect(find.text('00:00.000'), findsOneWidget);
-    });
+        await openTab(tester, l10n.timer);
+        expect(activeTab(container), 1);
 
-    testWidgets('8. Tapping a lap navigates to LapDetailsPage', (WidgetTester tester) async {
-      useTestScreen(tester);
+        await openTab(tester, l10n.stopwatch);
+        expect(activeTab(container), 0);
+        expect(find.byType(StopwatchPage), findsOneWidget);
 
-      final container = ProviderContainer(overrides: [appRouterProvider.overrideWith((ref) => AppRouter(ref))]);
-      addTearDown(container.dispose);
+        await unmountApp(tester);
+      });
 
-      final router = container.read(appRouterProvider);
+      testWidgets('13. A running stopwatch keeps running while the timer tab is open', (tester) async {
+        setupMockNativeChannels();
+        await pumpAppReady(tester);
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: ScreenUtilInit(
-            designSize: const Size(360, 690),
-            builder: (context, child) => localizedApp(routerConfig: router.config()),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        await tester.tap(find.text(l10n.start));
+        await waitRealTime(tester, 50);
+        final before = displayedTime(tester);
 
-      expect(find.byType(HomePage), findsOneWidget);
+        await openTab(tester, l10n.timer);
+        await waitRealTime(tester, 100);
 
-      await tester.tap(find.text(l10n.start));
-      await waitRealTime(tester, 100);
-      await tester.tap(find.text(l10n.lap));
-      await tester.pump();
+        await openTab(tester, l10n.stopwatch);
+        await waitRealTime(tester, 20);
 
-      await tester.tap(find.text(l10n.stop));
-      await tester.pump();
+        expect(find.text(l10n.stop), findsOneWidget);
+        expect(displayedTimeIn(tester, StopwatchPage).inMilliseconds, greaterThan(before.inMilliseconds + 100));
 
-      expect(find.text('1'), findsOneWidget);
-      expect(find.byType(LapDetailsPage), findsNothing);
+        await tester.tap(find.text(l10n.stop));
+        await tester.pump();
+        await unmountApp(tester);
+      });
 
-      await tester.tap(find.text('1'));
-      await tester.pumpAndSettle();
+      testWidgets('14. The bottom buttons belong to the active tab', (tester) async {
+        setupMockNativeChannels();
+        await pumpAppReady(tester);
 
-      expect(find.byType(LapDetailsPage), findsOneWidget);
-      expect(find.descendant(of: find.byType(AppBar), matching: find.text(l10n.lapDetails)), findsOneWidget);
-    });
+        await tester.tap(find.text(l10n.start));
+        await tester.pump();
+        expect(find.text(l10n.lap), findsOneWidget);
 
-    testWidgets('9. Saved laps and time are restored on startup', (WidgetTester tester) async {
-      useTestScreen(tester);
+        await openTab(tester, l10n.timer);
+        expect(find.text(l10n.lap), findsNothing);
+        expect(find.text(l10n.stop), findsNothing);
+        expect(find.text(l10n.start), findsOneWidget);
 
-      final savedLaps = [
-        LapModel(time: const Duration(seconds: 5), totalTime: const Duration(seconds: 5), order: 1),
-        LapModel(time: const Duration(seconds: 10), totalTime: const Duration(seconds: 15), order: 2),
-      ];
+        await openTab(tester, l10n.stopwatch);
+        expect(find.text(l10n.lap), findsOneWidget);
+        expect(find.text(l10n.stop), findsOneWidget);
 
-      setupMockNativeChannels(lapsJson: jsonEncode(savedLaps.map((lap) => lap.toJson()).toList()), nativeState: {'isRunning': false, 'startedAtEpochMs': null, 'accumulatedMs': 20000});
-
-      await tester.pumpWidget(buildTestableWidget());
-      await tester.pumpAndSettle();
-
-      expect(find.byType(ListView), findsOneWidget);
-      expect(find.text('1'), findsOneWidget);
-      expect(find.text('2'), findsOneWidget);
-      expect(find.text(DurationElapsedFormatter.toElapsedTime(const Duration(seconds: 20))), findsOneWidget);
-
-      expect(find.text(l10n.start), findsOneWidget);
-      final resetButton = tester.widget<TextButton>(find.widgetWithText(TextButton, l10n.reset));
-      expect(resetButton.onPressed, isNotNull);
+        await tester.tap(find.text(l10n.stop));
+        await tester.pump();
+        await unmountApp(tester);
+      });
     });
   });
 }

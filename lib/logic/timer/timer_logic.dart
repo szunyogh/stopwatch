@@ -102,7 +102,7 @@ class TimerLogic extends BaseLogic<TimerState> {
 
   void _setAnchor(StopwatchNativeState anchor) {
     if (anchor.isFinished) {
-      logger.i('[TimerLogic] _setAnchor - ${_anchor.isFinished}');
+      logger.i('[TimerLogic] _setAnchor - ${anchor.isFinished}');
       return _finish(anchor);
     }
 
